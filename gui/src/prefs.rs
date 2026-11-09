@@ -21,6 +21,41 @@ pub struct Prefs {
     pub display: DisplayPrefs,
     pub files: FilesPrefs,
     pub apps: AppsPrefs,
+    pub window: WindowPrefs,
+}
+
+/// Remembered window geometry, closing behavior and last active tab.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub struct WindowPrefs {
+    pub width: i32,
+    pub height: i32,
+    pub maximized: bool,
+    pub hide_on_close: bool,
+    pub last_tab: String,
+}
+
+impl Default for WindowPrefs {
+    fn default() -> Self {
+        Self {
+            width: 920,
+            height: 760,
+            maximized: false,
+            hide_on_close: true,
+            last_tab: "phone".into(),
+        }
+    }
+}
+
+impl WindowPrefs {
+    pub fn sanitized(mut self) -> Self {
+        self.width = self.width.clamp(420, 3840);
+        self.height = self.height.clamp(480, 2160);
+        if !matches!(self.last_tab.as_str(), "phone" | "apps" | "display" | "files" | "notifications") {
+            self.last_tab = "phone".into();
+        }
+        self
+    }
 }
 
 /// Choices on the Files page (the phone's storage as a FUSE mount).
@@ -258,7 +293,7 @@ impl DisplayPrefs {
     }
 }
 
-fn config_dir() -> PathBuf {
+pub fn config_dir() -> PathBuf {
     std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .filter(|p| p.is_absolute())
@@ -276,6 +311,7 @@ pub fn display_path() -> PathBuf {
 
 pub fn load() -> Prefs {
     let mut prefs: Prefs = std::fs::read_to_string(path()).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default();
+    prefs.window = prefs.window.sanitized();
     reload_shared(&mut prefs.display);
     prefs
 }
@@ -301,8 +337,13 @@ fn write_atomic(path: &Path, text: String) -> std::io::Result<()> {
 
 /// Writes `gui.json` and the shared `display.json`.
 pub fn save(prefs: &Prefs) -> std::io::Result<()> {
-    write_atomic(&path(), serde_json::to_string_pretty(prefs).map_err(std::io::Error::other)?)?;
+    save_gui(prefs)?;
     save_shared(&prefs.display)
+}
+
+/// Writes only `gui.json` without touching the shared `display.json`.
+pub fn save_gui(prefs: &Prefs) -> std::io::Result<()> {
+    write_atomic(&path(), serde_json::to_string_pretty(prefs).map_err(std::io::Error::other)?)
 }
 
 pub fn save_shared(display: &DisplayPrefs) -> std::io::Result<()> {
@@ -374,5 +415,20 @@ mod tests {
         // Partial or odd files only change what they validly hold.
         d.apply_shared(&json!({"mode":"sideways","size":"requested","output":null}));
         assert_eq!((d.mode.as_str(), d.mirror_resolution.as_str(), d.output.as_str()), ("mirror", "phone", ""));
+    }
+
+    #[test]
+    fn window_prefs_sanitizes_bounds_and_tab() {
+        let w = WindowPrefs { width: 100, height: 99999, maximized: true, hide_on_close: false, last_tab: "bogus".into() }.sanitized();
+        assert_eq!(w.width, 420);
+        assert_eq!(w.height, 2160);
+        assert!(w.maximized);
+        assert!(!w.hide_on_close);
+        assert_eq!(w.last_tab, "phone");
+
+        let valid = WindowPrefs { width: 1040, height: 800, maximized: false, hide_on_close: true, last_tab: "apps".into() }.sanitized();
+        assert_eq!(valid.width, 1040);
+        assert_eq!(valid.height, 800);
+        assert_eq!(valid.last_tab, "apps");
     }
 }

@@ -1,6 +1,6 @@
-//! The main window: a header with a device menu + a Phone / Apps / Display (Cross Control and the display) / Files / Notifications
-//! view switcher, driven by daemon status events. Pairing and Preferences live in dialogs opened
-//! from the device menu.
+//! The main window: a header with a device menu, a Phone / Apps / Display (Cross Control and the
+//! display) / Files / Notifications view switcher, and a primary application menu, driven by daemon
+//! status events. Pairing, Preferences, Keyboard Shortcuts and About live in dialogs.
 
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -13,14 +13,17 @@ use gtk::{gdk, gio, glib};
 
 use crate::apps::{self, AppsPage};
 use crate::crosscontrol::CrossControlPage;
-use crate::icons::{IconSlot, Query};
 use crate::daemon::{self, Event, Notification, Reply, Status};
 use crate::display::DisplayPage;
 use crate::files::FilesPage;
+use crate::icons::{self, IconSlot, Query};
 use crate::lastdevice::{self, LastDevice};
 use crate::lifecycle::{self, Daemon};
 use crate::mirror::{Exit, Mirror};
+use crate::prefs;
 use crate::tray;
+
+const TABS: [&str; 5] = ["phone", "apps", "display", "files", "notifications"];
 
 const SIGNAL_WORDS: [&str; 6] = ["None", "Very weak", "Weak", "Fair", "Good", "Excellent"];
 /// Adwaita's `network-{wireless,cellular}-signal-<x>-symbolic` names for levels 0–5.
@@ -292,6 +295,65 @@ fn menu_item(label: &str) -> gtk::Button {
     gtk::Button::builder().css_classes(["flat"]).child(&l).build()
 }
 
+/// Primary header menu (standard GNOME / libadwaita hamburger menu).
+fn build_app_menu() -> gio::Menu {
+    let pair_sec = gio::Menu::new();
+    pair_sec.append(Some("Pair new phone…"), Some("win.pair"));
+
+    let app_sec = gio::Menu::new();
+    app_sec.append(Some("Preferences"), Some("win.preferences"));
+    app_sec.append(Some("Keyboard Shortcuts"), Some("win.shortcuts"));
+    app_sec.append(Some("About Smart Connect"), Some("win.about"));
+
+    let quit_sec = gio::Menu::new();
+    quit_sec.append(Some("Quit"), Some("win.quit"));
+
+    let root = gio::Menu::new();
+    root.append_section(None, &pair_sec);
+    root.append_section(None, &app_sec);
+    root.append_section(None, &quit_sec);
+    root
+}
+
+/// Formats `path` cleanly for UI display, collapsing a leading `$HOME` into `~`.
+fn format_display_path(path: &Path) -> String {
+    if let Some(home) = std::env::var_os("HOME").map(std::path::PathBuf::from).filter(|h| !h.as_os_str().is_empty()) {
+        if let Ok(rel) = path.strip_prefix(&home) {
+            return if rel.as_os_str().is_empty() {
+                "~".to_owned()
+            } else {
+                format!("~/{}", rel.display())
+            };
+        }
+    }
+    path.display().to_string()
+}
+
+fn count_cached_icons(dir: &Path) -> usize {
+    let Ok(entries) = std::fs::read_dir(dir) else { return 0 };
+    entries
+        .filter_map(Result::ok)
+        .filter(|e| e.path().extension().and_then(|s| s.to_str()) == Some("png") && e.path().is_file())
+        .count()
+}
+
+fn clear_cached_icons(dir: &Path) -> std::io::Result<usize> {
+    let entries = match std::fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(0),
+        Err(e) => return Err(e),
+    };
+    let mut removed = 0;
+    for entry in entries.filter_map(Result::ok) {
+        let p = entry.path();
+        if p.extension().and_then(|s| s.to_str()) == Some("png") && p.is_file() {
+            std::fs::remove_file(&p)?;
+            removed += 1;
+        }
+    }
+    Ok(removed)
+}
+
 impl DeviceMenu {
     fn build() -> Self {
         let dot = gtk::Image::builder().icon_name("media-record-symbolic").pixel_size(10).css_classes(["dim-label"]).build();
@@ -325,7 +387,12 @@ impl DeviceMenu {
         pop_box.append(&gtk::Separator::new(gtk::Orientation::Horizontal));
         pop_box.append(&connect);
         let popover = gtk::Popover::builder().child(&pop_box).width_request(240).build();
-        let button = gtk::MenuButton::builder().child(&content).popover(&popover).build();
+        let button = gtk::MenuButton::builder()
+            .child(&content)
+            .popover(&popover)
+            .css_classes(["flat", "sc-device-btn"])
+            .tooltip_text("Phone connection and quick menu")
+            .build();
         Self { button, popover, dot, label, menu_name, menu_sub, check, pair, prefs, connect }
     }
 }
@@ -557,6 +624,8 @@ impl PairDialog {
 
 impl Ui {
     pub fn new(app: &adw::Application) -> Rc<Self> {
+        let win_prefs = prefs::load().window;
+
         let views = adw::ViewStack::new();
         let (phone, phone_w) = PhonePage::build();
         let (notifs, notifs_w) = NotifPage::build();
@@ -585,6 +654,7 @@ impl Ui {
         views.add_titled_with_icon(&display_w, Some("display"), "Display", "video-display-symbolic");
         views.add_titled_with_icon(&files_w, Some("files"), "Files", "folder-symbolic");
         let notif_page = views.add_titled_with_icon(&notifs_w, Some("notifications"), "Notifications", "preferences-system-notifications-symbolic");
+        views.set_visible_child_name(&win_prefs.last_tab);
 
         let (down_page, down) = DownPage::build();
         let spinner = adw::Spinner::builder().width_request(48).height_request(48).build();
@@ -604,8 +674,16 @@ impl Ui {
 
         let device = DeviceMenu::build();
         let switcher = adw::ViewSwitcher::builder().stack(&views).policy(adw::ViewSwitcherPolicy::Wide).build();
+        let app_menu_model = build_app_menu();
+        let app_menu = gtk::MenuButton::builder()
+            .icon_name("open-menu-symbolic")
+            .menu_model(&app_menu_model)
+            .primary(true)
+            .tooltip_text("Main Menu")
+            .build();
         let header = adw::HeaderBar::builder().title_widget(&switcher).build();
         header.pack_start(&device.button);
+        header.pack_end(&app_menu);
         let switcher_bar = adw::ViewSwitcherBar::builder().stack(&views).build();
         toasts.set_child(Some(&root));
         let toolbar = adw::ToolbarView::new();
@@ -616,12 +694,13 @@ impl Ui {
         let window = adw::ApplicationWindow::builder()
             .application(app)
             .title("Smart Connect")
-            .default_width(600)
-            .default_height(760)
+            .default_width(win_prefs.width)
+            .default_height(win_prefs.height)
+            .maximized(win_prefs.maximized)
             .content(&toolbar)
             .build();
-        // Six page names plus the device menu don't fit a narrow header: then the switcher moves to
-        // a bar at the bottom and the header keeps the window title and the device menu.
+        // Five page names plus the header menus don't fit a narrow header: then the switcher moves
+        // to a bar at the bottom and the header keeps the window title and menus.
         let narrow = adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 780sp").expect("valid breakpoint condition"));
         narrow.add_setter(&header, "title-widget", Some(&None::<gtk::Widget>.to_value()));
         narrow.add_setter(&switcher_bar, "reveal", Some(&true.to_value()));
@@ -651,6 +730,7 @@ impl Ui {
             daemon_ctl: RefCell::default(),
             state: RefCell::new(State { last: lastdevice::load(), ..State::default() }),
         });
+        ui.setup_actions(app);
         ui.show_switcher(false);
         // Until the daemon answers, the header and the "not running" page show the cached phone.
         ui.refresh_device_offline();
@@ -659,13 +739,10 @@ impl Ui {
         let weak = Rc::downgrade(&ui);
         views.connect_visible_child_name_notify(move |views| {
             let Some(ui) = weak.upgrade() else { return };
-            let name = views.visible_child_name();
-            ui.display.set_visible(name.as_deref() == Some("display"));
-            match name.as_deref() {
-                Some("apps") => ui.apps.shown(),
-                Some("display") => ui.cross.refresh(),
-                Some("notifications") => ui.load_muted(),
-                _ => {}
+            if ui.root.visible_child_name().as_deref() == Some("main") {
+                let name = views.visible_child_name();
+                ui.on_tab_visible(name.as_deref());
+                ui.save_window_prefs();
             }
         });
         let weak = Rc::downgrade(&ui);
@@ -675,6 +752,140 @@ impl Ui {
             }
         });
         ui
+    }
+
+    fn on_tab_visible(self: &Rc<Self>, name: Option<&str>) {
+        self.display.set_visible(name == Some("display"));
+        match name {
+            Some("apps") => self.apps.shown(),
+            Some("display") => self.cross.refresh(),
+            Some("notifications") => self.load_muted(),
+            _ => {}
+        }
+    }
+
+    fn save_window_prefs(&self) {
+        let mut p = prefs::load();
+        let maximized = self.window.is_maximized();
+        if !maximized {
+            let (aw, ah) = (self.window.width(), self.window.height());
+            let (dw, dh) = self.window.default_size();
+            let (w, h) = if self.window.is_visible() && aw > 0 && ah > 0 { (aw, ah) } else { (dw, dh) };
+            if w > 0 && h > 0 {
+                p.window.width = w;
+                p.window.height = h;
+            }
+        }
+        p.window.maximized = maximized;
+        if let Some(tab) = self.views.visible_child_name() {
+            let name = tab.as_str();
+            if TABS.contains(&name) {
+                p.window.last_tab = name.to_owned();
+            }
+        }
+        p.window = p.window.clone().sanitized();
+        if let Err(e) = prefs::save_gui(&p) {
+            eprintln!("smartconnect-gui: could not save window preferences: {e}");
+        }
+    }
+
+    fn setup_actions(self: &Rc<Self>, app: &adw::Application) {
+        let pair_act = gio::SimpleAction::new("pair", None);
+        let weak = Rc::downgrade(self);
+        pair_act.connect_activate(move |_, _| {
+            if let Some(ui) = weak.upgrade() {
+                if ui.state.borrow().status.is_some() {
+                    ui.open_pair_dialog();
+                } else {
+                    ui.toast("Start the Smart Connect service before pairing");
+                }
+            }
+        });
+        self.window.add_action(&pair_act);
+
+        let prefs_act = gio::SimpleAction::new("preferences", None);
+        let weak = Rc::downgrade(self);
+        prefs_act.connect_activate(move |_, _| {
+            if let Some(ui) = weak.upgrade() {
+                ui.open_preferences();
+            }
+        });
+        self.window.add_action(&prefs_act);
+
+        let shortcuts_act = gio::SimpleAction::new("shortcuts", None);
+        let weak = Rc::downgrade(self);
+        shortcuts_act.connect_activate(move |_, _| {
+            if let Some(ui) = weak.upgrade() {
+                ui.open_shortcuts();
+            }
+        });
+        self.window.add_action(&shortcuts_act);
+
+        let about_act = gio::SimpleAction::new("about", None);
+        let weak = Rc::downgrade(self);
+        about_act.connect_activate(move |_, _| {
+            if let Some(ui) = weak.upgrade() {
+                ui.open_about();
+            }
+        });
+        self.window.add_action(&about_act);
+
+        let focus_search_act = gio::SimpleAction::new("focus-search", None);
+        let weak = Rc::downgrade(self);
+        focus_search_act.connect_activate(move |_, _| {
+            if let Some(ui) = weak.upgrade() {
+                if ui.root.visible_child_name().as_deref() == Some("main") && ui.window.visible_dialog().is_none() {
+                    ui.views.set_visible_child_name("apps");
+                    ui.apps.focus_search();
+                }
+            }
+        });
+        self.window.add_action(&focus_search_act);
+
+        let hide_act = gio::SimpleAction::new("hide", None);
+        let weak = Rc::downgrade(self);
+        hide_act.connect_activate(move |_, _| {
+            if let Some(ui) = weak.upgrade() {
+                ui.window.close();
+            }
+        });
+        self.window.add_action(&hide_act);
+
+        let quit_act = gio::SimpleAction::new("quit", None);
+        let weak = Rc::downgrade(self);
+        quit_act.connect_activate(move |_, _| {
+            if let Some(ui) = weak.upgrade() {
+                ui.quit();
+            }
+        });
+        self.window.add_action(&quit_act);
+
+        let tab_act = gio::SimpleAction::new("tab", Some(glib::VariantTy::STRING));
+        let weak = Rc::downgrade(self);
+        tab_act.connect_activate(move |_, param| {
+            let Some(ui) = weak.upgrade() else { return };
+            if ui.root.visible_child_name().as_deref() != Some("main") || ui.window.visible_dialog().is_some() {
+                return;
+            }
+            if let Some(name) = param.and_then(|v| v.str()) {
+                if TABS.contains(&name) {
+                    ui.views.set_visible_child_name(name);
+                }
+            }
+        });
+        self.window.add_action(&tab_act);
+
+        app.set_accels_for_action("win.preferences", &["<Primary>comma"]);
+        app.set_accels_for_action("win.shortcuts", &["<Primary>question"]);
+        app.set_accels_for_action("win.pair", &["<Primary><Shift>p"]);
+        app.set_accels_for_action("win.focus-search", &["<Primary>f"]);
+        app.set_accels_for_action("win.hide", &["<Primary>w"]);
+        app.set_accels_for_action("win.quit", &["<Primary>q"]);
+        app.set_accels_for_action("win.tab::phone", &["<Alt>1", "<Primary>1"]);
+        app.set_accels_for_action("win.tab::apps", &["<Alt>2", "<Primary>2"]);
+        app.set_accels_for_action("win.tab::display", &["<Alt>3", "<Primary>3"]);
+        app.set_accels_for_action("win.tab::files", &["<Alt>4", "<Primary>4"]);
+        app.set_accels_for_action("win.tab::notifications", &["<Alt>5", "<Primary>5"]);
     }
 
     pub fn present(&self) {
@@ -785,12 +996,17 @@ impl Ui {
                 ui.clear_all_notifications();
             }
         });
-        // Closing the window only hides it to the tray; Quit (from the tray) is the only way out.
+        // Closing the window hides it to the tray/background (or quits if keep-running is off).
         let weak = Rc::downgrade(self);
         self.window.connect_close_request(move |_| {
             if let Some(ui) = weak.upgrade() {
-                ui.window.set_visible(false);
-                ui.refresh_tray();
+                ui.save_window_prefs();
+                if prefs::load().window.hide_on_close {
+                    ui.window.set_visible(false);
+                    ui.refresh_tray();
+                } else {
+                    ui.quit();
+                }
             }
             glib::Propagation::Stop
         });
@@ -898,8 +1114,9 @@ impl Ui {
         }
     }
 
-    /// Quit: stop our helpers and the daemon we manage, then leave. The only exit path.
+    /// Quit: save window state, stop our helpers and the daemon we manage, then leave.
     fn quit(self: &Rc<Self>) {
+        self.save_window_prefs();
         self.shutdown();
         self.daemon_ctl.borrow_mut().stop();
         if let Some(app) = self.window.application() {
@@ -907,11 +1124,13 @@ impl Ui {
         }
     }
 
-    /// Opens the Preferences dialog (built fresh so the Start-at-login switch reflects the disk).
+    /// Opens Preferences (built fresh so autostart, service status and icon cache reflect disk).
     fn open_preferences(self: &Rc<Self>) {
+        let general = adw::PreferencesGroup::builder().title("General").build();
+
         let start_at_login = adw::SwitchRow::builder()
             .title("Start at login")
-            .subtitle("Launch Smart Connect in the background (tray only) when you log in")
+            .subtitle("Launch Smart Connect in the background when you sign in")
             .build();
         start_at_login.set_active(lifecycle::autostart_enabled());
         let weak = Rc::downgrade(self);
@@ -920,12 +1139,248 @@ impl Ui {
                 ui.set_start_at_login(row, row.is_active());
             }
         });
-        let group = adw::PreferencesGroup::new();
-        group.add(&start_at_login);
+        general.add(&start_at_login);
+
+        let has_tray = self.tray.borrow().is_some();
+        let keep_running = adw::SwitchRow::builder()
+            .title("Keep running in background")
+            .subtitle(if has_tray {
+                "Closing the window hides it to the system tray instead of quitting"
+            } else {
+                "Closing the window keeps Smart Connect running in the background; reopen from the app launcher"
+            })
+            .build();
+        keep_running.set_active(prefs::load().window.hide_on_close);
+        let weak = Rc::downgrade(self);
+        keep_running.connect_active_notify(move |row| {
+            let Some(ui) = weak.upgrade() else { return };
+            let on = row.is_active();
+            let mut p = prefs::load();
+            if p.window.hide_on_close == on {
+                return;
+            }
+            p.window.hide_on_close = on;
+            match prefs::save_gui(&p) {
+                Ok(()) => ui.toast(if on {
+                    "Closing the window will keep Smart Connect running in the background"
+                } else {
+                    "Closing the window will quit Smart Connect"
+                }),
+                Err(e) => {
+                    ui.toast(&format!("Could not save background setting: {e}"));
+                    row.set_active(!on);
+                }
+            }
+        });
+        general.add(&keep_running);
+
+        let diagnostics = adw::PreferencesGroup::builder().title("Service & Diagnostics").build();
+
+        let (service_sub, stopped) = {
+            let st = self.state.borrow();
+            match &st.status {
+                Some(s) if s.connected => ("Connected to your phone", false),
+                Some(_) => ("Running · phone disconnected", false),
+                None if st.starting || st.service_starting => ("Starting…", false),
+                None if lifecycle::socket_alive() => ("Running", false),
+                None => ("Stopped", true),
+            }
+        };
+        let service_row = adw::ActionRow::builder()
+            .title("Background service (smartconnectd)")
+            .subtitle(service_sub)
+            .build();
+        if stopped {
+            let start_btn = gtk::Button::builder().label("Start").valign(gtk::Align::Center).build();
+            let weak = Rc::downgrade(self);
+            let row_w = service_row.downgrade();
+            start_btn.connect_clicked(move |btn| {
+                btn.set_sensitive(false);
+                btn.set_label("Starting…");
+                if let Some(r) = row_w.upgrade() {
+                    r.set_subtitle("Starting…");
+                }
+                if let Some(ui) = weak.upgrade() {
+                    ui.start_service();
+                }
+            });
+            service_row.add_suffix(&start_btn);
+        }
+        diagnostics.add(&service_row);
+
+        let cache_dir = icons::cache_dir();
+        let cached_count = count_cached_icons(&cache_dir);
+        let cache_subtitle = match cached_count {
+            0 => "No cached icons".to_owned(),
+            1 => "1 cached icon".to_owned(),
+            n => format!("{n} cached icons"),
+        };
+        let cache_row = adw::ActionRow::builder().title("App icon cache").subtitle(&cache_subtitle).build();
+        let clear_btn = gtk::Button::builder()
+            .label("Clear")
+            .valign(gtk::Align::Center)
+            .sensitive(cached_count > 0)
+            .build();
+        let weak = Rc::downgrade(self);
+        let cache_row_w = cache_row.downgrade();
+        clear_btn.connect_clicked(move |btn| {
+            let dir = icons::cache_dir();
+            match clear_cached_icons(&dir) {
+                Ok(n) => {
+                    icons::rescan();
+                    btn.set_sensitive(false);
+                    if let Some(r) = cache_row_w.upgrade() {
+                        r.set_subtitle("No cached icons");
+                    }
+                    if let Some(ui) = weak.upgrade() {
+                        ui.toast(&match n {
+                            0 => "App icon cache is already empty".to_owned(),
+                            1 => "Cleared 1 cached app icon".to_owned(),
+                            n => format!("Cleared {n} cached app icons"),
+                        });
+                    }
+                }
+                Err(e) => {
+                    if let Some(ui) = weak.upgrade() {
+                        ui.toast(&format!("Could not clear icon cache: {e}"));
+                    }
+                }
+            }
+        });
+        cache_row.add_suffix(&clear_btn);
+        diagnostics.add(&cache_row);
+
+        let config_dir = prefs::config_dir();
+        let config_row = adw::ActionRow::builder()
+            .title("Configuration folder")
+            .subtitle(&format_display_path(&config_dir))
+            .build();
+        let open_cfg_btn = gtk::Button::builder().label("Open").valign(gtk::Align::Center).build();
+        let weak = Rc::downgrade(self);
+        open_cfg_btn.connect_clicked(move |_| {
+            let Some(ui) = weak.upgrade() else { return };
+            let dir = prefs::config_dir();
+            let _ = std::fs::create_dir_all(&dir);
+            let launcher = gtk::FileLauncher::new(Some(&gio::File::for_path(&dir)));
+            let weak_ui = Rc::downgrade(&ui);
+            launcher.launch(Some(&ui.window), gio::Cancellable::NONE, move |res| {
+                if let Err(e) = res {
+                    if !e.matches(gtk::DialogError::Dismissed) {
+                        if let Some(ui) = weak_ui.upgrade() {
+                            ui.toast(&format!("Could not open folder: {e}"));
+                        }
+                    }
+                }
+            });
+        });
+        config_row.add_suffix(&open_cfg_btn);
+        diagnostics.add(&config_row);
+
+        let help = adw::PreferencesGroup::builder().title("Help & About").build();
+
+        let dialog = adw::PreferencesDialog::builder().title("Preferences").build();
+
+        let shortcuts_row = adw::ActionRow::builder()
+            .title("Keyboard Shortcuts")
+            .subtitle("Navigation, search, and quick actions")
+            .activatable(true)
+            .build();
+        shortcuts_row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+        let weak = Rc::downgrade(self);
+        let dlg_w = dialog.downgrade();
+        shortcuts_row.connect_activated(move |_| {
+            if let Some(dlg) = dlg_w.upgrade() {
+                dlg.close();
+            }
+            if let Some(ui) = weak.upgrade() {
+                ui.open_shortcuts();
+            }
+        });
+        help.add(&shortcuts_row);
+
+        let about_row = adw::ActionRow::builder()
+            .title("About Smart Connect")
+            .subtitle(concat!("Version ", env!("CARGO_PKG_VERSION")))
+            .activatable(true)
+            .build();
+        about_row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+        let weak = Rc::downgrade(self);
+        let dlg_w = dialog.downgrade();
+        about_row.connect_activated(move |_| {
+            if let Some(dlg) = dlg_w.upgrade() {
+                dlg.close();
+            }
+            if let Some(ui) = weak.upgrade() {
+                ui.open_about();
+            }
+        });
+        help.add(&about_row);
+
         let page = adw::PreferencesPage::new();
-        page.add(&group);
-        let dialog = adw::PreferencesDialog::new();
+        page.add(&general);
+        page.add(&diagnostics);
+        page.add(&help);
         dialog.add(&page);
+        dialog.present(Some(&self.window));
+    }
+
+    fn open_shortcuts(&self) {
+        let keycap = |text: &str| {
+            gtk::Label::builder()
+                .label(text)
+                .valign(gtk::Align::Center)
+                .css_classes(["card", "sc-kbd"])
+                .build()
+        };
+        let row = |title: &str, keys: &[&str]| {
+            let r = adw::ActionRow::builder().title(title).build();
+            let box_ = gtk::Box::builder().spacing(6).valign(gtk::Align::Center).build();
+            for k in keys {
+                box_.append(&keycap(k));
+            }
+            r.add_suffix(&box_);
+            r
+        };
+
+        let nav = adw::PreferencesGroup::builder().title("Navigation").build();
+        nav.add(&row("Phone", &["Alt + 1", "Ctrl + 1"]));
+        nav.add(&row("Apps", &["Alt + 2", "Ctrl + 2"]));
+        nav.add(&row("Display", &["Alt + 3", "Ctrl + 3"]));
+        nav.add(&row("Files", &["Alt + 4", "Ctrl + 4"]));
+        nav.add(&row("Notifications", &["Alt + 5", "Ctrl + 5"]));
+        nav.add(&row("Search phone apps", &["Ctrl + F"]));
+
+        let app_grp = adw::PreferencesGroup::builder().title("Application").build();
+        app_grp.add(&row("Pair a new phone", &["Ctrl + Shift + P"]));
+        app_grp.add(&row("Preferences", &["Ctrl + ,"]));
+        app_grp.add(&row("Keyboard Shortcuts", &["Ctrl + ?"]));
+        app_grp.add(&row("Close or hide window", &["Ctrl + W"]));
+        app_grp.add(&row("Quit Smart Connect", &["Ctrl + Q"]));
+
+        let page = adw::PreferencesPage::new();
+        page.add(&nav);
+        page.add(&app_grp);
+
+        let dialog = adw::PreferencesDialog::builder()
+            .title("Keyboard Shortcuts")
+            .content_width(460)
+            .content_height(520)
+            .build();
+        dialog.add(&page);
+        dialog.present(Some(&self.window));
+    }
+
+    fn open_about(&self) {
+        let dialog = adw::AboutDialog::builder()
+            .application_name("Smart Connect")
+            .application_icon("dev.smartconnect.Linux")
+            .version(env!("CARGO_PKG_VERSION"))
+            .developer_name("Smart Connect for Linux Contributors")
+            .comments("Pair, mirror, stream apps, share clipboard, forward notifications, and extend your desktop onto your Motorola phone.")
+            .website("https://github.com/Lalitmukesh69/smartconnect-linux-ui")
+            .issue_url("https://github.com/Lalitmukesh69/smartconnect-linux-ui/issues")
+            .license_type(gtk::License::MitX11)
+            .build();
         dialog.present(Some(&self.window));
     }
 
@@ -1013,13 +1468,15 @@ impl Ui {
         }
     }
 
-    /// The page switcher only makes sense while the daemon is up. The device menu also stays while it
-    /// is down if a phone is remembered (it then shows that phone and offers "Start service").
+    /// The page switcher only makes sense while the daemon is up; the device menu stays visible in
+    /// the header even when no phone is remembered yet.
     fn show_switcher(&self, on: bool) {
         self.switcher.set_visible(on);
         self.switcher_bar.set_visible(on);
-        let known = self.state.borrow().last.known();
-        self.device.button.set_visible(on || known);
+        self.device.button.set_visible(true);
+        if let Some(act) = self.window.lookup_action("pair").and_downcast::<gio::SimpleAction>() {
+            act.set_enabled(on);
+        }
     }
 
     /// Runs one daemon command on a worker thread and hands the reply back on the main loop.
@@ -1050,6 +1507,7 @@ impl Ui {
             self.refresh_tray();
             return;
         }
+        self.display.set_visible(false);
         self.apps.set_connected(false);
         self.display.set_connected(false);
         self.cross.set_connected(false);
@@ -1075,6 +1533,7 @@ impl Ui {
     }
 
     fn apply_status(self: &Rc<Self>, status: Status) {
+        let entering_main = self.root.visible_child_name().as_deref() != Some("main");
         {
             let mut st = self.state.borrow_mut();
             if !st.logged_first {
@@ -1095,7 +1554,6 @@ impl Ui {
             st.status = Some(status);
         }
         self.remember_device();
-        self.root.set_visible_child_name("main");
         self.show_switcher(true);
         let (connected, muted_known) = {
             let st = self.state.borrow();
@@ -1105,6 +1563,10 @@ impl Ui {
         self.display.set_connected(connected);
         self.cross.set_connected(connected);
         self.files.set_connected(connected);
+        self.root.set_visible_child_name("main");
+        if entering_main {
+            self.on_tab_visible(self.views.visible_child_name().as_deref());
+        }
         self.refresh_phone();
         self.refresh_notifications();
         self.refresh_pair();
@@ -1341,7 +1803,7 @@ impl Ui {
         if let Some(label) = d.connect.child().and_downcast::<gtk::Label>() {
             label.set_label(if starting { "Starting…" } else { "Start service" });
         }
-        d.button.set_visible(st.status.is_some() || st.last.known());
+        d.button.set_visible(true);
     }
 
     /// The "service isn't running" page's last-device card.

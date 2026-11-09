@@ -23,19 +23,22 @@ use gtk::{gdk, glib};
 
 const APP_ID: &str = "dev.smartconnect.Linux";
 
-// Structural CSS only — spacing and radius, never colours. Colours come from the user's theme via
-// libadwaita style classes (.card, .dim-label, .error, …). The one exception is the QR code's white
-// backdrop, which is functional: a QR must stay dark-on-light to scan under any theme.
+// Theme-native CSS — spacing, radii, transitions and libadwaita CSS variables, never hardcoded
+// theme colours. The one exception is the QR code's white backdrop, which is functional: a QR must
+// stay dark-on-light to scan under any theme.
 const CSS: &str = "
 picture.wallpaper { border-radius: 12px; }
-picture.qr { background: white; border-radius: 12px; padding: 12px; }
-.sc-card { padding: 16px; }
-.sc-mode { padding: 16px 10px; }
-.sc-tile { padding: 10px; }
-.sc-chip { padding: 6px 10px; }
+picture.qr { background: white; border-radius: 12px; padding: 14px; }
+.sc-card { padding: 18px; border-radius: 14px; }
+.sc-mode { padding: 16px 12px; border-radius: 12px; transition: background-color 150ms ease, outline-color 150ms ease; }
+.sc-mode:checked { outline: 2px solid var(--accent-bg-color); outline-offset: -2px; }
+.sc-tile { padding: 10px 8px; border-radius: 12px; transition: background-color 150ms ease; }
+.sc-chip { padding: 6px 12px; border-radius: 9999px; }
 .sc-dimmed { opacity: 0.55; }
-.sc-badge { padding: 1px 8px; border-radius: 9999px; min-height: 0; }
-.sc-notif { padding: 12px; }
+.sc-badge { padding: 2px 9px; border-radius: 9999px; min-height: 0; font-weight: 600; }
+.sc-notif { padding: 14px; }
+.sc-device-btn { border-radius: 9999px; padding: 4px 10px; }
+.sc-kbd { padding: 3px 9px; border-radius: 6px; font-size: 0.85em; font-weight: 600; }
 ";
 
 fn main() -> glib::ExitCode {

@@ -26,7 +26,7 @@ Status keys used on this page, the same as in the [README](../README.md#feature-
 | Front-end | What it can do |
 |---|---|
 | The Smart Connect app on the phone | Pair (scan the QR), Connect, Disconnect, and the tiles on the PC's device page (App streaming, Cross Control, PC lock, Hotspot, Webcam). Starting the PC's screen on the phone. |
-| GTK app (`smartconnect-gui`, **Smart Connect** in the app launcher) | A header **device menu** (left of the title) shows the connected device and holds *Pair new phone…*, *Preferences* (the *Start at login* switch) and *Connect/Disconnect*. A view switcher has five pages. *Phone*: a phone card (wallpaper, name, an inline battery / Wi-Fi / mobile / Bluetooth row, and **Mirror screen**), an unread-messages shortcut, and a Cross Control switch with an edge picker. While the phone is away the card keeps showing the last connected phone (dimmed last-known values, "last connected …") with a **Connect** button; with no phone paired it offers **Pair a phone**. If the Smart Connect service isn't running, the window says so, shows the last phone, and has a **Start service** button. *Apps*: a search box, Recent chips and an icon grid to stream single phone apps. *Display*: the phone as a second monitor or a copy of your screen (Layout / Experimental / Advanced groups). *Files*: mount the phone's storage, quick-folder shortcuts, and storage settings. *Notifications*: notifications grouped under *Today* with reply boxes, a ⋯ menu (*Open on phone*, *Dismiss*, *Mute app*) and per-app mute. Pairing opens in a dialog. In a narrow window the page switcher moves to the bottom. It also puts a [tray icon](#tray-icon-and-background-running) in the system tray and starts the daemon when you open it. |
+| GTK app (`smartconnect-gui`, **Smart Connect** in the app launcher) | A header **device menu** (left) shows the phone status and quick actions (*Pair new phone…*, *Preferences*, *Connect/Disconnect*), a view switcher holds five pages (*Phone*, *Apps*, *Display*, *Files*, *Notifications*), and a primary header menu (right) gives access to *Pair new phone…*, *Preferences*, *Keyboard Shortcuts*, *About Smart Connect*, and *Quit* (`Ctrl+Q`). *Phone*: phone card (wallpaper, name, battery / Wi-Fi / mobile / Bluetooth row, **Mirror screen** / **Connect** / **Pair a phone**), unread-messages shortcut, and Cross Control row; remembers the last phone while offline or service-stopped. *Apps*: search (`Ctrl+F`), Recent chips, and icon grid. *Display*: Cross Control mode cards, phone edge/span editor, and screen-sharing layout/settings. *Files*: phone storage mount card, quick folders, storage location/auto-mount, and PC folder sharing. *Notifications*: grouped under *Today* with reply boxes, **⋯** actions (*Open on phone*, *Dismiss*, *Mute app*), and *Muted apps*. Window size, maximized state, active tab, and background-close preference are saved in `gui.json`. |
 | Noctalia plugin | Bar pill with battery level. Panel with the phone card (wallpaper, battery, signal, unread count), Connect/Disconnect, the pairing QR, Mirror screen, Cross Control with an edge selector, Phone as display with an Extend/Duplicate switch, a Phone files tile (mount, open, unmount), and recent notifications with reply boxes and mute buttons. Settings for the display, the phone files and the muted apps. An [IPC target](#noctalia-ipc) for keybindings. |
 | CLI | `smartconnectd` with `status`, `subscribe`, `connect`, `disconnect` or `pair`, plus the helper programs. See the [reference](#command-line-reference). |
 | Your own scripts | The [control socket API](control-socket-api.md). |
@@ -166,17 +166,16 @@ running, starting, phone disconnected, phone connected — and its tooltip spell
 shows or hides the window; right-click opens a menu with **Show/Hide Window**, **Connect**,
 **Disconnect** and **Quit**.
 
-- **Closing the window hides it to the tray** instead of quitting. The daemon and any streams keep
-  running; reopen from the tray (or by launching the app again).
+- **Closing the window keeps Smart Connect running in the background** (minimized to the tray when a system-tray host is present) by default; reopen from the tray or your application launcher. Turn off *Keep running in background* in **Preferences** if you want closing the window (`Ctrl+W` or the close button) to quit immediately.
 - **Opening the app starts the daemon** if it isn't already running. It prefers the
   `systemctl --user` unit when that is installed, otherwise it runs `smartconnectd` itself. The
   window shows *Starting smartconnectd…* until the control socket answers.
-- **Quit** (tray menu only) leaves the app *and* stops the daemon — the systemd unit with
+- **Quit** (from the header **☰** menu, `Ctrl+Q`, or the tray menu) leaves the app *and* stops the daemon — the systemd unit with
   `systemctl --user stop smartconnectd`, or the `smartconnectd` the app started as a child. A daemon
   you started by hand (e.g. in a terminal) is left running.
-- **Start at login:** the switch on the *Phone* page adds or removes
+- **Start at login:** the switch under **Preferences → General** adds or removes
   `~/.config/autostart/dev.smartconnect.Linux.desktop` (`Exec=smartconnect-gui --background`), so the
-  app comes up at login hidden to the tray, with the daemon started. You can also run
+  app comes up at login hidden in the background, with the daemon started. You can also run
   `smartconnect-gui --background` yourself.
 
 If the desktop has no system-tray host, the app still runs with just its window (and the tray is

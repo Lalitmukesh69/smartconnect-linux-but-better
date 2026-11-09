@@ -446,6 +446,11 @@ impl AppsPage {
         self.update_controls();
     }
 
+    /// Focuses the app search entry (e.g. from Ctrl+F).
+    pub fn focus_search(&self) {
+        self.search.grab_focus();
+    }
+
     /// The page was shown: load the phone's list once per run.
     pub fn shown(self: &Rc<Self>) {
         let st = self.state.borrow();
