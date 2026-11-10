@@ -217,6 +217,7 @@ pub struct CrossControlPage {
     connected: Cell<bool>,
     syncing: Cell<bool>,
     polling: Cell<bool>,
+    on_state: RefCell<Option<Box<dyn Fn()>>>,
 }
 
 fn mode_card(icon: &str, title: &str, subtitle: &str) -> (gtk::ToggleButton, gtk::Image) {
@@ -310,6 +311,7 @@ impl CrossControlPage {
             connected: Cell::new(false),
             syncing: Cell::new(false),
             polling: Cell::new(false),
+            on_state: RefCell::default(),
         });
         page.connect();
         page.update_position_label();
@@ -379,6 +381,39 @@ impl CrossControlPage {
     pub fn set_connected(self: &Rc<Self>, connected: bool) {
         self.connected.set(connected);
         self.sync();
+    }
+
+    pub fn connect_state_changed(&self, f: impl Fn() + 'static) {
+        *self.on_state.borrow_mut() = Some(Box::new(f));
+    }
+
+    pub fn edge_label(&self) -> &'static str {
+        match self.layout.get().edge {
+            Edge::Left => "LEFT",
+            Edge::Right => "RIGHT",
+            Edge::Top => "TOP",
+            Edge::Bottom => "BOTTOM",
+        }
+    }
+
+    pub fn active_mode_id(&self) -> Option<&'static str> {
+        match self.running() {
+            Some(Mode::Shared) => Some("mouse"),
+            Some(Mode::Duplicate) => Some("duplicate"),
+            Some(Mode::Extend) => Some("extend"),
+            None => None,
+        }
+    }
+
+    /// Toggles a Cross Control mode programmatically (e.g. from the Command Palette).
+    pub fn toggle_mode_id(self: &Rc<Self>, id: &str) {
+        let mode = match id {
+            "mouse" => Mode::Shared,
+            "duplicate" => Mode::Duplicate,
+            "extend" => Mode::Extend,
+            _ => return,
+        };
+        self.pick(mode);
     }
 
     /// Called when the page is shown or the phone asked for Cross Control: refresh, and poll while
@@ -508,6 +543,9 @@ impl CrossControlPage {
         if self.landscape.replace(landscape) != landscape {
             self.canvas.queue_draw();
         }
+        if let Some(f) = self.on_state.borrow().as_ref() {
+            f();
+        }
     }
 
     // ── Phone position ──────────────────────────────────────────────────────
@@ -534,6 +572,9 @@ impl CrossControlPage {
         }
         self.update_position_label();
         self.canvas.queue_draw();
+        if let Some(f) = self.on_state.borrow().as_ref() {
+            f();
+        }
         // A running client only reads the position at startup: restart ours to apply it.
         if self.running() == Some(Mode::Shared) {
             let mut cross = self.cross.borrow_mut();

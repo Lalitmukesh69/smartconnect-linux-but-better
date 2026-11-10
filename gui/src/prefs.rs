@@ -22,6 +22,9 @@ pub struct Prefs {
     pub files: FilesPrefs,
     pub apps: AppsPrefs,
     pub window: WindowPrefs,
+    /// Optional PC-side display nickname for the paired phone.
+    #[serde(rename = "deviceAlias", skip_serializing_if = "Option::is_none")]
+    pub device_alias: Option<String>,
 }
 
 /// Remembered window geometry, closing behavior and last active tab.
@@ -38,7 +41,7 @@ pub struct WindowPrefs {
 impl Default for WindowPrefs {
     fn default() -> Self {
         Self {
-            width: 920,
+            width: 1120,
             height: 760,
             maximized: false,
             hide_on_close: true,
@@ -384,6 +387,7 @@ mod tests {
         p.display.mode = "mirror".into();
         p.display.output = "HDMI-A-1".into();
         p.display.audio = true;
+        p.device_alias = Some("Work Phone".into());
         let back: Prefs = serde_json::from_str(&serde_json::to_string(&p).unwrap()).unwrap();
         assert_eq!(back, p);
     }

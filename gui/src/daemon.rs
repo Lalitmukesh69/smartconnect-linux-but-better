@@ -40,6 +40,8 @@ pub struct Status {
     pub unread: Option<i64>,
     pub wallpaper: Option<String>,
     pub pairing_qr: Option<String>,
+    pub pc_address: Option<String>,
+    pub phone_address: Option<String>,
     pub notifications: Vec<Notification>,
 }
 

@@ -124,6 +124,7 @@ pub struct ShareSection {
     /// The switch is being set from the preferences: ignore its change signal.
     syncing: std::cell::Cell<bool>,
     watching: std::cell::Cell<bool>,
+    on_changed: RefCell<Option<Box<dyn Fn()>>>,
 }
 
 impl ShareSection {
@@ -166,6 +167,7 @@ impl ShareSection {
             st: RefCell::new(State { connected: false, child: None, offered_at: None, error: None, restart_pending: false }),
             syncing: std::cell::Cell::new(false),
             watching: std::cell::Cell::new(false),
+            on_changed: RefCell::default(),
         });
         section.connect_signals(&open, &change);
         section.sync_from_prefs();
@@ -391,6 +393,28 @@ impl ShareSection {
         self.stop();
     }
 
+    pub fn connect_changed(&self, f: impl Fn() + 'static) {
+        *self.on_changed.borrow_mut() = Some(Box::new(f));
+    }
+
+    pub fn status_summary(&self) -> String {
+        let p = prefs::load().files;
+        let st = self.st.borrow();
+        if st.child.is_some() {
+            "Active · Visible in Phone Files app".to_owned()
+        } else if st.error.is_some() {
+            "Share paused (error)".to_owned()
+        } else if p.share {
+            if st.connected {
+                "Starting share…".to_owned()
+            } else {
+                "Starts when connected".to_owned()
+            }
+        } else {
+            "Sharing paused".to_owned()
+        }
+    }
+
     fn refresh(&self) {
         let p = prefs::load().files;
         let text = {
@@ -424,6 +448,9 @@ impl ShareSection {
             }
         };
         self.status.set_subtitle(&text);
+        if let Some(f) = self.on_changed.borrow().as_ref() {
+            f();
+        }
     }
 
     fn open_folder(&self, button: &gtk::Button) {
@@ -472,6 +499,9 @@ impl ShareSection {
         }
         self.folder.set_subtitle(&folder_text(&prefs.files));
         self.restart_if_running();
+        if let Some(f) = self.on_changed.borrow().as_ref() {
+            f();
+        }
     }
 
     fn toast(&self, message: &str) {

@@ -237,6 +237,7 @@ pub struct AppsPage {
     state: RefCell<AppsState>,
     polling: Cell<bool>,
     on_sessions: RefCell<Option<Box<dyn Fn()>>>,
+    on_apps: RefCell<Option<Box<dyn Fn()>>>,
     /// Watches the icon cache dir so icons written by the stream host / icon download show up.
     _icon_monitor: Option<gio::FileMonitor>,
     /// A debounced icon re-scan is scheduled.
@@ -356,6 +357,7 @@ impl AppsPage {
             state: RefCell::new(AppsState { recent: prefs::load().apps.recent, ..AppsState::default() }),
             polling: Cell::new(false),
             on_sessions: RefCell::default(),
+            on_apps: RefCell::default(),
             _icon_monitor: icon_monitor,
             icon_rescan: Cell::new(false),
         });
@@ -392,6 +394,51 @@ impl AppsPage {
     /// Called whenever the session list changes (the Phone page's mirror button follows it).
     pub fn connect_sessions_changed(&self, f: impl Fn() + 'static) {
         *self.on_sessions.borrow_mut() = Some(Box::new(f));
+    }
+
+    /// Called whenever the app list or most-recent list changes (sidebar count badge and Phone summary).
+    pub fn connect_apps_changed(&self, f: impl Fn() + 'static) {
+        *self.on_apps.borrow_mut() = Some(Box::new(f));
+    }
+
+    pub fn app_count(&self) -> usize {
+        self.state.borrow().apps.len()
+    }
+
+    pub fn all_apps(&self) -> Vec<App> {
+        self.state.borrow().apps.clone()
+    }
+
+    /// Most recently streamed phone app present in the current list.
+    pub fn recent_app(&self) -> Option<App> {
+        let st = self.state.borrow();
+        st.recent
+            .iter()
+            .find_map(|pkg| st.apps.iter().find(|a| &a.pkg == pkg).cloned())
+    }
+
+    pub fn launch_by_pkg(self: &Rc<Self>, pkg: &str) {
+        let app = self.state.borrow().apps.iter().find(|a| a.pkg == pkg).cloned();
+        if let Some(app) = app {
+            if !self.state.borrow().connected {
+                self.toast("The phone is not connected");
+                return;
+            }
+            self.remember_recent(&app.pkg);
+            self.toast(&format!("Opening {}…", app.name));
+            let (pkg, cmp, name) = (app.pkg.clone(), app.cmp.clone(), app.name.clone());
+            let weak = Rc::downgrade(self);
+            glib::spawn_future_local(async move {
+                let result = gio::spawn_blocking(move || launch(&pkg, cmp.as_deref()))
+                    .await
+                    .unwrap_or_else(|_| Err("launch thread failed".into()));
+                let Some(p) = weak.upgrade() else { return };
+                if let Err(e) = result {
+                    p.toast(&format!("Could not open {name}: {e}"));
+                }
+                p.poll_soon();
+            });
+        }
     }
 
     /// A phone app's name from the (cached) app list.
@@ -432,6 +479,9 @@ impl AppsPage {
             tile.icon.set(&tile.query);
         }
         self.rebuild_recent();
+        if let Some(f) = self.on_apps.borrow().as_ref() {
+            f();
+        }
     }
 
     /// The host's whole-screen mirror session, if one is open.
@@ -541,6 +591,9 @@ impl AppsPage {
         self.apply_filter();
         self.rebuild_recent();
         self.update_controls();
+        if let Some(f) = self.on_apps.borrow().as_ref() {
+            f();
+        }
     }
 
     /// One app tile: an icon over the name, the package id on hover. `size` is the icon pixel size.
@@ -625,6 +678,9 @@ impl AppsPage {
             }
         }
         self.rebuild_recent();
+        if let Some(f) = self.on_apps.borrow().as_ref() {
+            f();
+        }
     }
 
     fn apply_filter(&self) {

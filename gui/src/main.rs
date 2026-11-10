@@ -9,9 +9,11 @@ mod icons;
 mod lastdevice;
 mod lifecycle;
 mod mirror;
+mod palette;
 mod prefs;
 mod setup;
 mod share;
+mod theme;
 mod tray;
 mod window;
 
@@ -19,27 +21,9 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 use adw::prelude::*;
-use gtk::{gdk, glib};
+use gtk::glib;
 
 const APP_ID: &str = "dev.smartconnect.Linux";
-
-// Theme-native CSS — spacing, radii, transitions and libadwaita CSS variables, never hardcoded
-// theme colours. The one exception is the QR code's white backdrop, which is functional: a QR must
-// stay dark-on-light to scan under any theme.
-const CSS: &str = "
-picture.wallpaper { border-radius: 12px; }
-picture.qr { background: white; border-radius: 12px; padding: 14px; }
-.sc-card { padding: 18px; border-radius: 14px; }
-.sc-mode { padding: 16px 12px; border-radius: 12px; transition: background-color 150ms ease, outline-color 150ms ease; }
-.sc-mode:checked { outline: 2px solid var(--accent-bg-color); outline-offset: -2px; }
-.sc-tile { padding: 10px 8px; border-radius: 12px; transition: background-color 150ms ease; }
-.sc-chip { padding: 6px 12px; border-radius: 9999px; }
-.sc-dimmed { opacity: 0.55; }
-.sc-badge { padding: 2px 9px; border-radius: 9999px; min-height: 0; font-weight: 600; }
-.sc-notif { padding: 14px; }
-.sc-device-btn { border-radius: 9999px; padding: 4px 10px; }
-.sc-kbd { padding: 3px 9px; border-radius: 6px; font-size: 0.85em; font-weight: 600; }
-";
 
 fn main() -> glib::ExitCode {
     // `--background` starts the app hidden (tray only), for the autostart entry. GApplication never
@@ -60,11 +44,7 @@ fn main() -> glib::ExitCode {
     let first_activation = Rc::new(Cell::new(true));
 
     app.connect_startup(|_| {
-        let provider = gtk::CssProvider::new();
-        provider.load_from_string(CSS);
-        if let Some(display) = gdk::Display::default() {
-            gtk::style_context_add_provider_for_display(&display, &provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
-        }
+        theme::apply_theme();
     });
 
     let slot = ui.clone();

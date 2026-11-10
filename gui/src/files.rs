@@ -254,6 +254,7 @@ pub struct FilesPage {
     ticks: Cell<u32>,
     /// A switch/row is being set from the preferences: ignore its change signal.
     syncing: Cell<bool>,
+    on_changed: RefCell<Option<Box<dyn Fn()>>>,
 }
 
 /// A themed "card" status tile is built from a plain box; this gives it inner padding (structural
@@ -386,6 +387,15 @@ impl FilesPage {
             watching: Cell::new(false),
             ticks: Cell::new(0),
             syncing: Cell::new(false),
+            on_changed: RefCell::default(),
+        });
+        let weak = Rc::downgrade(&page);
+        page.share.connect_changed(move || {
+            if let Some(p) = weak.upgrade() {
+                if let Some(f) = p.on_changed.borrow().as_ref() {
+                    f();
+                }
+            }
         });
         *page_ref.borrow_mut() = Some(Rc::downgrade(&page));
         page.connect_signals(&change);
@@ -463,6 +473,49 @@ impl FilesPage {
         }
     }
 
+    pub fn connect_changed(&self, f: impl Fn() + 'static) {
+        *self.on_changed.borrow_mut() = Some(Box::new(f));
+    }
+
+    pub fn is_mounted(&self) -> bool {
+        self.st.borrow().phase == Phase::Mounted
+    }
+
+    pub fn mount_status_label(&self) -> String {
+        let p = prefs::load().files;
+        let st = self.st.borrow();
+        match st.phase {
+            Phase::Mounted => match st.health {
+                Health::Offline => "Mounted · phone offline".to_owned(),
+                Health::Unresponsive => "Mounted · not responding".to_owned(),
+                _ => "Mounted Read-Only".to_owned(),
+            },
+            Phase::Mounting => "Mounting…".to_owned(),
+            Phase::Unmounted => {
+                if p.auto_mount {
+                    "Auto-mount ready".to_owned()
+                } else {
+                    "Ready to mount".to_owned()
+                }
+            }
+        }
+    }
+
+    pub fn share_status_label(&self) -> String {
+        self.share.status_summary()
+    }
+
+    pub fn toggle_mount(self: &Rc<Self>) {
+        let phase = self.st.borrow().phase;
+        let connected = self.st.borrow().connected;
+        match phase {
+            Phase::Mounted => self.unmount(),
+            Phase::Mounting => self.toast("Mount already in progress…"),
+            Phase::Unmounted if connected => self.start_mount(),
+            Phase::Unmounted => self.toast("Connect your phone first to mount its storage"),
+        }
+    }
+
     /// Sets the Storage widgets from the preferences.
     fn sync_from_prefs(&self) {
         let p = prefs::load().files;
@@ -493,6 +546,9 @@ impl FilesPage {
         prefs.files.auto_mount = on;
         if let Err(e) = prefs::save(&prefs) {
             eprintln!("smartconnect-gui: could not save the auto-mount setting: {e}");
+        }
+        if let Some(f) = self.on_changed.borrow().as_ref() {
+            f();
         }
     }
 
@@ -527,6 +583,9 @@ impl FilesPage {
             eprintln!("smartconnect-gui: could not save the mount folder: {e}");
         }
         self.location.set_subtitle(&self.location_text(&prefs.files));
+        if let Some(f) = self.on_changed.borrow().as_ref() {
+            f();
+        }
     }
 
     /// The folder to mount: the configured one expanded (blank → `~/Phone`).
@@ -966,6 +1025,10 @@ impl FilesPage {
 
         // The folder can only be changed while nothing is mounted.
         self.location.set_sensitive(*p == Phase::Unmounted && !st.busy);
+        drop(st);
+        if let Some(f) = self.on_changed.borrow().as_ref() {
+            f();
+        }
     }
 }
 
