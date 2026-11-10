@@ -6,6 +6,7 @@ use adw::prelude::*;
 use gtk::{gdk, glib};
 
 use crate::apps::App;
+use crate::theme::{IconKind, ModernIcon};
 
 #[derive(Clone)]
 pub struct CommandEntry {
@@ -71,11 +72,8 @@ pub fn present_command_palette(
         .can_close(true)
         .build();
 
-    let search_icon = gtk::Image::builder()
-        .icon_name("system-search-symbolic")
-        .pixel_size(16)
-        .css_classes(["sc-secondary"])
-        .build();
+    let search_icon = ModernIcon::new(IconKind::Search, 16);
+    search_icon.add_css_class("sc-secondary");
     let entry = gtk::Entry::builder()
         .hexpand(true)
         .placeholder_text("Type a command, switch views, or launch a phone app…")
@@ -94,7 +92,7 @@ pub fn present_command_palette(
         .margin_start(16)
         .margin_end(16)
         .build();
-    header_bar.append(&search_icon);
+    header_bar.append(search_icon.widget());
     header_bar.append(&entry);
     header_bar.append(&esc_btn);
 
@@ -276,11 +274,13 @@ pub fn present_telemetry_dialog(parent: &impl IsA<gtk::Widget>, rows: &[(&str, S
         .build();
 
     let title_row = gtk::Box::builder().spacing(10).build();
-    title_row.append(&gtk::Image::builder().icon_name("phone-symbolic").pixel_size(18).build());
+    let title_ic = ModernIcon::new(IconKind::Smartphone, 18);
+    title_row.append(title_ic.widget());
     title_row.append(&gtk::Label::builder().label("Endpoint Telemetry").xalign(0.0).hexpand(true).css_classes(["heading"]).build());
+    let close_ic = ModernIcon::new(IconKind::Close, 14);
     let close_btn = gtk::Button::builder()
-        .icon_name("window-close-symbolic")
-        .css_classes(["flat", "circular"])
+        .child(close_ic.widget())
+        .css_classes(["sc-btn-ghost"])
         .tooltip_text("Close")
         .build();
     title_row.append(&close_btn);

@@ -31,7 +31,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The READM
 
 ### Changed
 
-- GTK app (Phase 1 — Monochrome Sidebar Shell & Phone View): restyled `smartconnect-gui` in a high-contrast monochrome dark theme (`#050506` canvas, `#0A0A0C` 272 px sidebar, `#0E0E11` Bento cards, crisp white active states) with an `AdwOverlaySplitView` sidebar workspace navigation (collapsing via breakpoint below `780sp`), sticky `56 px` breadcrumb header (`1120×760` default window), and a redesigned *Phone* Bento overview (4-column telemetry tiles with segmented battery and cellular meters, Cross Control quick-launch Bento, and 3-column System Continuity cards wired to Apps, Storage Mount, and Share state).
+- GTK app (Phase 1 — Monochrome Sidebar Shell & Phone View): restyled `smartconnect-gui` in a high-contrast monochrome dark theme (`#050506` canvas, `#0A0A0C` 280 px sidebar, `#0E0E11` Bento cards, crisp white active states rendered above custom user GTK theme priority with Cairo-drawn `ModernIcon` stroke icons) with an `AdwOverlaySplitView` sidebar workspace navigation (collapsing via breakpoint below `780sp`), sticky `56 px` breadcrumb header (`1120×760` default window), and a vertically centered *Phone* Bento overview (aligned 4-column telemetry tiles with segmented battery and Wi-Fi/cellular signal meters, Cross Control quick-launch Bento, and symmetrical 3-column System Continuity cards wired to Apps, Storage Mount, and Share state).
 
 ### Added
 

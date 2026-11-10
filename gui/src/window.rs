@@ -1,4 +1,4 @@
-//! The main window: an Apple Pro Dark Monochrome 272px sidebar split-view with sticky 56px
+//! The main window: an Apple Pro Dark Monochrome 280px sidebar split-view with sticky 56px
 //! workspace header, Phone / Apps / Display / Files / Notifications views, `Ctrl+K` Command Palette,
 //! and Endpoint Telemetry sheet, driven by `smartconnectd` status events.
 
@@ -22,14 +22,14 @@ use crate::lifecycle::{self, Daemon};
 use crate::mirror::{Exit, Mirror};
 use crate::palette::{self, CommandEntry};
 use crate::prefs;
-use crate::theme::{brand_mark, format_display_path, overline, set_dot_online, status_dot};
+use crate::theme::{
+    brand_mark, format_display_path, overline, set_dot_online, status_dot, IconKind, ModernIcon,
+};
 use crate::tray;
 
 const TABS: [&str; 5] = ["phone", "apps", "display", "files", "notifications"];
 
 const SIGNAL_WORDS: [&str; 6] = ["None", "Very weak", "Weak", "Fair", "Good", "Excellent"];
-/// Adwaita's `network-{wireless,cellular}-signal-<x>-symbolic` names for levels 0–5.
-const SIGNAL_ICONS: [&str; 6] = ["none", "weak", "weak", "ok", "good", "excellent"];
 
 fn signal_level(level: Option<i64>) -> Option<usize> {
     level.map(|l| l.clamp(0, 5) as usize)
@@ -54,7 +54,7 @@ fn wifi_summary_word(v: &LastDevice) -> &'static str {
     }
 }
 
-fn cellular_bars(level: Option<i64>) -> usize {
+fn signal_bars_count(level: Option<i64>) -> usize {
     match signal_level(level) {
         None | Some(0) => 0,
         Some(1) => 1,
@@ -62,6 +62,28 @@ fn cellular_bars(level: Option<i64>) -> usize {
         Some(4) => 3,
         Some(_) => 4,
     }
+}
+
+fn battery_icon_kind(pct: Option<i64>, charging: bool) -> IconKind {
+    IconKind::Battery {
+        pct: pct.map(|b| b.clamp(0, 100) as u8),
+        charging,
+    }
+}
+
+fn wifi_icon_kind(v: &LastDevice) -> IconKind {
+    if !v.wifi {
+        return IconKind::WifiOff;
+    }
+    let bars = match signal_level(v.wifi_signal) {
+        Some(5) => 4,
+        Some(4) => 3,
+        Some(2 | 3) => 2,
+        Some(1) => 1,
+        Some(0) => 0,
+        _ => 4,
+    };
+    IconKind::Wifi { bars, on: true }
 }
 
 fn view_title(name: &str) -> &'static str {
@@ -155,7 +177,7 @@ struct DeviceMenu {
     sub_label: gtk::Label,
     pop_active: gtk::Button,
     pop_active_name: gtk::Label,
-    pop_active_check: gtk::Image,
+    pop_active_check: ModernIcon,
     pop_sub: gtk::Label,
     rename: gtk::Button,
     telemetry: gtk::Button,
@@ -165,19 +187,20 @@ struct DeviceMenu {
     connect: gtk::Button,
 }
 
-/// Fixed 272px Apple Pro Monochrome left sidebar.
+/// Fixed 280px Apple Pro Monochrome left sidebar.
 struct SidebarNav {
     root: gtk::Box,
     cmd_trigger: gtk::Button,
     device: DeviceMenu,
     nav_buttons: Vec<(&'static str, gtk::Button)>,
+    nav_icons: Vec<ModernIcon>,
     apps_badge: gtk::Label,
     notif_badge: gtk::Label,
-    foot_bat_icon: gtk::Image,
+    foot_bat_icon: ModernIcon,
     foot_bat_val: gtk::Label,
-    foot_wifi_icon: gtk::Image,
+    foot_wifi_icon: ModernIcon,
     foot_wifi_val: gtk::Label,
-    foot_bt_icon: gtk::Image,
+    foot_bt_icon: ModernIcon,
     foot_bt_val: gtk::Label,
     foot_cta: gtk::Button,
     foot_cta_spinner: adw::Spinner,
@@ -199,7 +222,7 @@ struct TopHeader {
 
 struct PhonePage {
     hero_top: gtk::Box,
-    /// Either a cached phone wallpaper thumbnail OR the crisp 56×56 monochrome device tile.
+    /// Either a cached phone wallpaper thumbnail OR the crisp monochrome device tile.
     thumb_box: gtk::Widget,
     thumb_stack: gtk::Stack,
     wallpaper: gtk::Picture,
@@ -223,18 +246,19 @@ struct PhonePage {
     unread_label: gtk::Label,
     /// 4-column Bento telemetry wrap inside the hero card.
     stats_wrap: gtk::Box,
-    bat_icon: gtk::Image,
+    bat_icon: ModernIcon,
     bat_val: gtk::Label,
     bat_segments: [gtk::Box; 5],
     bat_sub: gtk::Label,
-    wifi_icon: gtk::Image,
+    wifi_icon: ModernIcon,
     wifi_val: gtk::Label,
+    wifi_bars: [gtk::Box; 4],
     wifi_sub: gtk::Label,
-    cell_icon: gtk::Image,
+    cell_icon: ModernIcon,
     cell_val: gtk::Label,
     cell_bars: [gtk::Box; 4],
     cell_sub: gtk::Label,
-    bt_icon: gtk::Image,
+    bt_icon: ModernIcon,
     bt_val: gtk::Label,
     bt_sub: gtk::Label,
     /// Cross Control quick-launch section.
@@ -308,6 +332,22 @@ fn page_scroller(child: &impl IsA<gtk::Widget>, max: i32) -> gtk::ScrolledWindow
     gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).child(&clamp).build()
 }
 
+fn center_scroller(child: &impl IsA<gtk::Widget>, max: i32) -> gtk::ScrolledWindow {
+    let inner = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .vexpand(true)
+        .valign(gtk::Align::Center)
+        .build();
+    inner.append(child);
+    let clamp = adw::Clamp::builder()
+        .maximum_size(max)
+        .tightening_threshold(max)
+        .vexpand(true)
+        .child(&inner)
+        .build();
+    gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).child(&clamp).build()
+}
+
 /// Shows the image at `path` (a `?md5` suffix is ignored) or the icon placeholder.
 fn show_wallpaper(picture: &gtk::Picture, stack: &gtk::Stack, path: Option<&str>) {
     match path.map(|p| p.split('?').next().unwrap_or(p)).map(gdk::Texture::from_filename) {
@@ -331,13 +371,17 @@ fn wallpaper_thumb(w: i32, h: i32) -> (gtk::Widget, gtk::Picture, gtk::Stack) {
         .css_classes(["wallpaper"])
         .overflow(gtk::Overflow::Hidden)
         .build();
-    let placeholder = gtk::Image::builder()
-        .icon_name("phone-symbolic")
-        .pixel_size(24)
-        .width_request(56)
-        .height_request(56)
+    let placeholder_icon = ModernIcon::new(IconKind::Smartphone, 24);
+    let placeholder = gtk::Box::builder()
+        .width_request(w)
+        .height_request(h)
+        .halign(gtk::Align::Center)
+        .valign(gtk::Align::Center)
         .css_classes(["sc-icon-box"])
         .build();
+    placeholder.append(placeholder_icon.widget());
+    placeholder_icon.widget().set_hexpand(true);
+    placeholder_icon.widget().set_vexpand(true);
     let stack = gtk::Stack::new();
     stack.add_named(&placeholder, Some("placeholder"));
     stack.add_named(&picture, Some("picture"));
@@ -379,12 +423,13 @@ fn menu_item(label: &str) -> gtk::Button {
     gtk::Button::builder().css_classes(["flat", "sc-pop-item"]).child(&l).build()
 }
 
-fn pop_action_item(label: &str, icon: &str) -> gtk::Button {
+fn pop_action_item(label: &str, icon: IconKind) -> gtk::Button {
     let l = gtk::Label::builder().label(label).xalign(0.0).hexpand(true).build();
-    let img = gtk::Image::builder().icon_name(icon).pixel_size(13).css_classes(["sc-muted"]).build();
+    let img = ModernIcon::new(icon, 14);
+    img.add_css_class("sc-muted");
     let row = gtk::Box::builder().spacing(8).build();
     row.append(&l);
-    row.append(&img);
+    row.append(img.widget());
     gtk::Button::builder().css_classes(["flat", "sc-pop-item"]).child(&row).build()
 }
 
@@ -436,17 +481,19 @@ fn clear_cached_icons(dir: &Path) -> std::io::Result<usize> {
 
 impl DeviceMenu {
     fn build() -> Self {
-        let phone_icon = gtk::Image::builder().icon_name("phone-symbolic").pixel_size(16).build();
+        let phone_icon = ModernIcon::new(IconKind::Smartphone, 16);
         let icon_tile = gtk::Box::builder()
-            .width_request(36)
-            .height_request(36)
+            .width_request(34)
+            .height_request(34)
             .halign(gtk::Align::Center)
             .valign(gtk::Align::Center)
             .css_classes(["sc-icon-box-sm"])
             .build();
-        icon_tile.append(&phone_icon);
+        icon_tile.append(phone_icon.widget());
+        phone_icon.widget().set_hexpand(true);
+        phone_icon.widget().set_vexpand(true);
 
-        let dot = status_dot(10, true);
+        let dot = status_dot(9, true);
         dot.set_halign(gtk::Align::End);
         dot.set_valign(gtk::Align::End);
         let icon_overlay = gtk::Overlay::builder().child(&icon_tile).build();
@@ -475,16 +522,12 @@ impl DeviceMenu {
         text_col.append(&label);
         text_col.append(&sub_label);
 
-        let arrow = gtk::Image::builder()
-            .icon_name("pan-down-symbolic")
-            .pixel_size(14)
-            .css_classes(["sc-muted"])
-            .valign(gtk::Align::Center)
-            .build();
+        let arrow = ModernIcon::new(IconKind::ChevronDown, 14);
+        arrow.add_css_class("sc-muted");
         let content = gtk::Box::builder().spacing(10).build();
         content.append(&icon_overlay);
         content.append(&text_col);
-        content.append(&arrow);
+        content.append(arrow.widget());
 
         // Popover contents
         let over = overline("Paired Endpoint");
@@ -493,17 +536,17 @@ impl DeviceMenu {
         over.set_margin_top(4);
         over.set_margin_bottom(2);
 
-        let pop_phone_ic = gtk::Image::builder().icon_name("phone-symbolic").pixel_size(14).build();
+        let pop_phone_ic = ModernIcon::new(IconKind::Smartphone, 14);
         let pop_active_name = gtk::Label::builder()
             .xalign(0.0)
             .hexpand(true)
             .ellipsize(gtk::pango::EllipsizeMode::End)
             .build();
-        let pop_active_check = gtk::Image::builder().icon_name("object-select-symbolic").pixel_size(14).build();
+        let pop_active_check = ModernIcon::new(IconKind::Check, 14);
         let active_row = gtk::Box::builder().spacing(8).build();
-        active_row.append(&pop_phone_ic);
+        active_row.append(pop_phone_ic.widget());
         active_row.append(&pop_active_name);
-        active_row.append(&pop_active_check);
+        active_row.append(pop_active_check.widget());
         let pop_active = gtk::Button::builder().css_classes(["sc-pop-active"]).child(&active_row).build();
 
         let pop_sub = gtk::Label::builder()
@@ -515,10 +558,10 @@ impl DeviceMenu {
             .css_classes(["caption", "sc-muted", "sc-mono"])
             .build();
 
-        let rename = pop_action_item("Rename Device…", "document-edit-symbolic");
-        let telemetry = pop_action_item("System Telemetry…", "dialog-information-symbolic");
-        let pair = pop_action_item("Pair new phone…", "list-add-symbolic");
-        let prefs = pop_action_item("Preferences…", "preferences-system-symbolic");
+        let rename = pop_action_item("Rename Device…", IconKind::Edit);
+        let telemetry = pop_action_item("System Telemetry…", IconKind::Activity);
+        let pair = pop_action_item("Pair new phone…", IconKind::Plus);
+        let prefs = pop_action_item("Preferences…", IconKind::Settings);
         let connect = menu_item("Disconnect");
 
         let pop_box = gtk::Box::builder()
@@ -540,7 +583,7 @@ impl DeviceMenu {
         pop_box.append(&gtk::Separator::new(gtk::Orientation::Horizontal));
         pop_box.append(&connect);
 
-        let popover = gtk::Popover::builder().child(&pop_box).width_request(246).build();
+        let popover = gtk::Popover::builder().child(&pop_box).width_request(254).build();
         let button = gtk::MenuButton::builder()
             .child(&content)
             .popover(&popover)
@@ -569,8 +612,15 @@ impl DeviceMenu {
 }
 
 impl SidebarNav {
-    fn nav_button(icon_name: &str, title: &str, subtitle: &str, shortcut: &str, tooltip: &str, badge: Option<gtk::Label>) -> gtk::Button {
-        let icon = gtk::Image::builder().icon_name(icon_name).pixel_size(16).valign(gtk::Align::Center).build();
+    fn nav_button(
+        kind: IconKind,
+        title: &str,
+        subtitle: &str,
+        shortcut: &str,
+        tooltip: &str,
+        badge: Option<gtk::Label>,
+    ) -> (gtk::Button, ModernIcon) {
+        let icon = ModernIcon::new(kind, 16);
         let title_lbl = gtk::Label::builder()
             .label(title)
             .xalign(0.0)
@@ -585,36 +635,37 @@ impl SidebarNav {
             .build();
         let text_col = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(1)
+            .spacing(2)
             .hexpand(true)
             .build();
         text_col.append(&title_lbl);
         text_col.append(&sub_lbl);
 
-        let right_box = gtk::Box::builder().spacing(5).valign(gtk::Align::Center).build();
+        let right_box = gtk::Box::builder().spacing(6).valign(gtk::Align::Center).build();
         if let Some(badge) = badge {
             right_box.append(&badge);
         }
         right_box.append(&gtk::Label::builder().label(shortcut).css_classes(["sc-nav-shortcut"]).build());
 
-        let row = gtk::Box::builder().spacing(10).build();
-        row.append(&icon);
+        let row = gtk::Box::builder().spacing(11).build();
+        row.append(icon.widget());
         row.append(&text_col);
         row.append(&right_box);
 
-        gtk::Button::builder()
+        let btn = gtk::Button::builder()
             .css_classes(["sc-nav-item"])
             .child(&row)
             .tooltip_text(tooltip)
             .hexpand(true)
-            .build()
+            .build();
+        (btn, icon)
     }
 
     fn build() -> Self {
         // Brand row + Ctrl+K trigger inside a WindowHandle for smooth dragging.
         let brand_title = overline("Smart Connect");
         brand_title.set_margin_start(2);
-        let brand_box = gtk::Box::builder().spacing(8).hexpand(true).valign(gtk::Align::Center).build();
+        let brand_box = gtk::Box::builder().spacing(9).hexpand(true).valign(gtk::Align::Center).build();
         brand_box.append(&brand_mark());
         brand_box.append(&brand_title);
 
@@ -636,33 +687,34 @@ impl SidebarNav {
         let apps_badge = gtk::Label::builder().css_classes(["sc-nav-badge"]).visible(false).build();
         let notif_badge = gtk::Label::builder().css_classes(["sc-nav-badge"]).visible(false).build();
 
-        let btn_phone = Self::nav_button("phone-symbolic", "Phone", "Overview & Telemetry", "^1", "Phone (Ctrl+1 or Alt+1)", None);
-        let btn_apps = Self::nav_button(
-            "view-app-grid-symbolic",
+        let (btn_phone, ic_phone) =
+            Self::nav_button(IconKind::Smartphone, "Phone", "Overview & Telemetry", "^1", "Phone (Ctrl+1 or Alt+1)", None);
+        let (btn_apps, ic_apps) = Self::nav_button(
+            IconKind::AppsGrid,
             "Apps",
             "Launchpad & Mirroring",
             "^2",
             "Apps (Ctrl+2 or Alt+2)",
             Some(apps_badge.clone()),
         );
-        let btn_display = Self::nav_button(
-            "video-display-symbolic",
+        let (btn_display, ic_display) = Self::nav_button(
+            IconKind::Monitor,
             "Display",
             "Cross Control Studio",
             "^3",
             "Display (Ctrl+3 or Alt+3)",
             None,
         );
-        let btn_files = Self::nav_button(
-            "folder-symbolic",
+        let (btn_files, ic_files) = Self::nav_button(
+            IconKind::Folder,
             "Files",
             "Storage & SFTP Share",
             "^4",
             "Files (Ctrl+4 or Alt+4)",
             None,
         );
-        let btn_notifs = Self::nav_button(
-            "preferences-system-notifications-symbolic",
+        let (btn_notifs, ic_notifs) = Self::nav_button(
+            IconKind::Bell,
             "Notifications",
             "Alert Relay Center",
             "^5",
@@ -671,23 +723,23 @@ impl SidebarNav {
         );
 
         let workspace_hdr = overline("Workspace");
-        workspace_hdr.set_margin_start(8);
+        workspace_hdr.set_margin_start(10);
         workspace_hdr.set_margin_bottom(4);
-        let workspace_grp = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(3).build();
+        let workspace_grp = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(4).build();
         workspace_grp.append(&workspace_hdr);
         workspace_grp.append(&btn_phone);
         workspace_grp.append(&btn_apps);
 
         let continuity_hdr = overline("Continuity");
-        continuity_hdr.set_margin_start(8);
+        continuity_hdr.set_margin_start(10);
         continuity_hdr.set_margin_bottom(4);
-        let continuity_grp = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(3).build();
+        let continuity_grp = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(4).build();
         continuity_grp.append(&continuity_hdr);
         continuity_grp.append(&btn_display);
         continuity_grp.append(&btn_files);
         continuity_grp.append(&btn_notifs);
 
-        let nav_box = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(18).build();
+        let nav_box = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(22).build();
         nav_box.append(&workspace_grp);
         nav_box.append(&continuity_grp);
 
@@ -699,9 +751,9 @@ impl SidebarNav {
 
         let top_col = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(16)
+            .spacing(18)
             .margin_top(16)
-            .margin_bottom(12)
+            .margin_bottom(14)
             .margin_start(14)
             .margin_end(14)
             .vexpand(true)
@@ -711,22 +763,25 @@ impl SidebarNav {
         top_col.append(&nav_scroll);
 
         // Sidebar Footer: compact telemetry summary + master Connect CTA.
-        let foot_bat_icon = gtk::Image::builder().icon_name("battery-level-60-symbolic").pixel_size(13).build();
-        let foot_bat_val = gtk::Label::builder().label("—").css_classes(["sc-mono", "caption"]).build();
-        let bat_box = gtk::Box::builder().spacing(4).halign(gtk::Align::Center).hexpand(true).build();
-        bat_box.append(&foot_bat_icon);
+        let foot_bat_icon = ModernIcon::new(IconKind::Battery { pct: None, charging: false }, 14);
+        foot_bat_icon.add_css_class("sc-primary");
+        let foot_bat_val = gtk::Label::builder().label("—").css_classes(["sc-mono", "caption", "sc-primary"]).build();
+        let bat_box = gtk::Box::builder().spacing(5).halign(gtk::Align::Center).hexpand(true).build();
+        bat_box.append(foot_bat_icon.widget());
         bat_box.append(&foot_bat_val);
 
-        let foot_wifi_icon = gtk::Image::builder().icon_name("network-wireless-symbolic").pixel_size(13).css_classes(["sc-secondary"]).build();
+        let foot_wifi_icon = ModernIcon::new(IconKind::WifiOff, 14);
+        foot_wifi_icon.add_css_class("sc-secondary");
         let foot_wifi_val = gtk::Label::builder().label("—").css_classes(["sc-mono", "caption", "sc-secondary"]).build();
-        let wifi_box = gtk::Box::builder().spacing(4).halign(gtk::Align::Center).hexpand(true).build();
-        wifi_box.append(&foot_wifi_icon);
+        let wifi_box = gtk::Box::builder().spacing(5).halign(gtk::Align::Center).hexpand(true).build();
+        wifi_box.append(foot_wifi_icon.widget());
         wifi_box.append(&foot_wifi_val);
 
-        let foot_bt_icon = gtk::Image::builder().icon_name("bluetooth-active-symbolic").pixel_size(13).build();
-        let foot_bt_val = gtk::Label::builder().label("—").css_classes(["sc-mono", "caption"]).build();
-        let bt_box = gtk::Box::builder().spacing(4).halign(gtk::Align::Center).hexpand(true).build();
-        bt_box.append(&foot_bt_icon);
+        let foot_bt_icon = ModernIcon::new(IconKind::Bluetooth { on: false }, 14);
+        foot_bt_icon.add_css_class("sc-primary");
+        let foot_bt_val = gtk::Label::builder().label("—").css_classes(["sc-mono", "caption", "sc-primary"]).build();
+        let bt_box = gtk::Box::builder().spacing(5).halign(gtk::Align::Center).hexpand(true).build();
+        bt_box.append(foot_bt_icon.widget());
         bt_box.append(&foot_bt_val);
 
         let foot_stats = gtk::Box::builder().spacing(6).build();
@@ -750,21 +805,25 @@ impl SidebarNav {
             .hexpand(true)
             .build();
 
-        let footer = gtk::Box::builder()
+        let footer_inner = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(10)
-            .margin_top(12)
-            .margin_bottom(14)
+            .spacing(12)
+            .margin_top(14)
+            .margin_bottom(16)
             .margin_start(14)
             .margin_end(14)
+            .build();
+        footer_inner.append(&foot_stats);
+        footer_inner.append(&foot_cta);
+        let footer = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
             .css_classes(["sc-sidebar-footer"])
             .build();
-        footer.append(&foot_stats);
-        footer.append(&foot_cta);
+        footer.append(&footer_inner);
 
         let root = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .width_request(272)
+            .width_request(280)
             .css_classes(["sc-sidebar"])
             .build();
         root.append(&top_col);
@@ -781,6 +840,7 @@ impl SidebarNav {
                 ("files", btn_files),
                 ("notifications", btn_notifs),
             ],
+            nav_icons: vec![ic_phone, ic_apps, ic_display, ic_files, ic_notifs],
             apps_badge,
             notif_badge,
             foot_bat_icon,
@@ -797,9 +857,10 @@ impl SidebarNav {
     }
 
     fn set_active(&self, tab: &str, enabled: bool) {
-        for (id, btn) in &self.nav_buttons {
+        for ((id, btn), icon) in self.nav_buttons.iter().zip(&self.nav_icons) {
             btn.set_sensitive(enabled);
             set_class(btn, "active", enabled && *id == tab);
+            icon.queue_draw();
         }
     }
 }
@@ -818,8 +879,6 @@ impl TopHeader {
             .label("Connecting…")
             .css_classes(["sc-pill"])
             .margin_start(6)
-            .ellipsize(gtk::pango::EllipsizeMode::End)
-            .max_width_chars(34)
             .build();
 
         let left_box = gtk::Box::builder().spacing(8).valign(gtk::Align::Center).build();
@@ -830,9 +889,10 @@ impl TopHeader {
         left_box.append(&status_pill);
 
         // Right cluster
+        let quick_ic = ModernIcon::new(IconKind::Search, 13);
         let quick_inner = gtk::Box::builder().spacing(7).valign(gtk::Align::Center).build();
-        quick_inner.append(&gtk::Image::builder().icon_name("system-search-symbolic").pixel_size(13).build());
-        quick_inner.append(&gtk::Label::new(Some("Quick Command…")));
+        quick_inner.append(quick_ic.widget());
+        quick_inner.append(&gtk::Label::new(Some("Command")));
         quick_inner.append(&gtk::Label::builder().label("Ctrl+K").css_classes(["sc-kbd"]).build());
         let quick_cmd = gtk::Button::builder()
             .child(&quick_inner)
@@ -841,8 +901,9 @@ impl TopHeader {
             .valign(gtk::Align::Center)
             .build();
 
+        let tel_ic = ModernIcon::new(IconKind::Activity, 15);
         let telemetry = gtk::Button::builder()
-            .icon_name("dialog-information-symbolic")
+            .child(tel_ic.widget())
             .css_classes(["sc-btn-icon"])
             .tooltip_text("Endpoint Telemetry")
             .valign(gtk::Align::Center)
@@ -892,7 +953,7 @@ impl TopHeader {
 
 impl DownPage {
     fn build() -> (Self, gtk::Widget) {
-        let (thumb, wallpaper, wallpaper_stack) = wallpaper_thumb(48, 96);
+        let (thumb, wallpaper, wallpaper_stack) = wallpaper_thumb(52, 76);
         thumb.add_css_class("sc-dimmed");
         let name = gtk::Label::builder().xalign(0.0).css_classes(["heading"]).wrap(true).build();
         let sub = gtk::Label::builder().xalign(0.0).css_classes(["sc-secondary"]).wrap(true).build();
@@ -912,14 +973,16 @@ impl DownPage {
         card.append(&thumb);
         card.append(&text);
 
-        let icon = gtk::Image::builder()
-            .icon_name("network-offline-symbolic")
-            .pixel_size(28)
+        let down_ic = ModernIcon::new(IconKind::WifiOff, 26);
+        let icon = gtk::Box::builder()
             .width_request(60)
             .height_request(60)
             .css_classes(["sc-icon-box"])
             .halign(gtk::Align::Center)
             .build();
+        icon.append(down_ic.widget());
+        down_ic.widget().set_hexpand(true);
+        down_ic.widget().set_vexpand(true);
         let title = gtk::Label::builder()
             .label("Smart Connect service isn't running")
             .css_classes(["sc-view-title"])
@@ -970,7 +1033,7 @@ impl DownPage {
 impl PhonePage {
     fn build() -> (Self, gtk::Widget) {
         // ── 1. Endpoint Identity & Telemetry Bento ───────────────────────────
-        let (thumb_box, wallpaper, thumb_stack) = wallpaper_thumb(54, 108);
+        let (thumb_box, wallpaper, thumb_stack) = wallpaper_thumb(62, 92);
 
         let status_dot = status_dot(8, false);
         let status_pill = gtk::Label::builder().label("Endpoint Standby").build();
@@ -989,13 +1052,14 @@ impl PhonePage {
             .wrap(true)
             .wrap_mode(gtk::pango::WrapMode::WordChar)
             .build();
+        let rename_ic = ModernIcon::new(IconKind::Edit, 14);
         let rename_btn = gtk::Button::builder()
-            .icon_name("document-edit-symbolic")
-            .css_classes(["sc-btn-icon"])
+            .child(rename_ic.widget())
+            .css_classes(["sc-btn-ghost"])
             .tooltip_text("Rename display nickname (saved locally on this PC)")
             .valign(gtk::Align::Center)
             .build();
-        let name_view = gtk::Box::builder().spacing(10).valign(gtk::Align::Center).build();
+        let name_view = gtk::Box::builder().spacing(8).valign(gtk::Align::Center).build();
         name_view.append(&name);
         name_view.append(&rename_btn);
 
@@ -1004,14 +1068,16 @@ impl PhonePage {
             .placeholder_text("Phone display name…")
             .css_classes(["sc-inset-entry"])
             .build();
+        let save_ic = ModernIcon::new(IconKind::Check, 14);
         let rename_save = gtk::Button::builder()
-            .icon_name("object-select-symbolic")
+            .child(save_ic.widget())
             .css_classes(["sc-btn-primary"])
             .tooltip_text("Save nickname")
             .valign(gtk::Align::Center)
             .build();
+        let cancel_ic = ModernIcon::new(IconKind::Close, 14);
         let rename_cancel = gtk::Button::builder()
-            .icon_name("window-close-symbolic")
+            .child(cancel_ic.widget())
             .css_classes(["sc-btn-secondary"])
             .tooltip_text("Cancel")
             .valign(gtk::Align::Center)
@@ -1037,13 +1103,14 @@ impl PhonePage {
         id_col.append(&name_stack);
         id_col.append(&subtitle);
 
-        let left_cluster = gtk::Box::builder().spacing(16).hexpand(true).valign(gtk::Align::Start).build();
+        let left_cluster = gtk::Box::builder().spacing(18).hexpand(true).valign(gtk::Align::Center).build();
         left_cluster.append(&thumb_box);
         left_cluster.append(&id_col);
 
         let mirror = gtk::Button::builder().label("Mirror screen").css_classes(["sc-btn-secondary"]).visible(false).build();
-        let telemetry_inner = gtk::Box::builder().spacing(6).build();
-        telemetry_inner.append(&gtk::Image::builder().icon_name("dialog-information-symbolic").pixel_size(14).build());
+        let tel_ic = ModernIcon::new(IconKind::Activity, 14);
+        let telemetry_inner = gtk::Box::builder().spacing(7).valign(gtk::Align::Center).build();
+        telemetry_inner.append(tel_ic.widget());
         telemetry_inner.append(&gtk::Label::new(Some("Telemetry")));
         let telemetry = gtk::Button::builder()
             .child(&telemetry_inner)
@@ -1065,12 +1132,13 @@ impl PhonePage {
         actions.append(&connect);
         actions.append(&pair);
 
-        let hero_top = gtk::Box::builder().spacing(18).build();
+        let hero_top = gtk::Box::builder().spacing(18).valign(gtk::Align::Center).build();
         hero_top.append(&left_cluster);
         hero_top.append(&actions);
 
-        // 4-Column Telemetry Tiles
-        let bat_icon = gtk::Image::builder().icon_name("battery-level-60-symbolic").pixel_size(15).build();
+        // 4-Column Telemetry Tiles (aligned values, 12px meter slot, bottom sublabel)
+        let bat_icon = ModernIcon::new(IconKind::Battery { pct: None, charging: false }, 15);
+        bat_icon.add_css_class("sc-primary");
         let bat_val = gtk::Label::builder().label("—").xalign(0.0).css_classes(["sc-metric"]).build();
         let bat_segments: [gtk::Box; 5] = std::array::from_fn(|_| {
             gtk::Box::builder()
@@ -1079,38 +1147,51 @@ impl PhonePage {
                 .css_classes(["sc-seg-off"])
                 .build()
         });
-        let bat_bar = gtk::Box::builder().spacing(4).margin_top(6).build();
+        let bat_bar = gtk::Box::builder().spacing(4).hexpand(true).valign(gtk::Align::Center).build();
         for seg in &bat_segments {
             bat_bar.append(seg);
         }
+        let bat_slot = gtk::Box::builder().height_request(12).margin_top(6).build();
+        bat_slot.append(&bat_bar);
         let bat_sub = gtk::Label::builder().label("Telemetry offline").xalign(0.0).css_classes(["caption", "sc-muted"]).margin_top(4).build();
-        let bat_tile = Self::stat_tile("BATTERY", &bat_icon, &bat_val, &bat_bar, &bat_sub);
+        let bat_tile = Self::stat_tile("BATTERY", &bat_icon, &bat_val, &bat_slot, &bat_sub);
 
-        let wifi_icon = gtk::Image::builder().icon_name("network-wireless-symbolic").pixel_size(15).css_classes(["sc-secondary"]).build();
+        let wifi_icon = ModernIcon::new(IconKind::WifiOff, 15);
+        wifi_icon.add_css_class("sc-secondary");
         let wifi_val = gtk::Label::builder().label("—").xalign(0.0).css_classes(["sc-metric-text"]).build();
-        let wifi_spacer = gtk::Box::builder().height_request(6).margin_top(6).build();
+        let wifi_bars = [
+            gtk::Box::builder().width_request(7).height_request(5).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
+            gtk::Box::builder().width_request(7).height_request(7).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
+            gtk::Box::builder().width_request(7).height_request(9).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
+            gtk::Box::builder().width_request(7).height_request(11).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
+        ];
+        let wifi_meter = gtk::Box::builder().spacing(3).height_request(12).valign(gtk::Align::End).margin_top(6).build();
+        for bar in &wifi_bars {
+            wifi_meter.append(bar);
+        }
         let wifi_sub = gtk::Label::builder().label("Link offline").xalign(0.0).css_classes(["caption", "sc-muted", "sc-mono"]).margin_top(4).build();
-        let wifi_tile = Self::stat_tile("WI-FI LINK", &wifi_icon, &wifi_val, &wifi_spacer, &wifi_sub);
+        let wifi_tile = Self::stat_tile("WI-FI LINK", &wifi_icon, &wifi_val, &wifi_meter, &wifi_sub);
 
-        let cell_icon = gtk::Image::builder().icon_name("network-cellular-signal-none-symbolic").pixel_size(15).css_classes(["sc-secondary"]).build();
+        let cell_icon = ModernIcon::new(IconKind::Cellular { bars: 0 }, 15);
+        cell_icon.add_css_class("sc-secondary");
         let cell_val = gtk::Label::builder().label("—").xalign(0.0).css_classes(["sc-metric-text"]).build();
         let cell_bars = [
-            gtk::Box::builder().width_request(7).height_request(6).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
-            gtk::Box::builder().width_request(7).height_request(8).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
-            gtk::Box::builder().width_request(7).height_request(10).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
-            gtk::Box::builder().width_request(7).height_request(12).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
+            gtk::Box::builder().width_request(7).height_request(5).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
+            gtk::Box::builder().width_request(7).height_request(7).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
+            gtk::Box::builder().width_request(7).height_request(9).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
+            gtk::Box::builder().width_request(7).height_request(11).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
         ];
-        let cell_sub = gtk::Label::builder().label("Mobile signal").xalign(0.0).css_classes(["caption", "sc-muted", "sc-mono"]).margin_start(6).build();
-        let cell_meter = gtk::Box::builder().spacing(3).valign(gtk::Align::End).margin_top(6).build();
+        let cell_meter = gtk::Box::builder().spacing(3).height_request(12).valign(gtk::Align::End).margin_top(6).build();
         for bar in &cell_bars {
             cell_meter.append(bar);
         }
-        cell_meter.append(&cell_sub);
-        let cell_tile = Self::stat_tile("CELLULAR", &cell_icon, &cell_val, &cell_meter, &gtk::Box::new(gtk::Orientation::Horizontal, 0));
+        let cell_sub = gtk::Label::builder().label("Mobile signal").xalign(0.0).css_classes(["caption", "sc-muted", "sc-mono"]).margin_top(4).build();
+        let cell_tile = Self::stat_tile("CELLULAR", &cell_icon, &cell_val, &cell_meter, &cell_sub);
 
-        let bt_icon = gtk::Image::builder().icon_name("bluetooth-disabled-symbolic").pixel_size(15).build();
+        let bt_icon = ModernIcon::new(IconKind::Bluetooth { on: false }, 15);
+        bt_icon.add_css_class("sc-secondary");
         let bt_val = gtk::Label::builder().label("—").xalign(0.0).css_classes(["sc-metric-text"]).build();
-        let bt_spacer = gtk::Box::builder().height_request(6).margin_top(6).build();
+        let bt_spacer = gtk::Box::builder().height_request(12).margin_top(6).build();
         let bt_sub = gtk::Label::builder().label("Radio unknown").xalign(0.0).css_classes(["caption", "sc-muted", "sc-mono"]).margin_top(4).build();
         let bt_tile = Self::stat_tile("BLUETOOTH", &bt_icon, &bt_val, &bt_spacer, &bt_sub);
 
@@ -1150,7 +1231,12 @@ impl PhonePage {
 
         // ── Unread shortcut ──────────────────────────────────────────────────
         let unread_label = gtk::Label::builder().xalign(0.0).hexpand(true).build();
-        let unread_link = gtk::Label::builder().label("Open notifications ›").css_classes(["sc-tag"]).build();
+        let unread_ic = ModernIcon::new(IconKind::Bell, 16);
+        let unread_chev = ModernIcon::new(IconKind::ChevronRight, 13);
+        unread_chev.add_css_class("sc-muted");
+        let unread_link = gtk::Box::builder().spacing(5).valign(gtk::Align::Center).css_classes(["sc-tag"]).build();
+        unread_link.append(&gtk::Label::new(Some("Open notifications")));
+        unread_link.append(unread_chev.widget());
         let unread_row = gtk::Box::builder()
             .spacing(10)
             .margin_top(14)
@@ -1158,7 +1244,7 @@ impl PhonePage {
             .margin_start(18)
             .margin_end(18)
             .build();
-        unread_row.append(&gtk::Image::builder().icon_name("preferences-system-notifications-symbolic").pixel_size(16).build());
+        unread_row.append(unread_ic.widget());
         unread_row.append(&unread_label);
         unread_row.append(&unread_link);
         let unread_card = gtk::Button::builder().css_classes(["sc-bento-btn"]).visible(false).child(&unread_row).build();
@@ -1170,6 +1256,9 @@ impl PhonePage {
         cross_hdr.append(&cross_hdr_l);
         cross_hdr.append(&gtk::Label::builder().label("Universal Control & Spatial Display").css_classes(["sc-mono", "caption", "sc-muted"]).build());
 
+        let cross_ic = ModernIcon::new(IconKind::Mouse, 20);
+        cross_ic.widget().set_hexpand(true);
+        cross_ic.widget().set_vexpand(true);
         let cross_icon_box = gtk::Box::builder()
             .width_request(44)
             .height_request(44)
@@ -1177,7 +1266,7 @@ impl PhonePage {
             .valign(gtk::Align::Center)
             .css_classes(["sc-icon-box-white"])
             .build();
-        cross_icon_box.append(&gtk::Image::builder().icon_name("input-mouse-symbolic").pixel_size(20).build());
+        cross_icon_box.append(cross_ic.widget());
 
         let cross_edge = gtk::Label::builder().label("Edge: RIGHT").css_classes(["sc-tag"]).valign(gtk::Align::Center).build();
         let cross_title_row = gtk::Box::builder().spacing(10).build();
@@ -1202,7 +1291,10 @@ impl PhonePage {
         for pill in &cross_pills {
             cross_right.append(pill);
         }
-        cross_right.append(&gtk::Image::builder().icon_name("go-next-symbolic").pixel_size(15).css_classes(["sc-muted"]).margin_start(4).build());
+        let cross_chev = ModernIcon::new(IconKind::ChevronRight, 15);
+        cross_chev.add_css_class("sc-muted");
+        cross_chev.widget().set_margin_start(4);
+        cross_right.append(cross_chev.widget());
 
         let cross_row = gtk::Box::builder()
             .spacing(16)
@@ -1227,15 +1319,23 @@ impl PhonePage {
         cont_hdr.append(&cont_hdr_l);
         cont_hdr.append(&gtk::Label::builder().label("App Stream · Storage · Share").css_classes(["sc-mono", "caption", "sc-muted"]).build());
 
+        let leading_badge = |kind: IconKind| -> gtk::Box {
+            let ic = ModernIcon::new(kind, 17);
+            ic.widget().set_hexpand(true);
+            ic.widget().set_vexpand(true);
+            let b = gtk::Box::builder()
+                .width_request(38)
+                .height_request(38)
+                .valign(gtk::Align::Center)
+                .css_classes(["sc-icon-box-sm"])
+                .build();
+            b.append(ic.widget());
+            b
+        };
+
         // Tile A: Recent App Stream
-        let recent_icon_slot = IconSlot::new(34);
-        let recent_placeholder = gtk::Image::builder()
-            .icon_name("view-app-grid-symbolic")
-            .pixel_size(18)
-            .width_request(34)
-            .height_request(34)
-            .css_classes(["sc-icon-box-sm"])
-            .build();
+        let recent_icon_slot = IconSlot::new(38);
+        let recent_placeholder = leading_badge(IconKind::AppsGrid);
         let recent_icon_stack = gtk::Stack::new();
         recent_icon_stack.add_named(&recent_placeholder, Some("empty"));
         recent_icon_stack.add_named(recent_icon_slot.widget(), Some("app"));
@@ -1253,7 +1353,7 @@ impl PhonePage {
             .css_classes(["caption", "sc-muted"])
             .build();
         let recent_btn = gtk::Button::builder().label("Apps").css_classes(["sc-btn-secondary"]).valign(gtk::Align::Center).build();
-        let recent_card = Self::continuity_tile("RECENT APP STREAM", "view-app-grid-symbolic", &recent_icon_stack, &recent_name, &recent_sub, &recent_btn);
+        let recent_card = Self::continuity_tile("RECENT APP STREAM", IconKind::AppsGrid, &recent_icon_stack, &recent_name, &recent_sub, &recent_btn);
 
         // Tile B: Mount Location
         let mount_path = gtk::Label::builder()
@@ -1269,7 +1369,8 @@ impl PhonePage {
             .css_classes(["caption", "sc-muted"])
             .build();
         let mount_btn = gtk::Button::builder().label("Files").css_classes(["sc-btn-secondary"]).valign(gtk::Align::Center).build();
-        let mount_card = Self::continuity_tile("MOUNT LOCATION", "drive-harddisk-symbolic", &gtk::Box::new(gtk::Orientation::Horizontal, 0), &mount_path, &mount_status, &mount_btn);
+        let mount_badge = leading_badge(IconKind::HardDrive);
+        let mount_card = Self::continuity_tile("MOUNT LOCATION", IconKind::HardDrive, &mount_badge, &mount_path, &mount_status, &mount_btn);
 
         // Tile C: Shared Directory
         let share_path = gtk::Label::builder()
@@ -1285,7 +1386,8 @@ impl PhonePage {
             .css_classes(["caption", "sc-muted"])
             .build();
         let share_btn = gtk::Button::builder().label("Configure").css_classes(["sc-btn-secondary"]).valign(gtk::Align::Center).build();
-        let share_card = Self::continuity_tile("SHARED DIRECTORY", "folder-open-symbolic", &gtk::Box::new(gtk::Orientation::Horizontal, 0), &share_path, &share_status, &share_btn);
+        let share_badge = leading_badge(IconKind::Folder);
+        let share_card = Self::continuity_tile("SHARED DIRECTORY", IconKind::Folder, &share_badge, &share_path, &share_status, &share_btn);
 
         let cont_flow = gtk::FlowBox::builder()
             .selection_mode(gtk::SelectionMode::None)
@@ -1307,12 +1409,12 @@ impl PhonePage {
 
         let column = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(24)
-            .valign(gtk::Align::Start)
+            .spacing(22)
+            .valign(gtk::Align::Center)
             .margin_top(26)
             .margin_bottom(28)
-            .margin_start(20)
-            .margin_end(20)
+            .margin_start(28)
+            .margin_end(28)
             .build();
         column.append(&hero_bento);
         column.append(&unread_card);
@@ -1349,6 +1451,7 @@ impl PhonePage {
             bat_sub,
             wifi_icon,
             wifi_val,
+            wifi_bars,
             wifi_sub,
             cell_icon,
             cell_val,
@@ -1375,12 +1478,12 @@ impl PhonePage {
             share_status,
             share_btn,
         };
-        (page, page_scroller(&column, 1080).upcast())
+        (page, center_scroller(&column, 1020).upcast())
     }
 
     fn stat_tile(
         label: &str,
-        icon: &gtk::Image,
+        icon: &ModernIcon,
         main_val: &gtk::Label,
         visual: &impl IsA<gtk::Widget>,
         sub: &impl IsA<gtk::Widget>,
@@ -1389,7 +1492,7 @@ impl PhonePage {
         let hdr = overline(label);
         hdr.set_hexpand(true);
         top.append(&hdr);
-        top.append(icon);
+        top.append(icon.widget());
 
         let body = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(2).valign(gtk::Align::End).vexpand(true).build();
         body.append(main_val);
@@ -1408,7 +1511,7 @@ impl PhonePage {
 
     fn continuity_tile(
         overline_text: &str,
-        icon_name: &str,
+        kind: IconKind,
         leading: &impl IsA<gtk::Widget>,
         title: &gtk::Label,
         sub: &gtk::Label,
@@ -1418,13 +1521,15 @@ impl PhonePage {
         let ov = overline(overline_text);
         ov.set_hexpand(true);
         hdr.append(&ov);
-        hdr.append(&gtk::Image::builder().icon_name(icon_name).pixel_size(14).css_classes(["sc-secondary"]).build());
+        let hdr_ic = ModernIcon::new(kind, 14);
+        hdr_ic.add_css_class("sc-secondary");
+        hdr.append(hdr_ic.widget());
 
         let text = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(2).hexpand(true).valign(gtk::Align::Center).build();
         text.append(title);
         text.append(sub);
 
-        let bottom = gtk::Box::builder().spacing(10).valign(gtk::Align::Center).build();
+        let bottom = gtk::Box::builder().spacing(12).valign(gtk::Align::Center).build();
         bottom.append(leading);
         bottom.append(&text);
         bottom.append(action);
@@ -1584,15 +1689,17 @@ impl Ui {
         root.add_named(&views, Some("main"));
 
         let sidebar = SidebarNav::build();
+        let sidebar_ic = ModernIcon::new(IconKind::MenuSidebar, 16);
         let sidebar_toggle = gtk::Button::builder()
-            .icon_name("sidebar-show-symbolic")
+            .child(sidebar_ic.widget())
             .css_classes(["sc-btn-icon"])
             .tooltip_text("Show sidebar")
             .visible(false)
             .build();
         let app_menu_model = build_app_menu();
+        let menu_ic = ModernIcon::new(IconKind::MoreDots, 15);
         let app_menu = gtk::MenuButton::builder()
-            .icon_name("open-menu-symbolic")
+            .child(menu_ic.widget())
             .menu_model(&app_menu_model)
             .primary(true)
             .css_classes(["sc-btn-icon"])
@@ -1610,8 +1717,8 @@ impl Ui {
         let split_view = adw::OverlaySplitView::builder()
             .sidebar(&sidebar.root)
             .content(&workspace_toolbar)
-            .min_sidebar_width(272.0)
-            .max_sidebar_width(272.0)
+            .min_sidebar_width(280.0)
+            .max_sidebar_width(280.0)
             .sidebar_width_unit(adw::LengthUnit::Px)
             .show_sidebar(true)
             .pin_sidebar(true)
@@ -1623,15 +1730,16 @@ impl Ui {
             .default_width(win_prefs.width)
             .default_height(win_prefs.height)
             .maximized(win_prefs.maximized)
+            .css_classes(["sc-root"])
             .content(&split_view)
             .build();
 
-        // Medium width breakpoint: hide verbose header status badge & Quick Command label when header tightens.
+        // Medium width breakpoint: hide header status pill when header tightens.
         let medium = adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 960sp").expect("valid breakpoint condition"));
         medium.add_setter(&header.status_pill, "visible", Some(&false.to_value()));
         window.add_breakpoint(medium);
 
-        // Narrow width breakpoint: collapse 272px sidebar into an overlay drawer and stack phone hero actions.
+        // Narrow width breakpoint: collapse 280px sidebar into an overlay drawer and stack phone hero actions.
         let narrow = adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 780sp").expect("valid breakpoint condition"));
         narrow.add_setter(&split_view, "collapsed", Some(&true.to_value()));
         narrow.add_setter(&phone.hero_top, "orientation", Some(&gtk::Orientation::Vertical.to_value()));
@@ -3110,15 +3218,15 @@ impl Ui {
         let bat_opt = s.battery.or(last.battery);
         let compact_bat = bat_opt.filter(|_| state != PhoneState::Unpaired).map(|b| format!(" · {b}%")).unwrap_or_default();
         let sb_sub = match state {
-            PhoneState::Connected => format!("Connected{compact_bat}"),
+            PhoneState::Connected => format!("Online{compact_bat}"),
             PhoneState::Disconnected if busy => "Connecting…".to_owned(),
-            PhoneState::Disconnected => format!("Disconnected{compact_bat}"),
-            PhoneState::Unpaired => "No phone paired".to_owned(),
+            PhoneState::Disconnected => format!("Offline{compact_bat}"),
+            PhoneState::Unpaired => "Unpaired".to_owned(),
         };
         d.sub_label.set_label(&sb_sub);
 
         d.pop_active_name.set_label(display_name);
-        d.pop_active_check.set_visible(s.connected);
+        d.pop_active_check.widget().set_visible(s.connected);
         d.pop_sub.set_label(&match state {
             PhoneState::Connected => match s.battery {
                 Some(b) => format!("Wi-Fi · {b}%"),
@@ -3144,39 +3252,31 @@ impl Ui {
 
         // Sidebar footer telemetry
         if let Some(v) = values {
-            match v.battery {
-                Some(b) => {
-                    let level = (b.clamp(0, 100) + 5) / 10 * 10;
-                    let charging = v.charging && state == PhoneState::Connected;
-                    let icon = match (level, charging) {
-                        (100, true) => "battery-level-100-charged-symbolic".to_owned(),
-                        (l, true) => format!("battery-level-{l}-charging-symbolic"),
-                        (l, false) => format!("battery-level-{l}-symbolic"),
-                    };
-                    sb.foot_bat_icon.set_icon_name(Some(&icon));
-                    sb.foot_bat_val.set_label(&format!("{b}%"));
-                }
-                None => {
-                    sb.foot_bat_icon.set_icon_name(Some("battery-missing-symbolic"));
-                    sb.foot_bat_val.set_label("—");
-                }
-            }
-            let w_word = wifi_summary_word(v);
-            let w_icon = match signal_level(v.wifi_signal).filter(|_| v.wifi) {
-                Some(l) => format!("network-wireless-signal-{}-symbolic", SIGNAL_ICONS[l]),
-                None if v.wifi => "network-wireless-symbolic".to_owned(),
-                None => "network-wireless-offline-symbolic".to_owned(),
-            };
-            sb.foot_wifi_icon.set_icon_name(Some(&w_icon));
-            sb.foot_wifi_val.set_label(w_word);
-            sb.foot_bt_icon.set_icon_name(Some(if v.bluetooth { "bluetooth-active-symbolic" } else { "bluetooth-disabled-symbolic" }));
+            let charging = v.charging && state == PhoneState::Connected;
+            sb.foot_bat_icon.set_kind(battery_icon_kind(v.battery, charging));
+            sb.foot_bat_val.set_label(&v.battery.map_or_else(|| "—".to_owned(), |b| format!("{b}%")));
+
+            sb.foot_wifi_icon.set_kind(wifi_icon_kind(v));
+            set_class(sb.foot_wifi_icon.widget(), "sc-primary", v.wifi);
+            set_class(sb.foot_wifi_icon.widget(), "sc-secondary", !v.wifi);
+            sb.foot_wifi_icon.queue_draw();
+            sb.foot_wifi_val.set_label(wifi_summary_word(v));
+
+            sb.foot_bt_icon.set_kind(IconKind::Bluetooth { on: v.bluetooth });
+            set_class(sb.foot_bt_icon.widget(), "sc-primary", v.bluetooth);
+            set_class(sb.foot_bt_icon.widget(), "sc-secondary", !v.bluetooth);
+            sb.foot_bt_icon.queue_draw();
             sb.foot_bt_val.set_label(if v.bluetooth { "On" } else { "Off" });
         } else {
-            sb.foot_bat_icon.set_icon_name(Some("battery-missing-symbolic"));
+            sb.foot_bat_icon.set_kind(IconKind::Battery { pct: None, charging: false });
             sb.foot_bat_val.set_label("—");
-            sb.foot_wifi_icon.set_icon_name(Some("network-wireless-offline-symbolic"));
+            sb.foot_wifi_icon.set_kind(IconKind::WifiOff);
+            set_class(sb.foot_wifi_icon.widget(), "sc-primary", false);
+            set_class(sb.foot_wifi_icon.widget(), "sc-secondary", true);
             sb.foot_wifi_val.set_label("—");
-            sb.foot_bt_icon.set_icon_name(Some("bluetooth-disabled-symbolic"));
+            sb.foot_bt_icon.set_kind(IconKind::Bluetooth { on: false });
+            set_class(sb.foot_bt_icon.widget(), "sc-primary", false);
+            set_class(sb.foot_bt_icon.widget(), "sc-secondary", true);
             sb.foot_bt_val.set_label("—");
         }
 
@@ -3196,11 +3296,11 @@ impl Ui {
 
         let h = &self.header;
         h.crumb_device.set_label(display_name);
-        h.status_pill.set_label(&match state {
-            PhoneState::Connected => "Connected over Wi-Fi".to_owned(),
-            PhoneState::Disconnected if busy => "Connecting…".to_owned(),
-            PhoneState::Disconnected => seen.map_or_else(|| "Disconnected".to_owned(), |t| format!("Disconnected · {t}")),
-            PhoneState::Unpaired => "Unpaired".to_owned(),
+        h.status_pill.set_label(match state {
+            PhoneState::Connected => "Connected",
+            PhoneState::Disconnected if busy => "Connecting…",
+            PhoneState::Disconnected => "Disconnected",
+            PhoneState::Unpaired => "Unpaired",
         });
         h.connect.set_sensitive(!busy);
         h.connect_spinner.set_visible(busy);
@@ -3221,14 +3321,8 @@ impl Ui {
         match v.battery {
             Some(b) => {
                 let b_clamped = b.clamp(0, 100);
-                let level = (b_clamped + 5) / 10 * 10;
                 let charging = v.charging && live;
-                let icon = match (level, charging) {
-                    (100, true) => "battery-level-100-charged-symbolic".to_owned(),
-                    (l, true) => format!("battery-level-{l}-charging-symbolic"),
-                    (l, false) => format!("battery-level-{l}-symbolic"),
-                };
-                p.bat_icon.set_icon_name(Some(&icon));
+                p.bat_icon.set_kind(battery_icon_kind(Some(b_clamped), charging));
                 p.bat_val.set_label(&format!("{b}%"));
                 let lit = ((b_clamped as f64) / 20.0).ceil() as usize;
                 for (i, seg) in p.bat_segments.iter().enumerate() {
@@ -3244,7 +3338,7 @@ impl Ui {
                 });
             }
             None => {
-                p.bat_icon.set_icon_name(Some("battery-missing-symbolic"));
+                p.bat_icon.set_kind(IconKind::Battery { pct: None, charging: false });
                 p.bat_val.set_label("—");
                 for seg in &p.bat_segments {
                     set_class(seg, "sc-seg-on", false);
@@ -3255,41 +3349,51 @@ impl Ui {
         }
 
         let wifi_word = wifi_summary_word(v);
+        p.wifi_icon.set_kind(wifi_icon_kind(v));
+        set_class(p.wifi_icon.widget(), "sc-primary", v.wifi && live);
+        set_class(p.wifi_icon.widget(), "sc-secondary", !(v.wifi && live));
+        p.wifi_icon.queue_draw();
+        let lit_wifi = if v.wifi { signal_bars_count(v.wifi_signal) } else { 0 };
+        for (i, bar) in p.wifi_bars.iter().enumerate() {
+            set_class(bar, "sc-seg-on", i < lit_wifi);
+            set_class(bar, "sc-seg-off", i >= lit_wifi);
+        }
         match signal_level(v.wifi_signal).filter(|_| v.wifi) {
-            Some(l) => {
-                p.wifi_icon.set_icon_name(Some(&format!("network-wireless-signal-{}-symbolic", SIGNAL_ICONS[l])));
+            Some(_) => {
                 p.wifi_val.set_label(wifi_word);
                 p.wifi_sub.set_label(if live { "Active Wi-Fi continuity" } else { "Last known signal" });
             }
             None if v.wifi => {
-                p.wifi_icon.set_icon_name(Some("network-wireless-symbolic"));
                 p.wifi_val.set_label("On");
                 p.wifi_sub.set_label(if live { "Wi-Fi radio enabled" } else { "Last known state" });
             }
             None => {
-                p.wifi_icon.set_icon_name(Some("network-wireless-offline-symbolic"));
                 p.wifi_val.set_label("Off");
                 p.wifi_sub.set_label(if live { "Wi-Fi disabled" } else { "Last known state" });
             }
         }
 
         let cell_word = signal_text(v.cell_signal);
-        let cell_icon = signal_level(v.cell_signal).map_or("none", |l| SIGNAL_ICONS[l]);
-        p.cell_icon.set_icon_name(Some(&format!("network-cellular-signal-{cell_icon}-symbolic")));
+        let lit_cell = signal_bars_count(v.cell_signal);
+        p.cell_icon.set_kind(IconKind::Cellular { bars: lit_cell as u8 });
+        set_class(p.cell_icon.widget(), "sc-primary", lit_cell > 0 && live);
+        set_class(p.cell_icon.widget(), "sc-secondary", !(lit_cell > 0 && live));
+        p.cell_icon.queue_draw();
         p.cell_val.set_label(cell_word);
-        let lit_bars = cellular_bars(v.cell_signal);
         for (i, bar) in p.cell_bars.iter().enumerate() {
-            set_class(bar, "sc-seg-on", i < lit_bars);
-            set_class(bar, "sc-seg-off", i >= lit_bars);
+            set_class(bar, "sc-seg-on", i < lit_cell);
+            set_class(bar, "sc-seg-off", i >= lit_cell);
         }
         p.cell_sub.set_label(if live { "Mobile signal" } else { "Last known" });
 
+        p.bt_icon.set_kind(IconKind::Bluetooth { on: v.bluetooth });
+        set_class(p.bt_icon.widget(), "sc-primary", v.bluetooth);
+        set_class(p.bt_icon.widget(), "sc-secondary", !v.bluetooth);
+        p.bt_icon.queue_draw();
         if v.bluetooth {
-            p.bt_icon.set_icon_name(Some("bluetooth-active-symbolic"));
             p.bt_val.set_label("On");
             p.bt_sub.set_label(if live { "BLE proximity active" } else { "Last known state" });
         } else {
-            p.bt_icon.set_icon_name(Some("bluetooth-disabled-symbolic"));
             p.bt_val.set_label("Off");
             p.bt_sub.set_label(if live { "Radio disabled" } else { "Last known state" });
         }
@@ -3305,12 +3409,12 @@ impl Ui {
         let sb = &self.sidebar;
         let d = &sb.device;
         d.label.set_label(if last.known() { &display_name } else { "Smart Connect" });
-        d.sub_label.set_label(if starting { "Starting service…" } else { "Service stopped" });
+        d.sub_label.set_label(if starting { "Starting…" } else { "Service stopped" });
         set_dot_online(&d.dot, false);
 
         d.pop_active_name.set_label(if last.known() { &display_name } else { "Smart Connect" });
         d.pop_sub.set_label(if starting { "Starting the Smart Connect service…" } else { "Smart Connect service isn't running" });
-        d.pop_active_check.set_visible(false);
+        d.pop_active_check.widget().set_visible(false);
         d.rename.set_sensitive(false);
         d.pair.set_sensitive(false);
         d.connect.set_visible(true);
@@ -3319,8 +3423,11 @@ impl Ui {
             label.set_label(if starting { "Starting…" } else { "Start service" });
         }
 
+        sb.foot_bat_icon.set_kind(IconKind::Battery { pct: None, charging: false });
         sb.foot_bat_val.set_label("—");
+        sb.foot_wifi_icon.set_kind(IconKind::WifiOff);
         sb.foot_wifi_val.set_label("—");
+        sb.foot_bt_icon.set_kind(IconKind::Bluetooth { on: false });
         sb.foot_bt_val.set_label("—");
         sb.foot_cta.set_sensitive(!starting);
         sb.foot_cta_spinner.set_visible(starting);
@@ -3331,7 +3438,7 @@ impl Ui {
 
         let h = &self.header;
         h.crumb_device.set_label(if last.known() { &display_name } else { "Smart Connect" });
-        h.status_pill.set_label(if starting { "Starting smartconnectd…" } else { "Service stopped" });
+        h.status_pill.set_label(if starting { "Starting…" } else { "Service stopped" });
         h.connect.set_sensitive(!starting);
         h.connect_spinner.set_visible(starting);
         h.connect_label.set_label(if starting { "Starting…" } else { "Start service" });
