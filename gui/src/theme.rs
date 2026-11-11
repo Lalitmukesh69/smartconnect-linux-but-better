@@ -34,6 +34,23 @@ pub const CSS: &str = r#"
 }
 
 window.sc-root,
+window.sc-root *,
+window.sc-root .monospace,
+window.sc-root label,
+.sc-canvas,
+.sc-canvas *,
+.sc-dialog,
+.sc-dialog *,
+popover,
+popover *,
+dialog,
+dialog *,
+toast,
+toast * {
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+}
+
+window.sc-root,
 .sc-canvas {
   background-color: #050506;
   background-image: none;
@@ -183,7 +200,8 @@ window.sc-root button.sc-nav-item .sc-nav-sub {
 }
 
 window.sc-root button.sc-nav-item .sc-nav-shortcut {
-  font-family: "JetBrains Mono", "SF Mono", monospace;
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+  font-feature-settings: "tnum" 1;
   font-size: 10px;
   color: #7A7A86;
 }
@@ -194,7 +212,8 @@ window.sc-root button.sc-nav-item .sc-nav-badge {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 5px;
   padding: 1px 6px;
-  font-family: "JetBrains Mono", "SF Mono", monospace;
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+  font-feature-settings: "tnum" 1;
   font-size: 10px;
   font-weight: 600;
   min-height: 0;
@@ -249,7 +268,9 @@ window.sc-root button.sc-nav-item.active:hover .sc-vec-icon {
 /* Pure White Primary CTA Buttons */
 window.sc-root button.sc-btn-primary,
 window.sc-root headerbar button.sc-btn-primary,
-window.sc-root button.suggested-action {
+window.sc-root button.suggested-action,
+.sc-dialog button.sc-btn-primary,
+.sc-dialog button.suggested-action {
   background-color: #FFFFFF;
   background-image: none;
   color: #050506;
@@ -265,7 +286,9 @@ window.sc-root button.suggested-action {
 
 window.sc-root button.sc-btn-primary label,
 window.sc-root headerbar button.sc-btn-primary label,
-window.sc-root button.sc-btn-primary .sc-vec-icon {
+window.sc-root button.sc-btn-primary .sc-vec-icon,
+.sc-dialog button.sc-btn-primary label,
+.sc-dialog button.sc-btn-primary .sc-vec-icon {
   color: #050506;
 }
 
@@ -273,7 +296,9 @@ window.sc-root button.sc-btn-primary:hover,
 window.sc-root headerbar button.sc-btn-primary:hover,
 window.sc-root button.suggested-action:hover,
 window.sc-root button.sc-btn-primary:active,
-window.sc-root headerbar button.sc-btn-primary:active {
+window.sc-root headerbar button.sc-btn-primary:active,
+.sc-dialog button.sc-btn-primary:hover,
+.sc-dialog button.sc-btn-primary:active {
   background-color: #E4E4E7;
   border-color: #E4E4E7;
   color: #050506;
@@ -281,7 +306,8 @@ window.sc-root headerbar button.sc-btn-primary:active {
 
 window.sc-root button.sc-btn-primary:disabled,
 window.sc-root headerbar button.sc-btn-primary:disabled,
-window.sc-root button.suggested-action:disabled {
+window.sc-root button.suggested-action:disabled,
+.sc-dialog button.sc-btn-primary:disabled {
   background-color: #16161A;
   border-color: rgba(255, 255, 255, 0.06);
   color: #52525B;
@@ -289,13 +315,15 @@ window.sc-root button.suggested-action:disabled {
   opacity: 1;
 }
 
-window.sc-root button.sc-btn-primary:disabled label {
+window.sc-root button.sc-btn-primary:disabled label,
+.sc-dialog button.sc-btn-primary:disabled label {
   color: #52525B;
 }
 
 /* Secondary & Utility Buttons */
 window.sc-root button.sc-btn-secondary,
-window.sc-root headerbar button.sc-btn-secondary {
+window.sc-root headerbar button.sc-btn-secondary,
+.sc-dialog button.sc-btn-secondary {
   background-color: #16161B;
   background-image: none;
   color: #F4F4F6;
@@ -310,18 +338,21 @@ window.sc-root headerbar button.sc-btn-secondary {
 }
 
 window.sc-root button.sc-btn-secondary:hover,
-window.sc-root headerbar button.sc-btn-secondary:hover {
+window.sc-root headerbar button.sc-btn-secondary:hover,
+.sc-dialog button.sc-btn-secondary:hover {
   background-color: #202027;
   border-color: rgba(255, 255, 255, 0.24);
   color: #FFFFFF;
 }
 
-window.sc-root button.sc-btn-secondary:disabled {
+window.sc-root button.sc-btn-secondary:disabled,
+.sc-dialog button.sc-btn-secondary:disabled {
   opacity: 0.45;
 }
 
 window.sc-root button.sc-btn-control,
-window.sc-root headerbar button.sc-btn-control {
+window.sc-root headerbar button.sc-btn-control,
+.sc-dialog button.sc-btn-control {
   background-color: #0E0E11;
   background-image: none;
   color: #B4B4BC;
@@ -336,7 +367,8 @@ window.sc-root headerbar button.sc-btn-control {
 }
 
 window.sc-root button.sc-btn-control:hover,
-window.sc-root headerbar button.sc-btn-control:hover {
+window.sc-root headerbar button.sc-btn-control:hover,
+.sc-dialog button.sc-btn-control:hover {
   background-color: #18181E;
   border-color: rgba(255, 255, 255, 0.18);
   color: #FFFFFF;
@@ -344,7 +376,8 @@ window.sc-root headerbar button.sc-btn-control:hover {
 
 window.sc-root button.sc-btn-icon,
 window.sc-root headerbar button.sc-btn-icon,
-window.sc-root menubutton.sc-btn-icon > button {
+window.sc-root menubutton.sc-btn-icon > button,
+.sc-dialog button.sc-btn-icon {
   background-color: #121216;
   background-image: none;
   color: #B4B4BC;
@@ -362,13 +395,16 @@ window.sc-root button.sc-btn-icon:hover,
 window.sc-root button.sc-btn-icon:active,
 window.sc-root headerbar button.sc-btn-icon:hover,
 window.sc-root menubutton.sc-btn-icon > button:hover,
-window.sc-root menubutton.sc-btn-icon > button:checked {
+window.sc-root menubutton.sc-btn-icon > button:checked,
+.sc-dialog button.sc-btn-icon:hover,
+.sc-dialog button.sc-btn-icon:active {
   background-color: #1C1C22;
   color: #FFFFFF;
   border-color: rgba(255, 255, 255, 0.20);
 }
 
-window.sc-root button.sc-btn-ghost {
+window.sc-root button.sc-btn-ghost,
+.sc-dialog button.sc-btn-ghost {
   background-color: transparent;
   background-image: none;
   color: #8E8E98;
@@ -382,7 +418,8 @@ window.sc-root button.sc-btn-ghost {
   transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
 }
 
-window.sc-root button.sc-btn-ghost:hover {
+window.sc-root button.sc-btn-ghost:hover,
+.sc-dialog button.sc-btn-ghost:hover {
   background-color: #16161B;
   border-color: rgba(255, 255, 255, 0.10);
   color: #FFFFFF;
@@ -418,7 +455,8 @@ window.sc-root button.destructive-action:hover {
 }
 
 .sc-metric {
-  font-family: "JetBrains Mono", "SF Mono", monospace;
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+  font-feature-settings: "tnum" 1;
   font-size: 21px;
   font-weight: 600;
   color: #FFFFFF;
@@ -431,7 +469,7 @@ window.sc-root button.destructive-action:hover {
 }
 
 .sc-overline {
-  font-family: "JetBrains Mono", "SF Mono", monospace;
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 1.4px;
@@ -439,7 +477,8 @@ window.sc-root button.destructive-action:hover {
 }
 
 .sc-mono {
-  font-family: "JetBrains Mono", "SF Mono", monospace;
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+  font-feature-settings: "tnum" 1;
 }
 
 .sc-primary {
@@ -460,7 +499,8 @@ window.sc-root button.destructive-action:hover {
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 9999px;
   padding: 3px 10px;
-  font-family: "JetBrains Mono", "SF Mono", monospace;
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+  font-feature-settings: "tnum" 1;
   font-size: 10.5px;
   color: #B4B4BC;
 }
@@ -471,7 +511,8 @@ window.sc-root button.destructive-action:hover {
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 6px;
   padding: 2px 8px;
-  font-family: "JetBrains Mono", "SF Mono", monospace;
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+  font-feature-settings: "tnum" 1;
   font-size: 11px;
   color: #A1A1AA;
 }
@@ -482,7 +523,8 @@ window.sc-root button.destructive-action:hover {
   border: 1px solid #FFFFFF;
   border-radius: 6px;
   padding: 2px 8px;
-  font-family: "JetBrains Mono", "SF Mono", monospace;
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+  font-feature-settings: "tnum" 1;
   font-size: 11px;
   font-weight: 600;
   color: #050506;
@@ -611,6 +653,27 @@ window.sc-root button.sc-pop-item:hover {
 }
 
 picture.wallpaper { border-radius: 11px; }
+picture.sc-avatar { border-radius: 16px; }
+.sc-avatar-frame {
+  background-color: #16161B;
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+button.sc-repo-row {
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  border-radius: 0;
+  padding: 12px 16px;
+  box-shadow: none;
+  outline: none;
+  transition: background-color 150ms ease;
+}
+button.sc-repo-row:hover {
+  background-color: #15151B;
+}
 picture.qr { background: white; border-radius: 12px; padding: 14px; }
 .sc-card { padding: 18px; border-radius: 14px; }
 .sc-mode { padding: 16px 12px; border-radius: 12px; transition: background-color 150ms ease, outline-color 150ms ease; }
@@ -629,7 +692,8 @@ button.sc-kbd {
   background-color: #16161B;
   background-image: none;
   border: 1px solid rgba(255, 255, 255, 0.09);
-  font-family: "JetBrains Mono", "SF Mono", monospace;
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+  font-feature-settings: "tnum" 1;
   font-size: 10.5px;
   font-weight: 600;
   color: #B4B4BC;
@@ -644,8 +708,26 @@ button.sc-kbd:hover {
 }
 "#;
 
+fn helvetica_font_setting(current: Option<&str>) -> String {
+    let size = current
+        .and_then(|s| s.split_whitespace().last())
+        .and_then(|tok| tok.parse::<f64>().ok())
+        .filter(|&n| (8.0..=24.0).contains(&n))
+        .unwrap_or(11.0);
+    if size.fract().abs() < f64::EPSILON {
+        format!("Helvetica {}", size as u32)
+    } else {
+        format!("Helvetica {size:.1}")
+    }
+}
+
 pub fn apply_theme() {
     adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceDark);
+    if let Some(settings) = gtk::Settings::default() {
+        let current = settings.gtk_font_name();
+        let font = helvetica_font_setting(current.as_deref());
+        settings.set_gtk_font_name(Some(&font));
+    }
     let provider = gtk::CssProvider::new();
     provider.load_from_string(CSS);
     if let Some(display) = gdk::Display::default() {
@@ -669,7 +751,7 @@ pub fn format_display_path(path: &Path) -> String {
     path.display().to_string()
 }
 
-/// Uppercase tracked monospace overline (`WORKSPACE`, `BATTERY`, etc.).
+/// Uppercase tracked Helvetica overline (`WORKSPACE`, `BATTERY`, etc.).
 pub fn overline(text: &str) -> gtk::Label {
     gtk::Label::builder()
         .label(text.to_uppercase())
@@ -704,9 +786,10 @@ pub enum IconKind {
     Plus,
     Settings,
     WifiOff,
-    #[allow(dead_code)] // Constructed in Apps Launchpad (Phase 2).
     Refresh,
-    #[allow(dead_code)]
+    User,
+    ExternalLink,
+    #[allow(dead_code)] // Constructed in Apps Launchpad (Phase 2).
     ListRows,
     #[allow(dead_code)]
     Sparkles,
@@ -1032,6 +1115,32 @@ fn draw_icon(cr: &cairo::Context, kind: IconKind, rgba: (f64, f64, f64, f64)) {
             cr.line_to(18.6, 8.6);
             let _ = cr.stroke();
         }
+        IconKind::User => {
+            cr.arc(12.0, 7.6, 3.6, 0.0, std::f64::consts::TAU);
+            let _ = cr.stroke();
+            cr.move_to(4.6, 19.6);
+            cr.curve_to(4.6, 15.2, 8.0, 13.4, 12.0, 13.4);
+            cr.curve_to(16.0, 13.4, 19.4, 15.2, 19.4, 19.6);
+            let _ = cr.stroke();
+        }
+        IconKind::ExternalLink => {
+            cr.move_to(14.5, 4.2);
+            cr.line_to(19.8, 4.2);
+            cr.line_to(19.8, 9.5);
+            let _ = cr.stroke();
+            cr.move_to(10.5, 13.5);
+            cr.line_to(19.6, 4.4);
+            let _ = cr.stroke();
+            cr.move_to(11.0, 5.2);
+            cr.line_to(5.8, 5.2);
+            cr.curve_to(4.7, 5.2, 4.2, 5.7, 4.2, 6.8);
+            cr.line_to(4.2, 18.2);
+            cr.curve_to(4.2, 19.3, 4.7, 19.8, 5.8, 19.8);
+            cr.line_to(17.2, 19.8);
+            cr.curve_to(18.3, 19.8, 18.8, 19.3, 18.8, 18.2);
+            cr.line_to(18.8, 13.0);
+            let _ = cr.stroke();
+        }
         IconKind::ListRows => {
             for y in [6.5, 12.0, 17.5] {
                 cr.arc(4.2, y, 1.1, 0.0, std::f64::consts::TAU);
@@ -1134,6 +1243,15 @@ mod tests {
         // GTK4 CSS rejects backdrop-filter and CSS flex `gap`.
         assert!(!CSS.contains("backdrop-filter"));
         assert!(!CSS.contains("\n  gap:"));
+        assert!(CSS.contains("Helvetica"));
+        assert!(!CSS.contains("JetBrains Mono"));
+    }
+
+    #[test]
+    fn helvetica_font_setting_preserves_size() {
+        assert_eq!(helvetica_font_setting(Some("Adwaita Sans 11")), "Helvetica 11");
+        assert_eq!(helvetica_font_setting(Some("Inter 10.5")), "Helvetica 10.5");
+        assert_eq!(helvetica_font_setting(None), "Helvetica 11");
     }
 
     #[test]

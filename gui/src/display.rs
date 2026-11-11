@@ -865,8 +865,8 @@ impl DisplayPage {
         let hints = adw::PreferencesGroup::builder().visible(false).build();
         let vkms_hint = hint_row("dialog-warning-symbolic", "Extend needs a virtual output");
         vkms_hint.set_subtitle(
-            "Run <tt>sudo modprobe vkms</tt> (adds Virtual-1), or plug in an HDMI dummy and choose it under Advanced. \
-             To load vkms at every boot: <tt>echo vkms | sudo tee /etc/modules-load.d/vkms.conf</tt>",
+            "Run <b>sudo modprobe vkms</b> (adds Virtual-1), or plug in an HDMI dummy and choose it under Advanced. \
+             To load vkms at every boot: <b>echo vkms | sudo tee /etc/modules-load.d/vkms.conf</b>",
         );
         vkms_hint.add_suffix(&copy_button("sudo modprobe vkms", toasts));
         let vkms_check = refresh_button("Check again");
@@ -876,7 +876,7 @@ impl DisplayPage {
         output_hint.add_suffix(&output_check);
         let osk_hint = hint_row("input-keyboard-symbolic", "No on-screen keyboard");
         osk_hint.set_subtitle(
-            "The keyboard button on the phone opens wvkbd on the shared screen. Install it, e.g. <tt>yay -S wvkbd</tt>",
+            "The keyboard button on the phone opens wvkbd on the shared screen. Install it, e.g. <b>yay -S wvkbd</b>",
         );
         osk_hint.add_suffix(&copy_button("yay -S wvkbd", toasts));
         for row in [&vkms_hint, &output_hint, &osk_hint] {

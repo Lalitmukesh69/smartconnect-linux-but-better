@@ -183,6 +183,7 @@ struct DeviceMenu {
     telemetry: gtk::Button,
     pair: gtk::Button,
     prefs: gtk::Button,
+    developer: gtk::Button,
     /// Connect / Disconnect, or "Start service" while the daemon is down.
     connect: gtk::Button,
 }
@@ -208,12 +209,13 @@ struct SidebarNav {
     foot_cta_label: gtk::Label,
 }
 
-/// Sticky 56px workspace header bar with breadcrumb, status pill, Quick Command trigger, Telemetry and CTA.
+/// Sticky 56px workspace header bar with breadcrumb, status pill, Quick Command trigger, Developer, Telemetry and CTA.
 struct TopHeader {
     crumb_device: gtk::Label,
     crumb_view: gtk::Label,
     status_pill: gtk::Label,
     quick_cmd: gtk::Button,
+    developer: gtk::Button,
     telemetry: gtk::Button,
     connect: gtk::Button,
     connect_spinner: adw::Spinner,
@@ -442,6 +444,7 @@ fn build_app_menu() -> gio::Menu {
     let app_sec = gio::Menu::new();
     app_sec.append(Some("Preferences"), Some("win.preferences"));
     app_sec.append(Some("Keyboard Shortcuts"), Some("win.shortcuts"));
+    app_sec.append(Some("About Developer"), Some("win.developer"));
     app_sec.append(Some("About Smart Connect"), Some("win.about"));
 
     let quit_sec = gio::Menu::new();
@@ -562,6 +565,7 @@ impl DeviceMenu {
         let telemetry = pop_action_item("System Telemetry…", IconKind::Activity);
         let pair = pop_action_item("Pair new phone…", IconKind::Plus);
         let prefs = pop_action_item("Preferences…", IconKind::Settings);
+        let developer = pop_action_item("About Developer…", IconKind::User);
         let connect = menu_item("Disconnect");
 
         let pop_box = gtk::Box::builder()
@@ -580,6 +584,7 @@ impl DeviceMenu {
         pop_box.append(&telemetry);
         pop_box.append(&pair);
         pop_box.append(&prefs);
+        pop_box.append(&developer);
         pop_box.append(&gtk::Separator::new(gtk::Orientation::Horizontal));
         pop_box.append(&connect);
 
@@ -606,6 +611,7 @@ impl DeviceMenu {
             telemetry,
             pair,
             prefs,
+            developer,
             connect,
         }
     }
@@ -870,7 +876,7 @@ impl TopHeader {
         let crumb_device = gtk::Label::builder()
             .label("Smart Connect")
             .ellipsize(gtk::pango::EllipsizeMode::End)
-            .max_width_chars(24)
+            .max_width_chars(18)
             .css_classes(["sc-muted"])
             .build();
         let sep = gtk::Label::builder().label("/").css_classes(["sc-muted"]).build();
@@ -901,6 +907,14 @@ impl TopHeader {
             .valign(gtk::Align::Center)
             .build();
 
+        let dev_ic = ModernIcon::new(IconKind::User, 15);
+        let developer = gtk::Button::builder()
+            .child(dev_ic.widget())
+            .css_classes(["sc-btn-icon"])
+            .tooltip_text("About Developer (@Lalitmukesh69)")
+            .valign(gtk::Align::Center)
+            .build();
+
         let tel_ic = ModernIcon::new(IconKind::Activity, 15);
         let telemetry = gtk::Button::builder()
             .child(tel_ic.widget())
@@ -922,6 +936,7 @@ impl TopHeader {
 
         let right_box = gtk::Box::builder().spacing(8).valign(gtk::Align::Center).build();
         right_box.append(&quick_cmd);
+        right_box.append(&developer);
         right_box.append(&telemetry);
         right_box.append(&connect);
         right_box.append(app_menu);
@@ -941,6 +956,7 @@ impl TopHeader {
                 crumb_view,
                 status_pill,
                 quick_cmd,
+                developer,
                 telemetry,
                 connect,
                 connect_spinner,
@@ -1103,11 +1119,11 @@ impl PhonePage {
         id_col.append(&name_stack);
         id_col.append(&subtitle);
 
-        let left_cluster = gtk::Box::builder().spacing(18).hexpand(true).valign(gtk::Align::Center).build();
+        let left_cluster = gtk::Box::builder().spacing(16).hexpand(true).valign(gtk::Align::Center).build();
         left_cluster.append(&thumb_box);
         left_cluster.append(&id_col);
 
-        let mirror = gtk::Button::builder().label("Mirror screen").css_classes(["sc-btn-secondary"]).visible(false).build();
+        let mirror = gtk::Button::builder().label("Mirror").css_classes(["sc-btn-secondary"]).visible(false).build();
         let tel_ic = ModernIcon::new(IconKind::Activity, 14);
         let telemetry_inner = gtk::Box::builder().spacing(7).valign(gtk::Align::Center).build();
         telemetry_inner.append(tel_ic.widget());
@@ -1132,7 +1148,7 @@ impl PhonePage {
         actions.append(&connect);
         actions.append(&pair);
 
-        let hero_top = gtk::Box::builder().spacing(18).valign(gtk::Align::Center).build();
+        let hero_top = gtk::Box::builder().spacing(14).valign(gtk::Align::Center).build();
         hero_top.append(&left_cluster);
         hero_top.append(&actions);
 
@@ -1219,10 +1235,10 @@ impl PhonePage {
 
         let hero_card = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .margin_top(24)
-            .margin_bottom(24)
-            .margin_start(24)
-            .margin_end(24)
+            .margin_top(22)
+            .margin_bottom(22)
+            .margin_start(20)
+            .margin_end(20)
             .build();
         hero_card.append(&hero_top);
         hero_card.append(&stats_wrap);
@@ -1413,8 +1429,8 @@ impl PhonePage {
             .valign(gtk::Align::Center)
             .margin_top(26)
             .margin_bottom(28)
-            .margin_start(28)
-            .margin_end(28)
+            .margin_start(22)
+            .margin_end(22)
             .build();
         column.append(&hero_bento);
         column.append(&unread_card);
@@ -1957,6 +1973,15 @@ impl Ui {
         });
         self.window.add_action(&about_act);
 
+        let dev_act = gio::SimpleAction::new("developer", None);
+        let weak = Rc::downgrade(self);
+        dev_act.connect_activate(move |_, _| {
+            if let Some(ui) = weak.upgrade() {
+                ui.open_developer_dialog();
+            }
+        });
+        self.window.add_action(&dev_act);
+
         let focus_search_act = gio::SimpleAction::new("focus-search", None);
         let weak = Rc::downgrade(self);
         focus_search_act.connect_activate(move |_, _| {
@@ -2068,6 +2093,17 @@ impl Ui {
                 if let Some(ui) = weak.upgrade() {
                     ui.sidebar.device.popover.popdown();
                     ui.open_telemetry_dialog();
+                }
+            });
+        }
+
+        // About Developer modal triggers (header icon + device popover)
+        for btn in [&self.header.developer, &self.sidebar.device.developer] {
+            let weak = Rc::downgrade(self);
+            btn.connect_clicked(move |_| {
+                if let Some(ui) = weak.upgrade() {
+                    ui.sidebar.device.popover.popdown();
+                    ui.open_developer_dialog();
                 }
             });
         }
@@ -2365,6 +2401,7 @@ impl Ui {
         }
 
         entries.push(CommandEntry::new("action:prefs", "Open Preferences", "Settings", "Ctrl+,", ""));
+        entries.push(CommandEntry::new("action:developer", "About Developer — Lalit mukesh (@Lalitmukesh69)", "Developer", "GitHub", "github bio berlin repos"));
         entries.push(CommandEntry::new("action:shortcuts", "Keyboard Shortcuts", "Help", "Ctrl+?", ""));
 
         if daemon_up {
@@ -2393,6 +2430,7 @@ impl Ui {
                     "action:telemetry" => ui.open_telemetry_dialog(),
                     "action:pair" => ui.open_pair_dialog(),
                     "action:prefs" => ui.open_preferences(),
+                    "action:developer" => ui.open_developer_dialog(),
                     "action:shortcuts" => ui.open_shortcuts(),
                     _ => {}
                 }
@@ -2475,6 +2513,10 @@ impl Ui {
             ("Shared Path", format!("{} ({})", format_display_path(&p.files.share_path()), self.files.share_status_label())),
         ];
         palette::present_telemetry_dialog(&self.window, &rows);
+    }
+
+    fn open_developer_dialog(&self) {
+        palette::present_developer_dialog(&self.window);
     }
 
     pub fn start(self: &Rc<Self>) {
@@ -2752,6 +2794,24 @@ impl Ui {
         });
         help.add(&shortcuts_row);
 
+        let developer_row = adw::ActionRow::builder()
+            .title("About Developer")
+            .subtitle("Lalit mukesh (@Lalitmukesh69) · GitHub")
+            .activatable(true)
+            .build();
+        developer_row.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+        let weak = Rc::downgrade(self);
+        let dlg_w = dialog.downgrade();
+        developer_row.connect_activated(move |_| {
+            if let Some(dlg) = dlg_w.upgrade() {
+                dlg.close();
+            }
+            if let Some(ui) = weak.upgrade() {
+                ui.open_developer_dialog();
+            }
+        });
+        help.add(&developer_row);
+
         let about_row = adw::ActionRow::builder()
             .title("About Smart Connect")
             .subtitle(concat!("Version ", env!("CARGO_PKG_VERSION")))
@@ -2830,10 +2890,10 @@ impl Ui {
             .application_name("Smart Connect")
             .application_icon("dev.smartconnect.Linux")
             .version(env!("CARGO_PKG_VERSION"))
-            .developer_name("Smart Connect for Linux Contributors")
+            .developer_name("Lalit mukesh (@Lalitmukesh69)")
             .comments("Pair, mirror, stream apps, share clipboard, forward notifications, and extend your desktop onto your Motorola phone.")
-            .website("https://github.com/Lalitmukesh69/smartconnect-linux-ui")
-            .issue_url("https://github.com/Lalitmukesh69/smartconnect-linux-ui/issues")
+            .website("https://github.com/Lalitmukesh69/smartconnect-linux-but-better")
+            .issue_url("https://github.com/Lalitmukesh69/smartconnect-linux-but-better/issues")
             .license_type(gtk::License::MitX11)
             .build();
         dialog.present(Some(&self.window));
@@ -3089,7 +3149,7 @@ impl Ui {
 
         set_dot_online(&p.status_dot, s.connected);
         p.status_pill.set_label(match state {
-            PhoneState::Connected => "Continuity Session Online",
+            PhoneState::Connected => "Continuity Online",
             PhoneState::Disconnected if busy => "Handshaking…",
             PhoneState::Disconnected => "Endpoint Standby",
             PhoneState::Unpaired => "No Phone Paired",
@@ -3138,9 +3198,9 @@ impl Ui {
         p.mirror.set_label(if pending {
             "Starting…"
         } else if mirroring {
-            "Stop mirroring"
+            "Stop Mirror"
         } else {
-            "Mirror screen"
+            "Mirror"
         });
         set_class(&p.mirror, "destructive-action", mirroring);
         set_class(&p.mirror, "sc-btn-secondary", !mirroring);

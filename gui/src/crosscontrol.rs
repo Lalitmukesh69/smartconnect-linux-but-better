@@ -665,7 +665,7 @@ fn rounded(cr: &cairo::Context, x: f64, y: f64, w: f64, h: f64, r: f64) {
 }
 
 fn label(cr: &cairo::Context, text: &str, cx: f64, cy: f64, size: f64) {
-    cr.select_font_face("Sans", cairo::FontSlant::Normal, cairo::FontWeight::Normal);
+    cr.select_font_face("Helvetica", cairo::FontSlant::Normal, cairo::FontWeight::Normal);
     cr.set_font_size(size);
     if let Ok(ext) = cr.text_extents(text) {
         cr.move_to(cx - ext.width() / 2.0 - ext.x_bearing(), cy - ext.height() / 2.0 - ext.y_bearing());

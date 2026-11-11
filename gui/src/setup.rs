@@ -100,7 +100,13 @@ pub fn welcome(app: &adw::Application, appimage: PathBuf, update: bool, go_on: i
     let toolbar = adw::ToolbarView::new();
     toolbar.add_top_bar(&adw::HeaderBar::builder().show_title(false).build());
     toolbar.set_content(Some(&status));
-    let window = adw::ApplicationWindow::builder().application(app).default_width(560).default_height(560).content(&toolbar).build();
+    let window = adw::ApplicationWindow::builder()
+        .application(app)
+        .default_width(560)
+        .default_height(560)
+        .css_classes(["sc-root"])
+        .content(&toolbar)
+        .build();
 
     let (app_c, window_c) = (app.clone(), window.clone());
     set_up.connect_clicked(move |button| {
