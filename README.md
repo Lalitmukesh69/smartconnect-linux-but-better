@@ -27,7 +27,7 @@ It is a Rust daemon (`smartconnectd`) plus small helper programs, a GTK4/libadwa
 3. [Requirements](#requirements)
 4. [How it works](#how-it-works)
 5. [Notification actions](#notification-actions)
-6. [Known issues](#known-issues)
+6. [Known issues](ISSUE.md)
 7. [Components](#components)
 8. [Documentation](#documentation)
 9. [Disclaimer](#disclaimer)
@@ -257,6 +257,8 @@ The action buttons need the stream host, which `smartconnectd` starts and superv
 <a name="known-issues"></a>
 <details>
 <summary><h2>Known issues</h2></summary>
+
+See [ISSUE.md](ISSUE.md) or the [GitHub Issues tracker](https://github.com/Lalitmukesh69/smartconnect-linux-ui/issues) for the complete list of known issues and workarounds.
 
 - **Only one phone at a time.** The daemon pairs and connects a single phone. While one phone is
   connected you cannot pair or connect a second one; disconnect the first, and later reconnect it
