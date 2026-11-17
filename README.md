@@ -6,6 +6,8 @@
   <img src="https://semilaunch.com/assets/badge.png" alt="Featured on SemiLaunch" width="220" height="77">
 </a>
 
+<a href="https://altern.ai/ai/smartconnect-for-linux" target="_blank" rel="noopener"><img src="https://data.altern.ai/alternbadge.png" alt="Featured on Altern" width="200" height="43"></a>
+
 smartconnect-linux makes a Linux desktop show up in Motorola's **Smart Connect** phone app as if it
 were a Windows PC. The phone runs the stock, unmodified app: no root, no extra app, no developer
 options. Pair once by scanning a QR code, and you get:
