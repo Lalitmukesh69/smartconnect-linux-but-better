@@ -2,6 +2,10 @@
 
 **Use Motorola's Smart Connect with a Linux PC.**
 
+<a href="https://semilaunch.com" target="_blank" rel="noopener">
+  <img src="https://semilaunch.com/assets/badge.png" alt="Featured on SemiLaunch" width="220" height="77">
+</a>
+
 smartconnect-linux makes a Linux desktop show up in Motorola's **Smart Connect** phone app as if it
 were a Windows PC. The phone runs the stock, unmodified app: no root, no extra app, no developer
 options. Pair once by scanning a QR code, and you get:
