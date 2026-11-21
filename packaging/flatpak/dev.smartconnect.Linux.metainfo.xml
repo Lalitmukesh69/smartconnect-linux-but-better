@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>dev.smartconnect.Linux</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Smart Connect</name>
+  <summary>Connect, mirror, and control your Motorola phone from Linux</summary>
+  <description>
+    <p>
+      Smart Connect for Linux is a feature-rich, high-performance companion app for Motorola phones.
+      It pairs seamlessly with your phone to provide screen mirroring, independent app streaming,
+      cross-device input control, notification sync, clipboard synchronization, and virtual display extension.
+    </p>
+    <p>Key features:</p>
+    <ul>
+      <li>Screen Mirroring: Low-latency WebRTC video stream of your phone's screen.</li>
+      <li>App Streaming: Stream individual phone apps into standalone Linux desktop windows.</li>
+      <li>Cross Control: Move your mouse pointer and keyboard seamlessly between your PC and phone.</li>
+      <li>Clipboard Synchronization: Instant bi-directional clipboard sharing between PC and phone.</li>
+      <li>Notification Sync &amp; Reply: Receive and reply to Android notifications directly from your desktop.</li>
+      <li>Extend Display: Use your phone or tablet as an external monitor for your Linux PC.</li>
+      <li>Phone Camera as Webcam: High-definition webcam streaming using v4l2loopback.</li>
+      <li>File Sharing: Fast bidirectional file browsing and media transfer.</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">dev.smartconnect.Linux.desktop</launchable>
+  <developer id="io.github.lalitmukesh69">
+    <name>Lalit mukesh</name>
+  </developer>
+  <url type="homepage">https://github.com/Lalitmukesh69/smartconnect-linux-but-better</url>
+  <url type="bugtracker">https://github.com/Lalitmukesh69/smartconnect-linux-but-better/issues</url>
+  <categories>
+    <category>Network</category>
+    <category>Utility</category>
+    <category>TelephonyTools</category>
+  </categories>
+  <keywords>
+    <keyword>motorola</keyword>
+    <keyword>smartconnect</keyword>
+    <keyword>mirror</keyword>
+    <keyword>companion</keyword>
+    <keyword>phone</keyword>
+  </keywords>
+  <provides>
+    <binary>smartconnect-gui</binary>
+    <binary>smartconnectd</binary>
+  </provides>
+  <releases>
+    <release version="0.1.0" date="2026-11-21">
+      <description>
+        <p>
+          Initial public release of Smart Connect for Linux, featuring Apple Pro Dark Monochrome UI
+          redesign, screen mirroring, app streaming, Cross Control, file sharing, and virtual display.
+        </p>
+      </description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>
