@@ -11,8 +11,9 @@ and the Noctalia (Quickshell) panel plugin. `install.sh` copies this file to
 | `install.sh`, `uninstall.sh` (+ `common.sh`) | Per-user install from the checkout |
 | `systemd/smartconnectd.service` | The user unit |
 | `appimage/make-appimage.sh` (+ `build-in-container.sh`, `AppRun.sh`) | Builds the AppImage in an Arch container (see docs/installation.md#appimage) |
+| `flatpak/make-flatpak.sh` (+ `dev.smartconnect.Linux.json`, `dev.smartconnect.Linux.metainfo.xml`) | Builds the standalone Flatpak bundle (.flatpak) and ostree repo (see docs/installation.md#flatpak) |
 | `dev.smartconnect.Display.desktop` | Hidden entry that lets KDE Plasma's KWin trust `smartconnect-display` |
-| `dev.smartconnect.Linux.desktop`, `dev.smartconnect.Linux.svg` | GTK app launcher and icon (named after the app ID) |
+| `dev.smartconnect.Linux.desktop`, `dev.smartconnect.Linux.svg`, `icons/` | GTK app launcher and multi-resolution icons (named after the app ID) |
 | `arch/PKGBUILD` | Arch Linux package built from the checkout |
 
 ## Prerequisites
