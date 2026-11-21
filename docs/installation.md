@@ -4,7 +4,8 @@ This page covers what to install, how to build and install everything, how to ru
 systemd user service, which firewall ports to open, and how to set up the optional front-ends. The
 [README quick start](../README.md#quick-start) is the short version.
 
-- [AppImage](#appimage): the easiest way, any distribution, nothing to build
+- [Flatpak](#flatpak): easiest sandbox install, single-file bundle or Flathub
+- [AppImage](#appimage): portable single file, any distribution, nothing to build
 - [What you need](#what-you-need)
 - [Packages](#packages): [Arch Linux](#arch-linux), [Debian and Ubuntu](#debian-and-ubuntu-untested), [Fedora](#fedora-untested)
 - [System services](#system-services)
@@ -14,6 +15,35 @@ systemd user service, which firewall ports to open, and how to set up the option
 - [Noctalia plugin](#noctalia-plugin) · [GTK app](#gtk-app) · [Quick-reply window](#quick-reply-window)
 - [Optional: vkms and v4l2loopback](#optional-kernel-modules)
 - [Updating and uninstalling](#updating-and-uninstalling)
+
+## Flatpak
+
+Flatpak provides an isolated, sandboxed environment with dependencies included. Users can download
+and install the standalone `.flatpak` bundle with one command or double-click in GNOME Software
+or KDE Discover.
+
+### Download and Install
+
+1. Download `Smart_Connect-<version>-x86_64.flatpak` (or `dev.smartconnect.Linux.flatpak`) from the
+   [Releases page](https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases).
+2. Install the bundle:
+   ```sh
+   flatpak install Smart_Connect-0.1.0-x86_64.flatpak
+   ```
+   Or double-click the `.flatpak` file in GNOME Software or KDE Discover.
+3. Launch Smart Connect from your application launcher or terminal:
+   ```sh
+   flatpak run dev.smartconnect.Linux
+   ```
+
+### Building the Flatpak
+
+To build the Flatpak bundle yourself:
+```sh
+./packaging/flatpak/make-flatpak.sh
+```
+If `flatpak-builder` is installed locally, it builds using host tools. If not, it automatically uses
+a container with Podman or Docker to build and export the bundle to `dist/Smart_Connect-<version>-x86_64.flatpak`.
 
 ## AppImage
 
