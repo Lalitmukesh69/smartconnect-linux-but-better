@@ -43,7 +43,17 @@ It is a Rust daemon (`smartconnectd`) plus small helper programs, a GTK4/libadwa
 <details open>
 <summary><h2>Quick start</h2></summary>
 
-**Easiest: the AppImage** (any distribution from about 2022 on, nothing to build or install first):
+**Easiest: Flatpak** (sandboxed, works on any Linux distribution with Flatpak):
+
+1. Download `Smart_Connect-…-x86_64.flatpak` from the
+   [Releases page](https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases).
+2. Install with one command (or double-click in your software store):
+   ```sh
+   flatpak install Smart_Connect-0.1.0-x86_64.flatpak
+   ```
+3. Open **Smart Connect** from your applications or run `flatpak run dev.smartconnect.Linux`.
+
+**Portable: AppImage** (any distribution from about 2022 on, nothing to build or install first):
 
 1. Download `Smart_Connect-…-x86_64.AppImage` from the
    [Releases page](https://github.com/rudrahnpatel/smartconnect-linux/releases).
