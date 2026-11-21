@@ -1,0 +1,68 @@
+{
+  "app-id": "dev.smartconnect.Linux",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "47",
+  "sdk": "org.gnome.Sdk",
+  "command": "smartconnect-gui",
+  "sdk-extensions": [
+    "org.freedesktop.Sdk.Extension.rust-stable"
+  ],
+  "build-options": {
+    "append-path": "/usr/lib/sdk/rust-stable/bin",
+    "build-args": [
+      "--share=network"
+    ],
+    "env": {
+      "CARGO_HOME": "/run/build/smartconnect-linux/cargo",
+      "RUST_BACKTRACE": "1"
+    }
+  },
+  "finish-args": [
+    "--share=ipc",
+    "--socket=fallback-x11",
+    "--socket=wayland",
+    "--device=dri",
+    "--socket=pulseaudio",
+    "--share=network",
+    "--socket=session-bus",
+    "--system-talk-name=org.bluez",
+    "--system-talk-name=org.freedesktop.Avahi",
+    "--talk-name=org.freedesktop.portal.Desktop",
+    "--talk-name=org.freedesktop.portal.Fcitx",
+    "--talk-name=org.freedesktop.Notifications",
+    "--filesystem=xdg-run/pipewire-0",
+    "--filesystem=xdg-download",
+    "--filesystem=xdg-pictures",
+    "--filesystem=xdg-videos",
+    "--filesystem=xdg-documents",
+    "--device=all"
+  ],
+  "modules": [
+    {
+      "name": "smartconnect-linux",
+      "buildsystem": "simple",
+      "build-commands": [
+        "cargo build --release --workspace",
+        "install -Dm755 target/release/smartconnect-gui /app/bin/smartconnect-gui",
+        "install -Dm755 target/release/smartconnectd /app/bin/smartconnectd",
+        "install -Dm755 target/release/smartconnect-mirror /app/bin/smartconnect-mirror",
+        "install -Dm755 target/release/smartconnect-crosscontrol /app/bin/smartconnect-crosscontrol",
+        "install -Dm755 target/release/smartconnect-display /app/bin/smartconnect-display",
+        "install -Dm755 target/release/smartconnect-webcam /app/bin/smartconnect-webcam",
+        "install -Dm755 target/release/smartconnect-files /app/bin/smartconnect-files",
+        "install -Dm755 target/release/smartconnect-fex /app/bin/smartconnect-fex",
+        "install -Dm644 packaging/dev.smartconnect.Linux.desktop /app/share/applications/dev.smartconnect.Linux.desktop",
+        "install -Dm644 packaging/dev.smartconnect.Display.desktop /app/share/applications/dev.smartconnect.Display.desktop",
+        "install -Dm644 packaging/flatpak/dev.smartconnect.Linux.metainfo.xml /app/share/metainfo/dev.smartconnect.Linux.metainfo.xml",
+        "install -Dm644 packaging/dev.smartconnect.Linux.svg /app/share/icons/hicolor/scalable/apps/dev.smartconnect.Linux.svg",
+        "for s in 16 24 32 48 64 128 256 512; do if [ -f packaging/icons/hicolor/${s}x${s}/apps/dev.smartconnect.Linux.png ]; then install -Dm644 packaging/icons/hicolor/${s}x${s}/apps/dev.smartconnect.Linux.png /app/share/icons/hicolor/${s}x${s}/apps/dev.smartconnect.Linux.png; fi; done"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "../.."
+        }
+      ]
+    }
+  ]
+}
