@@ -21,9 +21,9 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 use adw::prelude::*;
-use gtk::glib;
+use gtk::{gdk, glib};
 
-const APP_ID: &str = "dev.smartconnect.Linux";
+pub const APP_ID: &str = "dev.smartconnect.Linux";
 
 fn main() -> glib::ExitCode {
     // `--background` starts the app hidden (tray only), for the autostart entry. GApplication never
@@ -45,6 +45,22 @@ fn main() -> glib::ExitCode {
 
     app.connect_startup(|_| {
         theme::apply_theme();
+        gtk::Window::set_default_icon_name(APP_ID);
+        if let Some(display) = gdk::Display::default() {
+            let icon_theme = gtk::IconTheme::for_display(&display);
+            if let Ok(exe) = std::env::current_exe() {
+                if let Some(parent) = exe.parent() {
+                    let share_icons = parent.join("../share/icons");
+                    if share_icons.is_dir() {
+                        icon_theme.add_search_path(&share_icons);
+                    }
+                }
+            }
+            let dev_icons = std::path::Path::new("packaging/icons");
+            if dev_icons.is_dir() {
+                icon_theme.add_search_path(dev_icons);
+            }
+        }
     });
 
     let slot = ui.clone();
