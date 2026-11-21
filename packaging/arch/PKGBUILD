@@ -74,6 +74,12 @@ package() {
     "$pkgdir/usr/share/applications/dev.smartconnect.Linux.desktop"
   install -Dm644 "$_root/packaging/dev.smartconnect.Linux.svg" \
     "$pkgdir/usr/share/icons/hicolor/scalable/apps/dev.smartconnect.Linux.svg"
+  for s in 16 24 32 48 64 128 256 512; do
+    if [ -f "$_root/packaging/icons/hicolor/${s}x${s}/apps/dev.smartconnect.Linux.png" ]; then
+      install -Dm644 "$_root/packaging/icons/hicolor/${s}x${s}/apps/dev.smartconnect.Linux.png" \
+        "$pkgdir/usr/share/icons/hicolor/${s}x${s}/apps/dev.smartconnect.Linux.png"
+    fi
+  done
   install -Dm644 "$_root/packaging/README.md" "$pkgdir/usr/share/doc/$pkgname/README.md"
   install -Dm644 "$_root/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 
