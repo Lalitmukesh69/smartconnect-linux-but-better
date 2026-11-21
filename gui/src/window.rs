@@ -871,26 +871,26 @@ impl TopHeader {
             .max_width_chars(18)
             .css_classes(["sc-muted"])
             .build();
-        let sep = gtk::Label::builder().label("/").css_classes(["sc-muted"]).build();
+        let sep = gtk::Label::builder().label("/").css_classes(["sc-sep"]).build();
         let crumb_view = gtk::Label::builder().label("Phone").css_classes(["heading"]).build();
         let status_pill = gtk::Label::builder()
             .label("Connecting…")
             .css_classes(["sc-pill"])
-            .margin_start(6)
+            .margin_start(8)
             .build();
 
-        let left_box = gtk::Box::builder().spacing(8).valign(gtk::Align::Center).build();
+        let left_box = gtk::Box::builder().spacing(10).valign(gtk::Align::Center).build();
         left_box.append(sidebar_toggle);
         left_box.append(&crumb_device);
         left_box.append(&sep);
         left_box.append(&crumb_view);
         left_box.append(&status_pill);
 
-        // Right cluster
-        let quick_ic = ModernIcon::new(IconKind::Search, 13);
-        let quick_inner = gtk::Box::builder().spacing(7).valign(gtk::Align::Center).build();
+        // Right cluster: neatly spaced minimal action items
+        let quick_ic = ModernIcon::new(IconKind::Search, 12);
+        let quick_inner = gtk::Box::builder().spacing(6).valign(gtk::Align::Center).build();
         quick_inner.append(quick_ic.widget());
-        quick_inner.append(&gtk::Label::new(Some("Command")));
+        quick_inner.append(&gtk::Label::builder().label("Command").css_classes(["sc-btn-label"]).build());
         quick_inner.append(&gtk::Label::builder().label("Ctrl+K").css_classes(["sc-kbd"]).build());
         let quick_cmd = gtk::Button::builder()
             .child(&quick_inner)
@@ -899,7 +899,7 @@ impl TopHeader {
             .valign(gtk::Align::Center)
             .build();
 
-        let dev_ic = ModernIcon::new(IconKind::User, 15);
+        let dev_ic = ModernIcon::new(IconKind::User, 14);
         let developer = gtk::Button::builder()
             .child(dev_ic.widget())
             .css_classes(["sc-btn-icon"])
@@ -907,7 +907,7 @@ impl TopHeader {
             .valign(gtk::Align::Center)
             .build();
 
-        let tel_ic = ModernIcon::new(IconKind::Activity, 15);
+        let tel_ic = ModernIcon::new(IconKind::Activity, 14);
         let telemetry = gtk::Button::builder()
             .child(tel_ic.widget())
             .css_classes(["sc-btn-icon"])
@@ -916,8 +916,8 @@ impl TopHeader {
             .build();
 
         let connect_spinner = adw::Spinner::builder().visible(false).build();
-        let connect_label = gtk::Label::new(Some("Connect"));
-        let connect_box = gtk::Box::builder().spacing(6).halign(gtk::Align::Center).build();
+        let connect_label = gtk::Label::builder().label("Connect").css_classes(["sc-btn-label"]).build();
+        let connect_box = gtk::Box::builder().spacing(5).halign(gtk::Align::Center).build();
         connect_box.append(&connect_spinner);
         connect_box.append(&connect_label);
         let connect = gtk::Button::builder()
@@ -926,10 +926,13 @@ impl TopHeader {
             .valign(gtk::Align::Center)
             .build();
 
-        let right_box = gtk::Box::builder().spacing(8).valign(gtk::Align::Center).build();
+        let icons_group = gtk::Box::builder().spacing(4).valign(gtk::Align::Center).build();
+        icons_group.append(&developer);
+        icons_group.append(&telemetry);
+
+        let right_box = gtk::Box::builder().spacing(12).valign(gtk::Align::Center).margin_end(6).build();
         right_box.append(&quick_cmd);
-        right_box.append(&developer);
-        right_box.append(&telemetry);
+        right_box.append(&icons_group);
         right_box.append(&connect);
         right_box.append(app_menu);
 

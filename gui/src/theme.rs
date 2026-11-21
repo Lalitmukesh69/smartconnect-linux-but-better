@@ -274,9 +274,8 @@ window.sc-root button.sc-nav-item.active:hover .sc-vec-icon {
   color: #050506;
 }
 
-/* Pure White Primary CTA Buttons */
+/* Pure White Primary CTA Buttons - Minimal & Refined */
 window.sc-root button.sc-btn-primary,
-window.sc-root headerbar button.sc-btn-primary,
 window.sc-root button.suggested-action,
 .sc-dialog button.sc-btn-primary,
 .sc-dialog button.suggested-action {
@@ -284,13 +283,34 @@ window.sc-root button.suggested-action,
   background-image: none;
   color: #050506;
   border: 1px solid #FFFFFF;
-  border-radius: 9px;
+  border-radius: 7px;
   font-weight: 600;
-  padding: 6px 15px;
-  min-height: 32px;
-  box-shadow: 0 0 18px rgba(255, 255, 255, 0.15);
+  font-size: 12px;
+  padding: 3px 12px;
+  min-height: 26px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
   outline: none;
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+/* Header Connect Button: ultra minimal, compact & clean */
+window.sc-root headerbar button.sc-btn-primary {
+  background-color: #FFFFFF;
+  background-image: none;
+  color: #050506;
+  border: 1px solid #FFFFFF;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 11.5px;
+  padding: 2px 10px;
+  min-height: 24px;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.10);
+}
+
+.sc-sidebar-footer button.sc-btn-primary {
+  min-height: 30px;
+  padding: 5px 12px;
+  font-size: 12px;
 }
 
 window.sc-root button.sc-btn-primary label,
@@ -329,18 +349,19 @@ window.sc-root button.sc-btn-primary:disabled label,
   color: #52525B;
 }
 
-/* Secondary & Utility Buttons */
+/* Secondary & Utility Buttons - Small & Minimal */
 window.sc-root button.sc-btn-secondary,
 window.sc-root headerbar button.sc-btn-secondary,
 .sc-dialog button.sc-btn-secondary {
-  background-color: #16161B;
+  background-color: #141418;
   background-image: none;
-  color: #F4F4F6;
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  border-radius: 9px;
+  color: #E4E4E7;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
   font-weight: 500;
-  padding: 6px 13px;
-  min-height: 32px;
+  font-size: 11.5px;
+  padding: 3px 10px;
+  min-height: 25px;
   box-shadow: none;
   outline: none;
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
@@ -349,8 +370,8 @@ window.sc-root headerbar button.sc-btn-secondary,
 window.sc-root button.sc-btn-secondary:hover,
 window.sc-root headerbar button.sc-btn-secondary:hover,
 .sc-dialog button.sc-btn-secondary:hover {
-  background-color: #202027;
-  border-color: rgba(255, 255, 255, 0.24);
+  background-color: #1E1E25;
+  border-color: rgba(255, 255, 255, 0.20);
   color: #FFFFFF;
 }
 
@@ -359,17 +380,18 @@ window.sc-root button.sc-btn-secondary:disabled,
   opacity: 0.45;
 }
 
+/* Command Palette Trigger in Header */
 window.sc-root button.sc-btn-control,
 window.sc-root headerbar button.sc-btn-control,
 .sc-dialog button.sc-btn-control {
   background-color: #0E0E11;
   background-image: none;
-  color: #B4B4BC;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 8px;
-  padding: 5px 10px;
-  min-height: 30px;
-  font-size: 12px;
+  color: #8E8E98;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  padding: 2px 7px;
+  min-height: 24px;
+  font-size: 11px;
   box-shadow: none;
   outline: none;
   transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
@@ -378,26 +400,27 @@ window.sc-root headerbar button.sc-btn-control,
 window.sc-root button.sc-btn-control:hover,
 window.sc-root headerbar button.sc-btn-control:hover,
 .sc-dialog button.sc-btn-control:hover {
-  background-color: #18181E;
-  border-color: rgba(255, 255, 255, 0.18);
+  background-color: #16161B;
+  border-color: rgba(255, 255, 255, 0.14);
   color: #FFFFFF;
 }
 
+/* Icon Buttons: Minimal floating buttons with subtle hover */
 window.sc-root button.sc-btn-icon,
 window.sc-root headerbar button.sc-btn-icon,
 window.sc-root menubutton.sc-btn-icon > button,
 .sc-dialog button.sc-btn-icon {
-  background-color: #121216;
+  background-color: transparent;
   background-image: none;
-  color: #B4B4BC;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 8px;
-  padding: 6px;
-  min-width: 32px;
-  min-height: 32px;
+  color: #8E8E98;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 4px;
+  min-width: 26px;
+  min-height: 26px;
   box-shadow: none;
   outline: none;
-  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 
 window.sc-root button.sc-btn-icon:hover,
@@ -407,9 +430,9 @@ window.sc-root menubutton.sc-btn-icon > button:hover,
 window.sc-root menubutton.sc-btn-icon > button:checked,
 .sc-dialog button.sc-btn-icon:hover,
 .sc-dialog button.sc-btn-icon:active {
-  background-color: #1C1C22;
+  background-color: rgba(255, 255, 255, 0.08);
   color: #FFFFFF;
-  border-color: rgba(255, 255, 255, 0.20);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 window.sc-root button.sc-btn-ghost,
@@ -503,15 +526,27 @@ window.sc-root button.destructive-action:hover {
 }
 
 .sc-pill {
-  background-color: #141418;
+  background-color: rgba(255, 255, 255, 0.04);
   background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 9999px;
-  padding: 3px 10px;
+  padding: 2px 8px;
   font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
   font-feature-settings: "tnum" 1;
-  font-size: 10.5px;
-  color: #B4B4BC;
+  font-size: 10px;
+  color: #9E9EA8;
+}
+
+.sc-sep {
+  color: rgba(255, 255, 255, 0.20);
+  font-size: 12px;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+.sc-btn-label {
+  font-size: 11.5px;
+  font-weight: 500;
 }
 
 .sc-tag {
