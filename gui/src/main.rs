@@ -1,6 +1,7 @@
 //! Smart Connect for Linux: GTK4/libadwaita front-end for `smartconnectd`.
 
 mod apps;
+pub mod components;
 mod daemon;
 mod crosscontrol;
 mod display;
@@ -18,6 +19,7 @@ pub mod tokens;
 mod tray;
 mod window;
 
+pub use components::*;
 pub use tokens::*;
 
 use std::cell::{Cell, RefCell};

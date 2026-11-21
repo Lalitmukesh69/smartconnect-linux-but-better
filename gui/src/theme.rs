@@ -9,28 +9,52 @@ use gtk::{cairo, gdk};
 
 pub const CSS: &str = r#"
 :root {
-  --window-bg-color: #050506;
-  --window-fg-color: #F4F4F6;
-  --view-bg-color: #050506;
-  --view-fg-color: #F4F4F6;
-  --sidebar-bg-color: #0A0A0C;
-  --sidebar-fg-color: #F4F4F6;
-  --sidebar-border-color: rgba(255, 255, 255, 0.07);
-  --headerbar-bg-color: #050506;
-  --headerbar-fg-color: #F4F4F6;
-  --headerbar-border-color: rgba(255, 255, 255, 0.07);
-  --card-bg-color: #0E0E11;
-  --card-fg-color: #F4F4F6;
-  --dialog-bg-color: #0E0E11;
-  --dialog-fg-color: #F4F4F6;
-  --popover-bg-color: #141418;
-  --popover-fg-color: #F4F4F6;
-  --accent-bg-color: #FFFFFF;
-  --accent-fg-color: #050506;
-  --accent-color: #FFFFFF;
-  --destructive-bg-color: #1E1E24;
-  --destructive-fg-color: #F4F4F6;
-  --destructive-color: #F4F4F6;
+  /* 2026 Dark Palette Tokens */
+  --bg: #022B3A;
+  --text: #FFFFFF;
+  --accent: #1F7A8C;
+  --highlight: #BFDBF7;
+  --soft: #E1E5F2;
+  --danger: #E06C75;
+
+  /* Derived Surface Tokens */
+  --surface-1: rgba(255, 255, 255, 0.04);
+  --surface-2: rgba(255, 255, 255, 0.07);
+  --surface-3: rgba(255, 255, 255, 0.11);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-control: rgba(225, 229, 242, 0.50);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --text-muted: rgba(225, 229, 242, 0.75);
+  --text-subtle: rgba(225, 229, 242, 0.55);
+  --accent-tint: rgba(31, 122, 140, 0.18);
+  --accent-hover: #1B7082;
+  --accent-active: #196A7C;
+
+  /* Base Radii */
+  --radius-control: 8px;
+  --radius-surface: 12px;
+  --radius-pill: 9999px;
+
+  /* Standard Libadwaita / GTK System Mappings */
+  --window-bg-color: #022B3A;
+  --window-fg-color: #FFFFFF;
+  --view-bg-color: #022B3A;
+  --view-fg-color: #FFFFFF;
+  --headerbar-bg-color: #022B3A;
+  --headerbar-fg-color: #FFFFFF;
+  --headerbar-border-color: transparent;
+  --card-bg-color: rgba(255, 255, 255, 0.04);
+  --card-fg-color: #FFFFFF;
+  --dialog-bg-color: #0C3342;
+  --dialog-fg-color: #FFFFFF;
+  --popover-bg-color: #0C3342;
+  --popover-fg-color: #FFFFFF;
+  --accent-bg-color: #1F7A8C;
+  --accent-fg-color: #FFFFFF;
+  --accent-color: #1F7A8C;
+  --destructive-bg-color: rgba(224, 108, 117, 0.15);
+  --destructive-fg-color: #FFFFFF;
+  --destructive-color: #E06C75;
 }
 
 window.sc-root,
@@ -52,184 +76,96 @@ toast * {
 
 window.sc-root,
 .sc-canvas {
-  background-color: #050506;
+  background-color: #022B3A;
   background-image: none;
-  color: #F4F4F6;
+  color: #FFFFFF;
+}
+
+window.sc-root button:focus-visible,
+window.sc-root entry:focus-visible,
+window.sc-root switch:focus-visible,
+window.sc-root checkbutton:focus-visible {
+  outline: 2px solid #BFDBF7;
+  outline-offset: 2px;
 }
 
 window.sc-root headerbar.sc-header {
-  background-color: #050506;
+  background-color: #022B3A;
   background-image: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid transparent;
   box-shadow: none;
   min-height: 56px;
-  padding-left: 14px;
-  padding-right: 14px;
+  min-height: 56px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+window.sc-root headerbar.sc-header.sc-header-scrolled {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .sc-sidebar {
-  background-color: #0A0A0C;
+  background-color: #022B3A;
   background-image: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 240px;
+  min-width: 240px;
+  transition: min-width 200ms ease, width 200ms ease;
+}
+
+.sc-sidebar.collapsed {
+  min-width: 64px;
+  min-width: 64px;
 }
 
 .sc-sidebar-header {
-  background-color: #0A0A0C;
+  background-color: #022B3A;
   background-image: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   min-height: 56px;
-  padding-left: 14px;
-  padding-right: 14px;
+  min-height: 56px;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 .sc-sidebar-footer {
-  background-color: #08080A;
+  background-color: #022B3A;
   background-image: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 16px 16px 16px;
 }
 
-.sc-bento {
-  background-color: #0E0E11;
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
-}
-
-window.sc-root button.sc-bento-btn {
-  background-color: #0E0E11;
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  padding: 0;
-  outline: none;
-  transition: background-color 150ms ease, border-color 150ms ease;
-}
-
-window.sc-root button.sc-bento-btn:hover {
-  background-color: #141418;
-  border-color: rgba(255, 255, 255, 0.22);
-}
-
-.sc-stat-tile {
-  background-color: #131317;
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 12px;
-  padding: 12px 14px;
-}
-
-.sc-icon-box {
-  background-color: #16161B;
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  border-radius: 12px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  color: #FFFFFF;
-}
-
-.sc-icon-box-sm {
-  background-color: #18181E;
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 10px;
-  color: #F4F4F6;
-}
-
-.sc-icon-box-white {
-  background-color: #FFFFFF;
-  background-image: none;
-  color: #050506;
-  border-radius: 11px;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.18);
-}
-
-.sc-icon-box-white .sc-vec-icon {
-  color: #050506;
-}
-
-/* MenuButton wraps an internal GtkButton child — style both directly and defeat user-theme chrome */
-window.sc-root menubutton.sc-device-switcher > button {
-  background-color: #121216;
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 12px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  padding: 10px 11px;
-  color: #F4F4F6;
-  outline: none;
-  transition: background-color 150ms ease, border-color 150ms ease;
-}
-
-window.sc-root menubutton.sc-device-switcher > button:hover,
-window.sc-root menubutton.sc-device-switcher > button:checked {
-  background-color: #18181E;
-  border-color: rgba(255, 255, 255, 0.16);
-  color: #FFFFFF;
-}
-
-/* Sidebar Navigation Rows */
 window.sc-root button.sc-nav-item {
   background-color: transparent;
   background-image: none;
   border: 1px solid transparent;
-  border-radius: 10px;
-  padding: 10px 12px;
-  color: #A1A1AA;
+  border-radius: 8px;
+  padding: 0 12px;
+  min-height: 40px;
+  min-height: 40px;
+  color: rgba(225, 229, 242, 0.75);
   box-shadow: none;
   outline: none;
-  min-height: 0;
-  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 
 window.sc-root button.sc-nav-item:hover {
-  background-color: #15151A;
-  border-color: rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 255, 255, 0.07);
   color: #FFFFFF;
 }
 
-window.sc-root button.sc-nav-item:disabled {
-  opacity: 0.45;
-}
-
 window.sc-root button.sc-nav-item .sc-nav-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  color: #E4E4E7;
+  color: rgba(225, 229, 242, 0.85);
 }
 
 window.sc-root button.sc-nav-item:hover .sc-nav-title {
   color: #FFFFFF;
 }
 
-window.sc-root button.sc-nav-item .sc-nav-sub {
-  font-size: 11px;
-  color: #8E8E98;
-}
-
-window.sc-root button.sc-nav-item .sc-nav-shortcut {
-  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
-  font-feature-settings: "tnum" 1;
-  font-size: 10px;
-  color: #7A7A86;
-}
-
-window.sc-root button.sc-nav-item .sc-nav-badge {
-  background-color: #1F1F26;
-  color: #D4D4D8;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 5px;
-  padding: 1px 6px;
-  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
-  font-feature-settings: "tnum" 1;
-  font-size: 10px;
-  font-weight: 600;
-  min-height: 0;
-}
-
 window.sc-root button.sc-nav-item .sc-vec-icon {
-  color: #A1A1AA;
+  color: rgba(225, 229, 242, 0.75);
 }
 
 window.sc-root button.sc-nav-item:hover .sc-vec-icon {
@@ -238,518 +174,569 @@ window.sc-root button.sc-nav-item:hover .sc-vec-icon {
 
 window.sc-root button.sc-nav-item.active,
 window.sc-root button.sc-nav-item.active:hover {
-  background-color: #FFFFFF;
-  background-image: none;
-  border-color: #FFFFFF;
-  color: #050506;
-  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.14);
-}
-
-window.sc-root button.sc-nav-item.active .sc-nav-title,
-window.sc-root button.sc-nav-item.active:hover .sc-nav-title {
-  font-weight: 600;
-  color: #050506;
-}
-
-window.sc-root button.sc-nav-item.active .sc-nav-sub,
-window.sc-root button.sc-nav-item.active:hover .sc-nav-sub {
-  color: rgba(5, 5, 6, 0.68);
-  font-weight: 500;
-}
-
-window.sc-root button.sc-nav-item.active .sc-nav-shortcut,
-window.sc-root button.sc-nav-item.active:hover .sc-nav-shortcut {
-  color: rgba(5, 5, 6, 0.55);
-}
-
-window.sc-root button.sc-nav-item.active .sc-nav-badge,
-window.sc-root button.sc-nav-item.active:hover .sc-nav-badge {
-  background-color: #050506;
-  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.11);
   border-color: transparent;
+  color: #FFFFFF;
+  box-shadow: none;
 }
 
-window.sc-root button.sc-nav-item.active .sc-vec-icon,
-window.sc-root button.sc-nav-item.active:hover .sc-vec-icon {
-  color: #050506;
+window.sc-root button.sc-nav-item.active .sc-nav-title {
+  font-weight: 600;
+  color: #FFFFFF;
 }
 
-/* Pure White Primary CTA Buttons - Minimal & Refined */
+window.sc-root button.sc-nav-item.active .sc-vec-icon {
+  color: #BFDBF7;
+}
+
+window.sc-root button.sc-nav-item .sc-nav-count {
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+  font-feature-settings: "tnum" 1;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+window.sc-root button.sc-nav-item .sc-nav-shortcut {
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+  font-feature-settings: "tnum" 1;
+  font-size: 11px;
+  color: rgba(225, 229, 242, 0.55);
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+window.sc-root button.sc-nav-item:hover .sc-nav-shortcut,
+window.sc-root button.sc-nav-item:focus-visible .sc-nav-shortcut {
+  opacity: 1;
+}
+
+.sc-nav-divider {
+  min-height: 1px;
+  min-height: 1px;
+  background-color: rgba(255, 255, 255, 0.08);
+  margin-top: 8px;
+  margin-bottom: 8px;
+  margin-left: 12px;
+  margin-right: 12px;
+}
+
+window.sc-root button.sc-device-row,
+window.sc-root menubutton.sc-device-switcher > button {
+  background-color: transparent;
+  background-image: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 8px;
+  min-height: 48px;
+  color: #FFFFFF;
+  outline: none;
+  transition: background-color 140ms ease;
+}
+
+window.sc-root button.sc-device-row:hover,
+window.sc-root menubutton.sc-device-switcher > button:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+.sc-device-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.sc-device-status {
+  font-size: 12px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
 window.sc-root button.sc-btn-primary,
 window.sc-root button.suggested-action,
 .sc-dialog button.sc-btn-primary,
 .sc-dialog button.suggested-action {
-  background-color: #FFFFFF;
+  background-color: #1F7A8C;
   background-image: none;
-  color: #050506;
-  border: 1px solid #FFFFFF;
-  border-radius: 7px;
+  color: #FFFFFF;
+  border: 1px solid #1F7A8C;
+  border-radius: 8px;
   font-weight: 600;
-  font-size: 12px;
-  padding: 3px 12px;
-  min-height: 26px;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
+  font-size: 13px;
+  padding: 0 16px;
+  min-height: 40px;
+  min-height: 40px;
+  box-shadow: none;
   outline: none;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
-}
-
-/* Header Connect Button: ultra minimal, compact & clean */
-window.sc-root headerbar button.sc-btn-primary {
-  background-color: #FFFFFF;
-  background-image: none;
-  color: #050506;
-  border: 1px solid #FFFFFF;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 11.5px;
-  padding: 2px 10px;
-  min-height: 24px;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.10);
-}
-
-.sc-sidebar-footer button.sc-btn-primary {
-  min-height: 30px;
-  padding: 5px 12px;
-  font-size: 12px;
+  transition: background-color 140ms ease, border-color 140ms ease;
 }
 
 window.sc-root button.sc-btn-primary label,
-window.sc-root headerbar button.sc-btn-primary label,
-window.sc-root button.sc-btn-primary .sc-vec-icon,
-.sc-dialog button.sc-btn-primary label,
-.sc-dialog button.sc-btn-primary .sc-vec-icon {
-  color: #050506;
+window.sc-root button.suggested-action label {
+  color: #FFFFFF;
 }
 
 window.sc-root button.sc-btn-primary:hover,
-window.sc-root headerbar button.sc-btn-primary:hover,
-window.sc-root button.suggested-action:hover,
+window.sc-root button.suggested-action:hover {
+  background-color: #1B7082;
+  border-color: #1B7082;
+  color: #FFFFFF;
+}
+
 window.sc-root button.sc-btn-primary:active,
-window.sc-root headerbar button.sc-btn-primary:active,
-.sc-dialog button.sc-btn-primary:hover,
-.sc-dialog button.sc-btn-primary:active {
-  background-color: #E4E4E7;
-  border-color: #E4E4E7;
-  color: #050506;
+window.sc-root button.suggested-action:active {
+  background-color: #196A7C;
+  border-color: #196A7C;
+  color: #FFFFFF;
 }
 
 window.sc-root button.sc-btn-primary:disabled,
-window.sc-root headerbar button.sc-btn-primary:disabled,
-window.sc-root button.suggested-action:disabled,
-.sc-dialog button.sc-btn-primary:disabled {
-  background-color: #16161A;
-  border-color: rgba(255, 255, 255, 0.06);
-  color: #52525B;
-  box-shadow: none;
-  opacity: 1;
+window.sc-root button.suggested-action:disabled {
+  opacity: 0.40;
+  background-color: #1F7A8C;
+  border-color: #1F7A8C;
+  color: #FFFFFF;
 }
 
-window.sc-root button.sc-btn-primary:disabled label,
-.sc-dialog button.sc-btn-primary:disabled label {
-  color: #52525B;
-}
-
-/* Secondary & Utility Buttons - Small & Minimal */
 window.sc-root button.sc-btn-secondary,
-window.sc-root headerbar button.sc-btn-secondary,
 .sc-dialog button.sc-btn-secondary {
-  background-color: #141418;
+  background-color: rgba(255, 255, 255, 0.07);
   background-image: none;
-  color: #E4E4E7;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 6px;
+  color: #FFFFFF;
+  border: 1px solid rgba(225, 229, 242, 0.20);
+  border-radius: 8px;
   font-weight: 500;
-  font-size: 11.5px;
-  padding: 3px 10px;
-  min-height: 25px;
+  font-size: 13px;
+  padding: 0 16px;
+  min-height: 40px;
+  min-height: 40px;
   box-shadow: none;
   outline: none;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  transition: background-color 140ms ease, border-color 140ms ease;
 }
 
 window.sc-root button.sc-btn-secondary:hover,
-window.sc-root headerbar button.sc-btn-secondary:hover,
 .sc-dialog button.sc-btn-secondary:hover {
-  background-color: #1E1E25;
-  border-color: rgba(255, 255, 255, 0.20);
+  background-color: rgba(255, 255, 255, 0.11);
+  border-color: rgba(225, 229, 242, 0.35);
   color: #FFFFFF;
 }
 
-window.sc-root button.sc-btn-secondary:disabled,
-.sc-dialog button.sc-btn-secondary:disabled {
-  opacity: 0.45;
+window.sc-root button.sc-btn-secondary:disabled {
+  opacity: 0.40;
 }
 
-/* Command Palette Trigger in Header */
-window.sc-root button.sc-btn-control,
-window.sc-root headerbar button.sc-btn-control,
-.sc-dialog button.sc-btn-control {
-  background-color: #0E0E11;
-  background-image: none;
-  color: #8E8E98;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 6px;
-  padding: 2px 7px;
-  min-height: 24px;
-  font-size: 11px;
-  box-shadow: none;
-  outline: none;
-  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
-}
-
-window.sc-root button.sc-btn-control:hover,
-window.sc-root headerbar button.sc-btn-control:hover,
-.sc-dialog button.sc-btn-control:hover {
-  background-color: #16161B;
-  border-color: rgba(255, 255, 255, 0.14);
-  color: #FFFFFF;
-}
-
-/* Icon Buttons: Minimal floating buttons with subtle hover */
-window.sc-root button.sc-btn-icon,
-window.sc-root headerbar button.sc-btn-icon,
-window.sc-root menubutton.sc-btn-icon > button,
-.sc-dialog button.sc-btn-icon {
-  background-color: transparent;
-  background-image: none;
-  color: #8E8E98;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 4px;
-  min-width: 26px;
-  min-height: 26px;
-  box-shadow: none;
-  outline: none;
-  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
-}
-
-window.sc-root button.sc-btn-icon:hover,
-window.sc-root button.sc-btn-icon:active,
-window.sc-root headerbar button.sc-btn-icon:hover,
-window.sc-root menubutton.sc-btn-icon > button:hover,
-window.sc-root menubutton.sc-btn-icon > button:checked,
-.sc-dialog button.sc-btn-icon:hover,
-.sc-dialog button.sc-btn-icon:active {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #FFFFFF;
-  border-color: rgba(255, 255, 255, 0.08);
+window.sc-root button.sc-btn-row-action {
+  min-width: 88px;
+  min-height: 36px;
+  min-height: 36px;
+  font-size: 13px;
+  padding: 0 14px;
 }
 
 window.sc-root button.sc-btn-ghost,
 .sc-dialog button.sc-btn-ghost {
   background-color: transparent;
   background-image: none;
-  color: #8E8E98;
+  color: rgba(225, 229, 242, 0.75);
   border: 1px solid transparent;
-  border-radius: 7px;
-  padding: 5px;
-  min-width: 28px;
-  min-height: 28px;
+  border-radius: 8px;
+  padding: 0 12px;
+  min-height: 36px;
+  min-height: 36px;
   box-shadow: none;
   outline: none;
-  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+  transition: background-color 140ms ease, color 140ms ease;
 }
 
-window.sc-root button.sc-btn-ghost:hover,
-.sc-dialog button.sc-btn-ghost:hover {
-  background-color: #16161B;
-  border-color: rgba(255, 255, 255, 0.10);
+window.sc-root button.sc-btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.07);
   color: #FFFFFF;
 }
 
+window.sc-root button.sc-btn-icon,
+window.sc-root menubutton.sc-btn-icon > button,
+.sc-dialog button.sc-btn-icon {
+  background-color: transparent;
+  background-image: none;
+  color: rgba(225, 229, 242, 0.75);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0;
+  min-width: 40px;
+  min-height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  box-shadow: none;
+  outline: none;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+window.sc-root button.sc-btn-icon:hover,
+window.sc-root menubutton.sc-btn-icon > button:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #FFFFFF;
+}
+
+window.sc-root button.sc-btn-danger,
 window.sc-root button.destructive-action {
-  background-color: #1E1E24;
+  background-color: rgba(224, 108, 117, 0.15);
   background-image: none;
   color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  border-radius: 9px;
+  border: 1px solid #E06C75;
+  border-radius: 8px;
   font-weight: 600;
-  box-shadow: none;
+  font-size: 13px;
+  padding: 0 16px;
+  min-height: 40px;
+  min-height: 40px;
+  outline: none;
+  transition: background-color 140ms ease;
 }
 
+window.sc-root button.sc-btn-danger:hover,
 window.sc-root button.destructive-action:hover {
-  background-color: #2A2A32;
-  border-color: #FFFFFF;
+  background-color: rgba(224, 108, 117, 0.28);
 }
 
-.sc-hero-title {
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: -0.6px;
-  color: #FFFFFF;
-}
-
-.sc-view-title {
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.4px;
-  color: #FFFFFF;
-}
-
-.sc-metric {
-  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
-  font-feature-settings: "tnum" 1;
-  font-size: 21px;
-  font-weight: 600;
-  color: #FFFFFF;
-}
-
-.sc-metric-text {
-  font-size: 21px;
-  font-weight: 600;
-  color: #FFFFFF;
-}
-
-.sc-overline {
-  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 1.4px;
-  color: #8E8E98;
-}
-
-.sc-mono {
-  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
-  font-feature-settings: "tnum" 1;
-}
-
-.sc-primary {
-  color: #F4F4F6;
-}
-
-.sc-secondary {
-  color: #A1A1AA;
-}
-
-.sc-muted {
-  color: #8E8E98;
-}
-
-.sc-pill {
+.sc-surface {
   background-color: rgba(255, 255, 255, 0.04);
   background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 9999px;
-  padding: 2px 8px;
-  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
-  font-feature-settings: "tnum" 1;
-  font-size: 10px;
-  color: #9E9EA8;
-}
-
-.sc-sep {
-  color: rgba(255, 255, 255, 0.20);
-  font-size: 12px;
-  margin-left: 2px;
-  margin-right: 2px;
-}
-
-.sc-btn-label {
-  font-size: 11.5px;
-  font-weight: 500;
-}
-
-.sc-tag {
-  background-color: #16161B;
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
-  font-feature-settings: "tnum" 1;
-  font-size: 11px;
-  color: #A1A1AA;
-}
-
-.sc-tag-active {
-  background-color: #FFFFFF;
-  background-image: none;
-  border: 1px solid #FFFFFF;
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
-  font-feature-settings: "tnum" 1;
-  font-size: 11px;
-  font-weight: 600;
-  color: #050506;
-}
-
-.sc-dot-online {
-  background-color: #FFFFFF;
-  border-radius: 9999px;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.85);
-}
-
-.sc-dot-offline {
-  background-color: #52525B;
-  border-radius: 9999px;
-  box-shadow: none;
-}
-
-.sc-dot-ring {
-  border: 2px solid #121216;
-}
-
-.sc-seg-on {
-  background-color: #FFFFFF;
-  border-radius: 2px;
-}
-
-.sc-seg-off {
-  background-color: rgba(255, 255, 255, 0.14);
-  border-radius: 2px;
-}
-
-.sc-inset-entry {
-  background-color: #08080A;
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 9px;
-  color: #FFFFFF;
-}
-
-.sc-inset-entry:focus-within {
-  border-color: #FFFFFF;
-}
-
-.sc-divider-top {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-list.boxed-list {
-  background-color: #0E0E11;
-  background-image: none;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
-}
-
-list.boxed-list > row {
-  background-color: transparent;
-}
-
-list.boxed-list > row:hover {
-  background-color: #141418;
-}
-
-popover > contents {
-  background-color: #141418;
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
 }
 
-switch {
-  background-color: #1E1E24;
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  color: transparent;
-}
-
-switch:checked {
-  background-color: #FFFFFF;
-  border-color: #FFFFFF;
-}
-
-switch > slider {
-  background-color: #71717A;
-  background-image: none;
-}
-
-switch:checked > slider {
-  background-color: #050506;
-}
-
-window.sc-root button.sc-pop-active {
-  background-color: #FFFFFF;
-  background-image: none;
-  color: #050506;
-  border-radius: 8px;
-  border: none;
-  box-shadow: none;
-  font-weight: 600;
-}
-
-window.sc-root button.sc-pop-item {
+.sc-row {
+  min-height: 56px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background-color: transparent;
-  background-image: none;
-  border: none;
-  box-shadow: none;
-  border-radius: 7px;
-  color: #E4E4E7;
 }
 
-window.sc-root button.sc-pop-item:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #FFFFFF;
+.sc-surface > *:last-child .sc-row,
+.sc-surface > .sc-row:last-child {
+  border-bottom: none;
 }
 
-.sc-cmd-row {
-  border-radius: 10px;
-  padding: 6px 10px;
+.sc-row-interactive {
+  transition: background-color 140ms ease;
 }
 
-.sc-cmd-list row:selected,
-.sc-cmd-list row:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+.sc-row-interactive:hover {
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
-picture.wallpaper { border-radius: 11px; }
-picture.sc-avatar { border-radius: 16px; }
-.sc-avatar-frame {
-  background-color: #16161B;
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-}
-button.sc-repo-row {
+button.sc-btn-surface-row {
   background-color: transparent;
   background-image: none;
   border: none;
   border-radius: 0;
-  padding: 12px 16px;
-  box-shadow: none;
+  padding: 0;
   outline: none;
-  transition: background-color 150ms ease;
-}
-button.sc-repo-row:hover {
-  background-color: #15151B;
-}
-picture.qr { background: white; border-radius: 12px; padding: 14px; }
-.sc-card { padding: 18px; border-radius: 14px; }
-.sc-mode { padding: 16px 12px; border-radius: 12px; transition: background-color 150ms ease, outline-color 150ms ease; }
-.sc-mode:checked { outline: 2px solid #FFFFFF; outline-offset: -2px; }
-.sc-tile { padding: 10px 8px; border-radius: 12px; transition: background-color 150ms ease; }
-.sc-chip { padding: 6px 12px; border-radius: 9999px; }
-.sc-dimmed { opacity: 0.72; }
-.sc-badge { padding: 2px 9px; border-radius: 9999px; min-height: 0; font-weight: 600; }
-.sc-notif { padding: 14px; }
-.sc-device-btn { border-radius: 9999px; padding: 4px 10px; }
-
-.sc-kbd,
-button.sc-kbd {
-  padding: 2px 7px;
-  border-radius: 5px;
-  background-color: #16161B;
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
-  font-feature-settings: "tnum" 1;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #B4B4BC;
-  min-height: 0;
   box-shadow: none;
 }
 
-button.sc-kbd:hover {
-  background-color: #1E1E24;
-  border-color: rgba(255, 255, 255, 0.24);
+button.sc-btn-surface-row:hover .sc-row {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.sc-page-title {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 36px;
+  letter-spacing: -0.01em;
   color: #FFFFFF;
 }
+
+.sc-page-desc {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  color: #FFFFFF;
+}
+
+.sc-section-desc {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-row-label {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: #FFFFFF;
+}
+
+.sc-row-helper {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-meta-text {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-stat-value {
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+  font-feature-settings: "tnum" 1;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  color: #FFFFFF;
+}
+
+switch.sc-toggle {
+  background-color: rgba(255, 255, 255, 0.07);
+  background-image: none;
+  border: 1px solid rgba(225, 229, 242, 0.50);
+  border-radius: 12px;
+  min-width: 40px;
+  min-height: 24px;
+  min-width: 40px;
+  min-height: 24px;
+  outline: none;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+switch.sc-toggle > slider {
+  background-color: rgba(225, 229, 242, 0.70);
+  background-image: none;
+  border-radius: 9999px;
+  min-width: 18px;
+  min-height: 18px;
+  margin: 2px;
+  transition: all 140ms ease;
+}
+
+switch.sc-toggle:checked {
+  background-color: #1F7A8C;
+  border-color: #1F7A8C;
+}
+
+switch.sc-toggle:checked > slider {
+  background-color: #FFFFFF;
+}
+
+checkbutton.sc-option-card {
+  background-color: rgba(255, 255, 255, 0.04);
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  outline: none;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+checkbutton.sc-option-card:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+checkbutton.sc-option-card:checked {
+  background-color: rgba(31, 122, 140, 0.18);
+  border: 1.5px solid #1F7A8C;
+}
+
+checkbutton.sc-option-card .sc-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+checkbutton.sc-option-card .sc-card-desc {
+  font-size: 13px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+checkbutton.sc-option-card .sc-card-icon {
+  color: rgba(225, 229, 242, 0.75);
+}
+
+checkbutton.sc-option-card:checked .sc-card-icon {
+  color: #BFDBF7;
+}
+
+checkbutton.sc-option-card:disabled {
+  opacity: 0.50;
+}
+
+.sc-notice {
+  background-color: rgba(31, 122, 140, 0.18);
+  background-image: none;
+  border: 1px solid rgba(31, 122, 140, 0.35);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #E1E5F2;
+}
+
+.sc-notice-text {
+  font-size: 13px;
+  line-height: 20px;
+  color: #E1E5F2;
+}
+
+.sc-dot-connected {
+  background-color: #BFDBF7;
+  border-radius: 9999px;
+  box-shadow: 0 0 6px rgba(191, 219, 247, 0.6);
+}
+
+.sc-dot-connecting {
+  background-color: #1F7A8C;
+  border-radius: 9999px;
+  box-shadow: 0 0 6px rgba(31, 122, 140, 0.6);
+}
+
+.sc-dot-disconnected {
+  background-color: transparent;
+  border: 1.5px solid rgba(225, 229, 242, 0.50);
+  border-radius: 9999px;
+}
+
+.sc-dot-error {
+  background-color: #E06C75;
+  border-radius: 9999px;
+}
+
+.sc-status-label {
+  font-size: 13px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-stat-strip {
+}
+
+.sc-stat-col {
+  padding: 16px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sc-stat-strip > *:last-child .sc-stat-col,
+.sc-stat-strip > .sc-stat-col:last-child {
+  border-right: none;
+}
+
+.sc-indicator-fill {
+  background-color: #1F7A8C;
+  border-radius: 9999px;
+}
+
+.sc-indicator-empty {
+  background-color: rgba(225, 229, 242, 0.20);
+  border-radius: 9999px;
+}
+
+.sc-icon-tile {
+  min-width: 40px;
+  min-height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-icon-muted {
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-icon-highlight {
+  color: #BFDBF7;
+}
+
+.sc-kbd {
+  font-family: "Helvetica", "Nimbus Sans", "Liberation Sans", sans-serif;
+  font-feature-settings: "tnum" 1;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(225, 229, 242, 0.75);
+}
+
+entry.sc-input,
+.sc-input {
+  background-color: rgba(255, 255, 255, 0.07);
+  background-image: none;
+  border: 1px solid rgba(225, 229, 242, 0.50);
+  border-radius: 8px;
+  color: #FFFFFF;
+  padding: 0 12px;
+  min-height: 40px;
+}
+
+entry.sc-input:focus-within {
+  border-color: #BFDBF7;
+}
+
+.sc-skeleton {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+}
+
+.sc-empty-state {
+  padding: 16px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-empty-label {
+  font-size: 13px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+popover > contents {
+  background-color: #0C3342;
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+  padding: 6px;
+}
+
+popover button.sc-menu-item {
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  border-radius: 6px;
+  color: #FFFFFF;
+  font-size: 13px;
+  padding: 8px 12px;
+  min-height: 36px;
+  outline: none;
+  transition: background-color 140ms ease;
+}
+
+popover button.sc-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+window.sc-root headerbar.sc-header windowcontrols button {
+  min-width: 28px;
+  min-height: 28px;
+  margin: 0 4px;
+  padding: 0;
+  border-radius: 6px;
+}
+
 "#;
 
 fn helvetica_font_setting(current: Option<&str>) -> String {
@@ -906,7 +893,7 @@ fn rounded_rect(cr: &cairo::Context, x: f64, y: f64, w: f64, h: f64, r: f64) {
 fn draw_icon(cr: &cairo::Context, kind: IconKind, rgba: (f64, f64, f64, f64)) {
     let (r, g, b, a) = rgba;
     cr.set_source_rgba(r, g, b, a);
-    cr.set_line_width(1.85);
+    cr.set_line_width(1.5);
 
     match kind {
         IconKind::Smartphone => {
@@ -1222,11 +1209,12 @@ pub fn brand_mark() -> gtk::DrawingArea {
         cr.arc(r, h - r, r, std::f64::consts::FRAC_PI_2, std::f64::consts::PI);
         cr.arc(r, r, r, std::f64::consts::PI, 1.5 * std::f64::consts::PI);
         cr.close_path();
-        cr.set_source_rgb(1.0, 1.0, 1.0);
+        // Accent background (#1F7A8C)
+        cr.set_source_rgb(31.0 / 255.0, 122.0 / 255.0, 140.0 / 255.0);
         let _ = cr.fill();
 
-        // Three minimalist stacked layers inside in #050506.
-        cr.set_source_rgb(0.02, 0.02, 0.024);
+        // Three minimalist stacked layers inside in #FFFFFF / #BFDBF7
+        cr.set_source_rgb(1.0, 1.0, 1.0);
         cr.set_line_width(1.5);
         cr.set_line_cap(cairo::LineCap::Round);
         cr.set_line_join(cairo::LineJoin::Round);

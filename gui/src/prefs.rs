@@ -52,8 +52,8 @@ impl Default for WindowPrefs {
 
 impl WindowPrefs {
     pub fn sanitized(mut self) -> Self {
-        self.width = self.width.clamp(980, 3840);
-        self.height = self.height.clamp(620, 2160);
+        self.width = self.width.clamp(960, 3840);
+        self.height = self.height.clamp(600, 2160);
         if !matches!(self.last_tab.as_str(), "phone" | "apps" | "display" | "files" | "notifications") {
             self.last_tab = "phone".into();
         }
@@ -424,7 +424,7 @@ mod tests {
     #[test]
     fn window_prefs_sanitizes_bounds_and_tab() {
         let w = WindowPrefs { width: 100, height: 99999, maximized: true, hide_on_close: false, last_tab: "bogus".into() }.sanitized();
-        assert_eq!(w.width, 420);
+        assert_eq!(w.width, 960);
         assert_eq!(w.height, 2160);
         assert!(w.maximized);
         assert!(!w.hide_on_close);
