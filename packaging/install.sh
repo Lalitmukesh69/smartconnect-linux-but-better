@@ -161,6 +161,11 @@ else
   warn "and on KDE Plasma the phone display will not get screen casting (KWin needs an absolute Exec=)"
 fi
 run install -Dm644 "$ROOT/packaging/$APP_ID.svg" "$ICON_DIR/$APP_ID.svg"
+for s in 16 24 32 48 64 128 256 512; do
+  if [ -f "$ROOT/packaging/icons/hicolor/${s}x${s}/apps/$APP_ID.png" ]; then
+    run install -Dm644 "$ROOT/packaging/icons/hicolor/${s}x${s}/apps/$APP_ID.png" "$SHARE_DIR/icons/hicolor/${s}x${s}/apps/$APP_ID.png"
+  fi
+done
 install_filtered 644 "$ROOT/packaging/$APP_ID.desktop" "$APPS_DIR/$APP_ID.desktop" "$desktop_script"
 if [ -n "$display_script" ]; then
   install_filtered 644 "$ROOT/packaging/dev.smartconnect.Display.desktop" "$APPS_DIR/dev.smartconnect.Display.desktop" "$display_script"
