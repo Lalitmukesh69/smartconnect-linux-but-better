@@ -1366,41 +1366,44 @@ mod tests {
 
 
     #[test]
-    fn test_capture_baselines() {
+    #[ignore]
+    fn test_capture_redesign_screenshots() {
         if adw::init().is_err() { return; }
         use gtk::gsk::prelude::*;
         use gtk::prelude::*;
 
-        let app = adw::Application::builder().application_id("dev.smartconnect.baseline").build();
+        let app = adw::Application::builder().application_id("dev.smartconnect.redesign").build();
         let _ = app.register(None::<&gtk::gio::Cancellable>);
         let ui = crate::window::Ui::new(&app);
         crate::theme::apply_theme();
-        ui.window().set_default_size(1280, 720);
-        ui.window().present();
 
         let r = gtk::gsk::CairoRenderer::new();
         let _ = r.realize(None::<&gdk::Surface>);
 
         let art_dir = "/home/lalitmukesh/.gemini/antigravity/brain/06bb29b7-6cfe-49b1-a088-1f523ed5698c";
-        let tabs = [("phone", "baseline_phone.png"),
-                    ("apps", "baseline_apps.png"),
-                    ("display", "baseline_display.png"),
-                    ("files", "baseline_files.png"),
-                    ("notifications", "baseline_notifications.png")];
 
-        for (tab, filename) in tabs {
-            ui.switch_tab(tab);
-            for _ in 0..20 {
-                gtk::glib::MainContext::default().iteration(false);
-            }
-            let snap = gtk::Snapshot::new();
-            let paintable = gtk::WidgetPaintable::new(Some(ui.window()));
-            paintable.snapshot(&snap, 1280.0, 720.0);
-            if let Some(node) = snap.to_node() {
-                let texture = r.render_texture(&node, None);
-                let out_path = format!("{}/{}", art_dir, filename);
-                let _ = texture.save_to_png(&out_path);
-                println!("Captured {}", out_path);
+        let sizes = [(960, 600), (1280, 720), (1366, 768), (1920, 1080)];
+        let tabs = ["phone", "apps", "display", "files", "notifications", "kitchen_sink"];
+
+        for (w, h) in sizes {
+            ui.window().set_default_size(w, h);
+            ui.window().set_size_request(w, h);
+            ui.window().present();
+
+            for tab in tabs {
+                ui.switch_tab(tab);
+                for _ in 0..25 {
+                    gtk::glib::MainContext::default().iteration(false);
+                }
+                let snap = gtk::Snapshot::new();
+                let paintable = gtk::WidgetPaintable::new(Some(ui.window()));
+                paintable.snapshot(&snap, w as f64, h as f64);
+                if let Some(node) = snap.to_node() {
+                    let texture = r.render_texture(&node, None);
+                    let out_path = format!("{}/after_{}_{}x{}.png", art_dir, tab, w, h);
+                    let _ = texture.save_to_png(&out_path);
+                    println!("Rendered redesign capture: {}", out_path);
+                }
             }
         }
     }

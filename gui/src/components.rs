@@ -652,12 +652,12 @@ pub fn build_kitchen_sink_page() -> gtk::Widget {
     let stat_surface = surface();
     let stats_strip = gtk::Box::builder().homogeneous(true).css_classes(["sc-stat-strip"]).build();
     let ind1 = gtk::Box::builder().height_request(4).css_classes(["sc-indicator-fill"]).build();
-    let (stat1, _, _) = stat_widget("BATTERY", "85%", Some(&ind1));
+    let (stat1, _, _) = stat_widget("Battery", "85%", Some(&ind1));
     let ind2 = gtk::Box::builder().height_request(4).css_classes(["sc-indicator-fill"]).build();
-    let (stat2, _, _) = stat_widget("WI-FI LINK", "5 GHz", Some(&ind2));
+    let (stat2, _, _) = stat_widget("Wi-Fi link", "5 GHz", Some(&ind2));
     let ind3 = gtk::Box::builder().height_request(4).css_classes(["sc-indicator-fill"]).build();
-    let (stat3, _, _) = stat_widget("CELLULAR", "5G Full", Some(&ind3));
-    let (stat4, _, _) = stat_widget("BLUETOOTH", "Active", None::<&gtk::Widget>);
+    let (stat3, _, _) = stat_widget("Cellular", "5G Full", Some(&ind3));
+    let (stat4, _, _) = stat_widget("Bluetooth", "Active", None::<&gtk::Widget>);
     stats_strip.append(&stat1);
     stats_strip.append(&stat2);
     stats_strip.append(&stat3);
