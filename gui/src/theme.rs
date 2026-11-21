@@ -73,6 +73,15 @@ window.sc-root headerbar.sc-header {
   border-right: 1px solid rgba(255, 255, 255, 0.07);
 }
 
+.sc-sidebar-header {
+  background-color: #0A0A0C;
+  background-image: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  min-height: 56px;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
 .sc-sidebar-footer {
   background-color: #08080A;
   background-image: none;
@@ -108,7 +117,7 @@ window.sc-root button.sc-bento-btn:hover {
   background-image: none;
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 12px;
-  padding: 15px 16px;
+  padding: 12px 14px;
 }
 
 .sc-icon-box {

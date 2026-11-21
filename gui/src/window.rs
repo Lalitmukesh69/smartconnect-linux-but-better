@@ -99,7 +99,7 @@ fn view_title(name: &str) -> &'static str {
 pub struct Ui {
     window: adw::ApplicationWindow,
     toasts: adw::ToastOverlay,
-    split_view: adw::OverlaySplitView,
+    sidebar_box: gtk::Box,
     sidebar_toggle: gtk::Button,
     root: gtk::Stack,
     /// Label under the spinner on the "connecting" page ("Connecting…" / "Starting smartconnectd…").
@@ -331,22 +331,6 @@ struct NotifRow {
 
 fn page_scroller(child: &impl IsA<gtk::Widget>, max: i32) -> gtk::ScrolledWindow {
     let clamp = adw::Clamp::builder().maximum_size(max).tightening_threshold(max).child(child).build();
-    gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).child(&clamp).build()
-}
-
-fn center_scroller(child: &impl IsA<gtk::Widget>, max: i32) -> gtk::ScrolledWindow {
-    let inner = gtk::Box::builder()
-        .orientation(gtk::Orientation::Vertical)
-        .vexpand(true)
-        .valign(gtk::Align::Center)
-        .build();
-    inner.append(child);
-    let clamp = adw::Clamp::builder()
-        .maximum_size(max)
-        .tightening_threshold(max)
-        .vexpand(true)
-        .child(&inner)
-        .build();
     gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).child(&clamp).build()
 }
 
@@ -683,10 +667,18 @@ impl SidebarNav {
             .valign(gtk::Align::Center)
             .build();
 
-        let brand_row = gtk::Box::builder().spacing(8).build();
+        let brand_row = gtk::Box::builder().spacing(8).valign(gtk::Align::Center).hexpand(true).build();
         brand_row.append(&brand_box);
         brand_row.append(&cmd_trigger);
-        let brand_handle = gtk::WindowHandle::builder().child(&brand_row).build();
+        let brand_handle = gtk::WindowHandle::builder().child(&brand_row).hexpand(true).build();
+
+        let brand_header = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .height_request(56)
+            .css_classes(["sc-sidebar-header"])
+            .valign(gtk::Align::Center)
+            .build();
+        brand_header.append(&brand_handle);
 
         let device = DeviceMenu::build();
 
@@ -757,14 +749,13 @@ impl SidebarNav {
 
         let top_col = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(18)
-            .margin_top(16)
-            .margin_bottom(14)
+            .spacing(16)
+            .margin_top(14)
+            .margin_bottom(12)
             .margin_start(14)
             .margin_end(14)
             .vexpand(true)
             .build();
-        top_col.append(&brand_handle);
         top_col.append(&device.button);
         top_col.append(&nav_scroll);
 
@@ -829,9 +820,10 @@ impl SidebarNav {
 
         let root = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .width_request(280)
+            .width_request(272)
             .css_classes(["sc-sidebar"])
             .build();
+        root.append(&brand_header);
         root.append(&top_col);
         root.append(&footer);
 
@@ -1049,7 +1041,7 @@ impl DownPage {
 impl PhonePage {
     fn build() -> (Self, gtk::Widget) {
         // ── 1. Endpoint Identity & Telemetry Bento ───────────────────────────
-        let (thumb_box, wallpaper, thumb_stack) = wallpaper_thumb(62, 92);
+        let (thumb_box, wallpaper, thumb_stack) = wallpaper_thumb(54, 76);
 
         let status_dot = status_dot(8, false);
         let status_pill = gtk::Label::builder().label("Endpoint Standby").build();
@@ -1111,7 +1103,7 @@ impl PhonePage {
 
         let id_col = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(8)
+            .spacing(5)
             .hexpand(true)
             .valign(gtk::Align::Center)
             .build();
@@ -1167,9 +1159,9 @@ impl PhonePage {
         for seg in &bat_segments {
             bat_bar.append(seg);
         }
-        let bat_slot = gtk::Box::builder().height_request(12).margin_top(6).build();
+        let bat_slot = gtk::Box::builder().height_request(12).margin_top(4).build();
         bat_slot.append(&bat_bar);
-        let bat_sub = gtk::Label::builder().label("Telemetry offline").xalign(0.0).css_classes(["caption", "sc-muted"]).margin_top(4).build();
+        let bat_sub = gtk::Label::builder().label("Telemetry offline").xalign(0.0).css_classes(["caption", "sc-muted"]).margin_top(3).build();
         let bat_tile = Self::stat_tile("BATTERY", &bat_icon, &bat_val, &bat_slot, &bat_sub);
 
         let wifi_icon = ModernIcon::new(IconKind::WifiOff, 15);
@@ -1181,11 +1173,11 @@ impl PhonePage {
             gtk::Box::builder().width_request(7).height_request(9).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
             gtk::Box::builder().width_request(7).height_request(11).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
         ];
-        let wifi_meter = gtk::Box::builder().spacing(3).height_request(12).valign(gtk::Align::End).margin_top(6).build();
+        let wifi_meter = gtk::Box::builder().spacing(3).height_request(12).valign(gtk::Align::End).margin_top(4).build();
         for bar in &wifi_bars {
             wifi_meter.append(bar);
         }
-        let wifi_sub = gtk::Label::builder().label("Link offline").xalign(0.0).css_classes(["caption", "sc-muted", "sc-mono"]).margin_top(4).build();
+        let wifi_sub = gtk::Label::builder().label("Link offline").xalign(0.0).css_classes(["caption", "sc-muted", "sc-mono"]).margin_top(3).build();
         let wifi_tile = Self::stat_tile("WI-FI LINK", &wifi_icon, &wifi_val, &wifi_meter, &wifi_sub);
 
         let cell_icon = ModernIcon::new(IconKind::Cellular { bars: 0 }, 15);
@@ -1197,18 +1189,18 @@ impl PhonePage {
             gtk::Box::builder().width_request(7).height_request(9).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
             gtk::Box::builder().width_request(7).height_request(11).valign(gtk::Align::End).css_classes(["sc-seg-off"]).build(),
         ];
-        let cell_meter = gtk::Box::builder().spacing(3).height_request(12).valign(gtk::Align::End).margin_top(6).build();
+        let cell_meter = gtk::Box::builder().spacing(3).height_request(12).valign(gtk::Align::End).margin_top(4).build();
         for bar in &cell_bars {
             cell_meter.append(bar);
         }
-        let cell_sub = gtk::Label::builder().label("Mobile signal").xalign(0.0).css_classes(["caption", "sc-muted", "sc-mono"]).margin_top(4).build();
+        let cell_sub = gtk::Label::builder().label("Mobile signal").xalign(0.0).css_classes(["caption", "sc-muted", "sc-mono"]).margin_top(3).build();
         let cell_tile = Self::stat_tile("CELLULAR", &cell_icon, &cell_val, &cell_meter, &cell_sub);
 
         let bt_icon = ModernIcon::new(IconKind::Bluetooth { on: false }, 15);
         bt_icon.add_css_class("sc-secondary");
         let bt_val = gtk::Label::builder().label("—").xalign(0.0).css_classes(["sc-metric-text"]).build();
-        let bt_spacer = gtk::Box::builder().height_request(12).margin_top(6).build();
-        let bt_sub = gtk::Label::builder().label("Radio unknown").xalign(0.0).css_classes(["caption", "sc-muted", "sc-mono"]).margin_top(4).build();
+        let bt_spacer = gtk::Box::builder().height_request(12).margin_top(4).build();
+        let bt_sub = gtk::Label::builder().label("Radio unknown").xalign(0.0).css_classes(["caption", "sc-muted", "sc-mono"]).margin_top(3).build();
         let bt_tile = Self::stat_tile("BLUETOOTH", &bt_icon, &bt_val, &bt_spacer, &bt_sub);
 
         let stats_flow = gtk::FlowBox::builder()
@@ -1218,7 +1210,7 @@ impl PhonePage {
             .max_children_per_line(4)
             .column_spacing(12)
             .row_spacing(12)
-            .margin_top(20)
+            .margin_top(14)
             .build();
         for tile in [bat_tile, wifi_tile, cell_tile, bt_tile] {
             stats_flow.append(&tile);
@@ -1228,17 +1220,17 @@ impl PhonePage {
         }
         let stats_wrap = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .margin_top(22)
+            .margin_top(16)
             .css_classes(["sc-divider-top"])
             .build();
         stats_wrap.append(&stats_flow);
 
         let hero_card = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .margin_top(22)
-            .margin_bottom(22)
-            .margin_start(20)
-            .margin_end(20)
+            .margin_top(20)
+            .margin_bottom(20)
+            .margin_start(22)
+            .margin_end(22)
             .build();
         hero_card.append(&hero_top);
         hero_card.append(&stats_wrap);
@@ -1272,12 +1264,12 @@ impl PhonePage {
         cross_hdr.append(&cross_hdr_l);
         cross_hdr.append(&gtk::Label::builder().label("Universal Control & Spatial Display").css_classes(["sc-mono", "caption", "sc-muted"]).build());
 
-        let cross_ic = ModernIcon::new(IconKind::Mouse, 20);
+        let cross_ic = ModernIcon::new(IconKind::Mouse, 18);
         cross_ic.widget().set_hexpand(true);
         cross_ic.widget().set_vexpand(true);
         let cross_icon_box = gtk::Box::builder()
-            .width_request(44)
-            .height_request(44)
+            .width_request(40)
+            .height_request(40)
             .halign(gtk::Align::Center)
             .valign(gtk::Align::Center)
             .css_classes(["sc-icon-box-white"])
@@ -1313,18 +1305,18 @@ impl PhonePage {
         cross_right.append(cross_chev.widget());
 
         let cross_row = gtk::Box::builder()
-            .spacing(16)
-            .margin_top(18)
-            .margin_bottom(18)
-            .margin_start(20)
-            .margin_end(20)
+            .spacing(14)
+            .margin_top(14)
+            .margin_bottom(14)
+            .margin_start(18)
+            .margin_end(18)
             .build();
         cross_row.append(&cross_icon_box);
         cross_row.append(&cross_text);
         cross_row.append(&cross_right);
         let cross_btn = gtk::Button::builder().css_classes(["sc-bento-btn"]).child(&cross_row).build();
 
-        let cross_section = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(10).build();
+        let cross_section = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(8).build();
         cross_section.append(&cross_hdr);
         cross_section.append(&cross_btn);
 
@@ -1336,12 +1328,12 @@ impl PhonePage {
         cont_hdr.append(&gtk::Label::builder().label("App Stream · Storage · Share").css_classes(["sc-mono", "caption", "sc-muted"]).build());
 
         let leading_badge = |kind: IconKind| -> gtk::Box {
-            let ic = ModernIcon::new(kind, 17);
+            let ic = ModernIcon::new(kind, 16);
             ic.widget().set_hexpand(true);
             ic.widget().set_vexpand(true);
             let b = gtk::Box::builder()
-                .width_request(38)
-                .height_request(38)
+                .width_request(34)
+                .height_request(34)
                 .valign(gtk::Align::Center)
                 .css_classes(["sc-icon-box-sm"])
                 .build();
@@ -1350,7 +1342,7 @@ impl PhonePage {
         };
 
         // Tile A: Recent App Stream
-        let recent_icon_slot = IconSlot::new(38);
+        let recent_icon_slot = IconSlot::new(34);
         let recent_placeholder = leading_badge(IconKind::AppsGrid);
         let recent_icon_stack = gtk::Stack::new();
         recent_icon_stack.add_named(&recent_placeholder, Some("empty"));
@@ -1419,18 +1411,18 @@ impl PhonePage {
                 cell.set_focusable(false);
             }
         }
-        let continuity_section = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(10).build();
+        let continuity_section = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(8).build();
         continuity_section.append(&cont_hdr);
         continuity_section.append(&cont_flow);
 
         let column = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(22)
-            .valign(gtk::Align::Center)
-            .margin_top(26)
-            .margin_bottom(28)
-            .margin_start(22)
-            .margin_end(22)
+            .spacing(18)
+            .valign(gtk::Align::Start)
+            .margin_top(18)
+            .margin_bottom(30)
+            .margin_start(24)
+            .margin_end(24)
             .build();
         column.append(&hero_bento);
         column.append(&unread_card);
@@ -1494,7 +1486,7 @@ impl PhonePage {
             share_status,
             share_btn,
         };
-        (page, center_scroller(&column, 1020).upcast())
+        (page, page_scroller(&column, 1040).upcast())
     }
 
     fn stat_tile(
@@ -1517,7 +1509,7 @@ impl PhonePage {
 
         let tile = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(12)
+            .spacing(8)
             .css_classes(["sc-stat-tile"])
             .build();
         tile.append(&top);
@@ -1545,18 +1537,18 @@ impl PhonePage {
         text.append(title);
         text.append(sub);
 
-        let bottom = gtk::Box::builder().spacing(12).valign(gtk::Align::Center).build();
+        let bottom = gtk::Box::builder().spacing(10).valign(gtk::Align::Center).build();
         bottom.append(leading);
         bottom.append(&text);
         bottom.append(action);
 
         let inner = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(14)
-            .margin_top(16)
-            .margin_bottom(16)
-            .margin_start(18)
-            .margin_end(18)
+            .spacing(12)
+            .margin_top(13)
+            .margin_bottom(13)
+            .margin_start(16)
+            .margin_end(16)
             .build();
         inner.append(&hdr);
         inner.append(&bottom);
@@ -1588,17 +1580,18 @@ impl NotifPage {
         let list = gtk::ListBox::builder().selection_mode(gtk::SelectionMode::None).css_classes(["boxed-list"]).visible(false).build();
         let column = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(12)
+            .spacing(16)
+            .valign(gtk::Align::Start)
             .margin_top(24)
-            .margin_bottom(24)
-            .margin_start(20)
-            .margin_end(20)
+            .margin_bottom(36)
+            .margin_start(28)
+            .margin_end(28)
             .build();
         column.append(&muted_group);
         column.append(&empty);
         column.append(&today);
         column.append(&list);
-        (Self { empty, today, clear_all, list, muted_group, muted }, page_scroller(&column, 900).upcast())
+        (Self { empty, today, clear_all, list, muted_group, muted }, page_scroller(&column, 1040).upcast())
     }
 }
 
@@ -1668,10 +1661,11 @@ impl Ui {
         let display_column = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
             .spacing(24)
+            .valign(gtk::Align::Start)
             .margin_top(24)
-            .margin_bottom(24)
-            .margin_start(20)
-            .margin_end(20)
+            .margin_bottom(36)
+            .margin_start(28)
+            .margin_end(28)
             .build();
         display_column.append(&cross_modes);
         display_column.append(&cross_position);
@@ -1709,8 +1703,9 @@ impl Ui {
         let sidebar_toggle = gtk::Button::builder()
             .child(sidebar_ic.widget())
             .css_classes(["sc-btn-icon"])
-            .tooltip_text("Show sidebar")
-            .visible(false)
+            .tooltip_text("Toggle sidebar (Ctrl+\\)")
+            .visible(true)
+            .valign(gtk::Align::Center)
             .build();
         let app_menu_model = build_app_menu();
         let menu_ic = ModernIcon::new(IconKind::MoreDots, 15);
@@ -1730,15 +1725,22 @@ impl Ui {
         workspace_toolbar.set_content(Some(&toasts));
         workspace_toolbar.add_css_class("sc-canvas");
 
-        let split_view = adw::OverlaySplitView::builder()
-            .sidebar(&sidebar.root)
-            .content(&workspace_toolbar)
-            .min_sidebar_width(280.0)
-            .max_sidebar_width(280.0)
-            .sidebar_width_unit(adw::LengthUnit::Px)
-            .show_sidebar(true)
-            .pin_sidebar(true)
+        let main_layout = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .hexpand(true)
+            .vexpand(true)
             .build();
+
+        sidebar.root.set_size_request(272, -1);
+        sidebar.root.set_hexpand(false);
+        sidebar.root.set_vexpand(true);
+        sidebar.root.set_visible(true);
+
+        workspace_toolbar.set_hexpand(true);
+        workspace_toolbar.set_vexpand(true);
+
+        main_layout.append(&sidebar.root);
+        main_layout.append(&workspace_toolbar);
 
         let window = adw::ApplicationWindow::builder()
             .application(app)
@@ -1748,7 +1750,7 @@ impl Ui {
             .default_height(win_prefs.height)
             .maximized(win_prefs.maximized)
             .css_classes(["sc-root"])
-            .content(&split_view)
+            .content(&main_layout)
             .build();
 
         // Medium width breakpoint: hide header status pill when header tightens.
@@ -1756,9 +1758,9 @@ impl Ui {
         medium.add_setter(&header.status_pill, "visible", Some(&false.to_value()));
         window.add_breakpoint(medium);
 
-        // Narrow width breakpoint: collapse 280px sidebar into an overlay drawer and stack phone hero actions.
-        let narrow = adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 780sp").expect("valid breakpoint condition"));
-        narrow.add_setter(&split_view, "collapsed", Some(&true.to_value()));
+        // Narrow width breakpoint: auto-hide sidebar if window is made very narrow (< 680sp) and stack phone hero actions.
+        let narrow = adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 680sp").expect("valid breakpoint condition"));
+        narrow.add_setter(&sidebar.root, "visible", Some(&false.to_value()));
         narrow.add_setter(&phone.hero_top, "orientation", Some(&gtk::Orientation::Vertical.to_value()));
         window.add_breakpoint(narrow);
 
@@ -1767,7 +1769,7 @@ impl Ui {
         let ui = Rc::new(Self {
             window,
             toasts,
-            split_view: split_view.clone(),
+            sidebar_box: sidebar.root.clone(),
             sidebar_toggle: sidebar_toggle.clone(),
             root,
             connecting_label,
@@ -1795,18 +1797,10 @@ impl Ui {
         ui.refresh_down();
         ui.connect_signals();
 
-        // Sidebar collapse visibility sync.
-        let toggle_w = ui.sidebar_toggle.downgrade();
-        ui.split_view.connect_collapsed_notify(move |sv| {
-            if let Some(btn) = toggle_w.upgrade() {
-                btn.set_visible(sv.is_collapsed());
-            }
-        });
-        let sv_w = ui.split_view.downgrade();
+        // Sidebar toggle click handler.
+        let sb = ui.sidebar_box.clone();
         ui.sidebar_toggle.connect_clicked(move |_| {
-            if let Some(sv) = sv_w.upgrade() {
-                sv.set_show_sidebar(!sv.shows_sidebar());
-            }
+            sb.set_visible(!sb.is_visible());
         });
 
         let weak = Rc::downgrade(&ui);
@@ -1853,9 +1847,6 @@ impl Ui {
             return;
         }
         self.views.set_visible_child_name(name);
-        if self.split_view.is_collapsed() {
-            self.split_view.set_show_sidebar(false);
-        }
         self.refresh_header_tab();
     }
 
@@ -2026,11 +2017,21 @@ impl Ui {
         });
         self.window.add_action(&tab_act);
 
+        let toggle_sidebar_act = gio::SimpleAction::new("toggle-sidebar", None);
+        let weak = Rc::downgrade(self);
+        toggle_sidebar_act.connect_activate(move |_, _| {
+            if let Some(ui) = weak.upgrade() {
+                ui.sidebar_box.set_visible(!ui.sidebar_box.is_visible());
+            }
+        });
+        self.window.add_action(&toggle_sidebar_act);
+
         app.set_accels_for_action("win.command-palette", &["<Primary>k"]);
         app.set_accels_for_action("win.preferences", &["<Primary>comma"]);
         app.set_accels_for_action("win.shortcuts", &["<Primary>question"]);
         app.set_accels_for_action("win.pair", &["<Primary><Shift>p"]);
         app.set_accels_for_action("win.focus-search", &["<Primary>f"]);
+        app.set_accels_for_action("win.toggle-sidebar", &["<Primary>backslash", "F9"]);
         app.set_accels_for_action("win.hide", &["<Primary>w"]);
         app.set_accels_for_action("win.quit", &["<Primary>q"]);
         app.set_accels_for_action("win.tab::phone", &["<Alt>1", "<Primary>1"]);

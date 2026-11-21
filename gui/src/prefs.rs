@@ -41,7 +41,7 @@ pub struct WindowPrefs {
 impl Default for WindowPrefs {
     fn default() -> Self {
         Self {
-            width: 1120,
+            width: 1180,
             height: 760,
             maximized: false,
             hide_on_close: true,
@@ -52,8 +52,8 @@ impl Default for WindowPrefs {
 
 impl WindowPrefs {
     pub fn sanitized(mut self) -> Self {
-        self.width = self.width.clamp(420, 3840);
-        self.height = self.height.clamp(480, 2160);
+        self.width = self.width.clamp(980, 3840);
+        self.height = self.height.clamp(620, 2160);
         if !matches!(self.last_tab.as_str(), "phone" | "apps" | "display" | "files" | "notifications") {
             self.last_tab = "phone".into();
         }
