@@ -21,9 +21,11 @@ use gtk::{gio, glib};
 use serde::Deserialize;
 use serde_json::{json, Value};
 
+use crate::components::*;
 use crate::icons::{self, IconSlot};
 use crate::mirror::binary;
 use crate::prefs;
+use crate::theme::{IconKind, ModernIcon};
 
 const MIRROR_BIN: &str = "smartconnect-mirror";
 /// Session list refresh period.
@@ -224,15 +226,17 @@ const ICON_RESCAN_DELAY: Duration = Duration::from_millis(700);
 pub struct AppsPage {
     toasts: adw::ToastOverlay,
     stack: gtk::Stack,
-    empty: adw::StatusPage,
+    _empty: gtk::Box,
+    notice: gtk::Box,
     search: gtk::SearchEntry,
     refresh: gtk::Button,
     spinner: adw::Spinner,
+    count_lbl: gtk::Label,
+    _mirror_btn: gtk::Button,
+    empty_search: gtk::Box,
     running: adw::PreferencesGroup,
-    /// "Recent" heading + chips, hidden until there are recents among the known apps.
     recent_group: gtk::Box,
-    recent_flow: gtk::FlowBox,
-    /// "All apps" icon grid.
+    recent_flow: gtk::Box,
     flow: gtk::FlowBox,
     state: RefCell<AppsState>,
     polling: Cell<bool>,
@@ -269,76 +273,125 @@ struct AppsState {
 
 impl AppsPage {
     pub fn build(toasts: &adw::ToastOverlay) -> (Rc<Self>, gtk::Widget) {
-        let search = gtk::SearchEntry::builder().hexpand(true).placeholder_text("Search apps").build();
-        let refresh = gtk::Button::builder().label("Refresh").tooltip_text("Reload the app list from the phone").valign(gtk::Align::Center).build();
+        let count_lbl = gtk::Label::builder()
+            .label("0 apps")
+            .css_classes(["sc-stat-caption", "tabular-nums"])
+            .valign(gtk::Align::Center)
+            .build();
+
+        let mirror_btn = ghost_button("Mirror phone display");
+        mirror_btn.set_tooltip_text(Some("Stream entire phone display in a window"));
+
+        let search = gtk::SearchEntry::builder()
+            .placeholder_text("Search apps…")
+            .width_request(220)
+            .build();
+
+        let refresh_ic = ModernIcon::new(IconKind::Refresh, 16);
+        let refresh = gtk::Button::builder()
+            .child(refresh_ic.widget())
+            .css_classes(["sc-btn-icon"])
+            .tooltip_text("Reload apps from phone")
+            .valign(gtk::Align::Center)
+            .build();
+
         let spinner = adw::Spinner::builder().visible(false).build();
-        let bar = gtk::Box::builder().spacing(8).build();
-        bar.append(&search);
-        bar.append(&spinner);
-        bar.append(&refresh);
-        // The search bar stays a sensible width even on a wide window; the grid below fills it.
-        let bar_clamp = adw::Clamp::builder().maximum_size(760).tightening_threshold(760).child(&bar).build();
+
+        let header_actions = gtk::Box::builder()
+            .spacing(crate::tokens::SPACE_2)
+            .valign(gtk::Align::Center)
+            .build();
+        header_actions.append(&search);
+        header_actions.append(&count_lbl);
+        header_actions.append(&spinner);
+        header_actions.append(&refresh);
+        header_actions.append(&mirror_btn);
+
+        let (header, _, _) = page_header("Apps", "Launchpad and mirroring", Some(&header_actions));
+
+        let notice = notice_banner(
+            IconKind::Smartphone,
+            "App streaming is available when connected. Connect from the sidebar to launch apps.",
+        );
 
         let running = adw::PreferencesGroup::builder()
-            .title("Running")
+            .title("Running apps")
             .description("Phone apps open in their own windows")
+            .css_classes(["sc-pref-group"])
             .visible(false)
             .build();
 
-        // Recent: a heading above a row of app chips.
-        let recent_flow = gtk::FlowBox::builder()
-            .selection_mode(gtk::SelectionMode::None)
-            .homogeneous(false)
-            .min_children_per_line(1)
-            .max_children_per_line(12)
-            .column_spacing(8)
-            .row_spacing(8)
+        // Recent apps inside ONE Surface
+        let recent_flow = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .css_classes(["sc-surface"])
             .build();
-        let recent_group = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(8).visible(false).build();
-        recent_group.append(&gtk::Label::builder().label("Recent").xalign(0.0).css_classes(["heading"]).build());
-        recent_group.append(&recent_flow);
+        let recent_group = section("Recent", Some("Recently streamed applications"), &recent_flow);
+        recent_group.set_visible(false);
 
-        // All apps: an icon grid that adds columns as the window widens (fills the full width).
+        // Empty search state
+        let empty_search = empty_state(
+            IconKind::Search,
+            "No apps matching your query · Check spelling or search by package name",
+        );
+        empty_search.set_visible(false);
+
+        // All apps inside ONE Surface with hairline-separated rows
         let flow = gtk::FlowBox::builder()
             .selection_mode(gtk::SelectionMode::None)
             .homogeneous(true)
-            .min_children_per_line(3)
-            .max_children_per_line(24)
-            .column_spacing(4)
-            .row_spacing(8)
+            .min_children_per_line(1)
+            .max_children_per_line(1)
+            .row_spacing(0)
+            .column_spacing(0)
+            .css_classes(["sc-surface"])
             .hexpand(true)
             .build();
-        let all_group = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(8).build();
-        all_group.append(&gtk::Label::builder().label("All apps").xalign(0.0).css_classes(["heading"]).build());
-        all_group.append(&flow);
+
+        let all_col = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(crate::tokens::SPACE_2)
+            .build();
+        all_col.append(&empty_search);
+        all_col.append(&flow);
+
+        let all_group = section("All apps", None, &all_col);
 
         let column = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(18)
-            .margin_top(24)
-            .margin_bottom(24)
-            .margin_start(12)
-            .margin_end(12)
+            .spacing(crate::tokens::SPACE_10)
+            .margin_top(crate::tokens::CONTENT_PAD_TOP)
+            .margin_bottom(crate::tokens::CONTENT_PAD_BOTTOM)
+            .margin_start(crate::tokens::CONTENT_PAD_HORIZ)
+            .margin_end(crate::tokens::CONTENT_PAD_HORIZ)
             .build();
-        column.append(&bar_clamp);
+        column.append(&header);
+        column.append(&notice);
         column.append(&running);
         column.append(&recent_group);
         column.append(&all_group);
-        let clamp = adw::Clamp::builder().maximum_size(1700).tightening_threshold(1700).child(&column).build();
-        let scroller = gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).child(&clamp).build();
 
-        let empty = adw::StatusPage::builder()
-            .icon_name("view-app-grid-symbolic")
-            .title("No App List Yet")
-            .description("Connect the phone, then load its apps to open them in their own windows.")
+        let scroller = page_scroller(&column, crate::tokens::CONTENT_MAX_WIDTH);
+
+        let load = primary_button("Load apps");
+        let empty_box = empty_state(
+            IconKind::AppsGrid,
+            "No apps loaded yet · Connect your phone to stream apps onto this PC",
+        );
+        let empty = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(crate::tokens::SPACE_4)
+            .halign(gtk::Align::Center)
+            .valign(gtk::Align::Center)
+            .vexpand(true)
             .build();
-        let load = gtk::Button::builder().label("Load Apps").css_classes(["pill", "suggested-action"]).halign(gtk::Align::Center).build();
-        empty.set_child(Some(&load));
+        empty.append(&empty_box);
+        empty.append(&load);
+
         let stack = gtk::Stack::new();
         stack.add_named(&empty, Some("empty"));
         stack.add_named(&scroller, Some("list"));
 
-        // Watch the icon cache dir (created if missing, so the monitor has something to watch).
         let icon_dir = icons::cache_dir();
         let _ = std::fs::create_dir_all(&icon_dir);
         let icon_monitor = gio::File::for_path(&icon_dir).monitor_directory(gio::FileMonitorFlags::NONE, gio::Cancellable::NONE).ok();
@@ -346,10 +399,14 @@ impl AppsPage {
         let page = Rc::new(Self {
             toasts: toasts.clone(),
             stack: stack.clone(),
-            empty,
+            _empty: empty,
+            notice,
             search,
             refresh,
             spinner,
+            count_lbl,
+            _mirror_btn: mirror_btn.clone(),
+            empty_search,
             running,
             recent_group,
             recent_flow,
@@ -360,6 +417,13 @@ impl AppsPage {
             on_apps: RefCell::default(),
             _icon_monitor: icon_monitor,
             icon_rescan: Cell::new(false),
+        });
+
+        let weak_mirror = Rc::downgrade(&page);
+        mirror_btn.connect_clicked(move |_| {
+            if let Some(p) = weak_mirror.upgrade() {
+                p.toggle_mirror();
+            }
         });
 
         if let Some(monitor) = &page._icon_monitor {
@@ -485,6 +549,24 @@ impl AppsPage {
     }
 
     /// The host's whole-screen mirror session, if one is open.
+    pub fn toggle_mirror(self: &Rc<Self>) {
+        if let Some(sid) = self.mirror_session() {
+            self.close_session(sid);
+        } else {
+            let weak = Rc::downgrade(self);
+            glib::spawn_future_local(async move {
+                let result = gio::spawn_blocking(start_mirror)
+                    .await
+                    .unwrap_or_else(|_| Err("mirror thread failed".into()));
+                let Some(p) = weak.upgrade() else { return };
+                if let Err(e) = result {
+                    p.toast(&e);
+                }
+                p.poll_soon();
+            });
+        }
+    }
+
     pub fn mirror_session(&self) -> Option<i64> {
         self.state.borrow().sessions.iter().find(|s| s.pkg == "mirror").map(|s| s.session_id)
     }
@@ -521,20 +603,9 @@ impl AppsPage {
         self.refresh.set_sensitive(st.connected && !st.fetching);
         self.spinner.set_visible(st.fetching);
         self.stack.set_visible_child_name(if st.apps.is_empty() { "empty" } else { "list" });
-        self.search.set_placeholder_text(Some(&match st.apps.len() {
-            0 => "Search apps".to_owned(),
-            n => format!("Search {n} apps"),
-        }));
-        if let Some(load) = self.empty.child() {
-            load.set_sensitive(st.connected && !st.fetching);
-        }
-        self.empty.set_description(Some(if st.fetching {
-            "Asking the phone for its apps…"
-        } else if st.connected {
-            "Load the phone's apps to open them in their own windows."
-        } else {
-            "Connect the phone, then load its apps to open them in their own windows."
-        }));
+        let count = st.apps.len();
+        self.count_lbl.set_label(&format!("{count} apps"));
+        self.notice.set_visible(!st.connected);
     }
 
     fn fetch(self: &Rc<Self>) {
@@ -580,7 +651,7 @@ impl AppsPage {
         }
         icons::rescan();
         for app in &apps {
-            let (button, icon) = self.app_tile(app, 48);
+            let (button, icon) = self.app_row(app);
             self.flow.append(&button);
             // FlowBox wraps each child in a FlowBoxChild; that is what we hide when filtering.
             let child = button.parent().and_downcast::<gtk::FlowBoxChild>().expect("flowbox child");
@@ -596,53 +667,103 @@ impl AppsPage {
         }
     }
 
-    /// One app tile: an icon over the name, the package id on hover. `size` is the icon pixel size.
-    fn app_tile(self: &Rc<Self>, app: &App, size: i32) -> (gtk::Button, IconSlot) {
-        let inner = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(6).build();
-        let icon = IconSlot::new(size);
+    fn app_row(self: &Rc<Self>, app: &App) -> (gtk::Widget, IconSlot) {
+        let icon = IconSlot::new(40);
         icon.set(&app.query());
-        inner.append(icon.widget());
-        let name = gtk::Label::builder()
+
+        let title_lbl = gtk::Label::builder()
             .label(&app.name)
-            .justify(gtk::Justification::Center)
-            .wrap(true)
-            .wrap_mode(gtk::pango::WrapMode::WordChar)
-            .lines(2)
+            .xalign(0.0)
+            .css_classes(["sc-row-title"])
             .ellipsize(gtk::pango::EllipsizeMode::End)
-            .max_width_chars(10)
-            .css_classes(["caption"])
             .build();
-        inner.append(&name);
-        let tooltip = if app.work { format!("{} · work profile", app.pkg) } else { app.pkg.clone() };
-        let button = gtk::Button::builder().css_classes(["flat", "sc-tile"]).tooltip_text(&tooltip).child(&inner).build();
+
+        let sub_lbl = gtk::Label::builder()
+            .label(if app.work { format!("{} · Work profile", app.pkg) } else { app.pkg.clone() })
+            .xalign(0.0)
+            .css_classes(["sc-row-helper"])
+            .ellipsize(gtk::pango::EllipsizeMode::End)
+            .build();
+
+        let text_col = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(2)
+            .hexpand(true)
+            .valign(gtk::Align::Center)
+            .build();
+        text_col.append(&title_lbl);
+        text_col.append(&sub_lbl);
+
+        let launch_btn = row_action_button("Launch", false);
+
+        let row = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .spacing(crate::tokens::SPACE_3)
+            .css_classes(["sc-row", "sc-row-interactive"])
+            .build();
+        row.append(icon.widget());
+        row.append(&text_col);
+        row.append(&launch_btn);
+
         let weak = Rc::downgrade(self);
-        let app = app.clone();
-        let btn = button.downgrade();
-        button.connect_clicked(move |_| {
-            if let (Some(p), Some(btn)) = (weak.upgrade(), btn.upgrade()) {
-                p.launch(&app, &btn);
+        let app_clone = app.clone();
+        let btn = launch_btn.downgrade();
+        launch_btn.connect_clicked(move |_| {
+            if let (Some(p), Some(b)) = (weak.upgrade(), btn.upgrade()) {
+                p.launch(&app_clone, &b);
             }
         });
-        (button, icon)
+
+        (row.upcast(), icon)
     }
 
-    /// One Recent chip: a small horizontal icon + name button.
-    fn recent_chip(self: &Rc<Self>, app: &App) -> gtk::Button {
-        let inner = gtk::Box::builder().spacing(8).build();
-        let icon = IconSlot::new(24);
+    fn recent_row(self: &Rc<Self>, app: &App) -> gtk::Widget {
+        let icon = IconSlot::new(40);
         icon.set(&app.query());
-        inner.append(icon.widget());
-        inner.append(&gtk::Label::builder().label(&app.name).ellipsize(gtk::pango::EllipsizeMode::End).max_width_chars(16).build());
-        let button = gtk::Button::builder().css_classes(["card", "sc-chip"]).tooltip_text(&app.pkg).child(&inner).build();
+
+        let title_lbl = gtk::Label::builder()
+            .label(&app.name)
+            .xalign(0.0)
+            .css_classes(["sc-row-title"])
+            .ellipsize(gtk::pango::EllipsizeMode::End)
+            .build();
+
+        let sub_lbl = gtk::Label::builder()
+            .label("Recently streamed")
+            .xalign(0.0)
+            .css_classes(["sc-row-helper"])
+            .build();
+
+        let text_col = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(2)
+            .hexpand(true)
+            .valign(gtk::Align::Center)
+            .build();
+        text_col.append(&title_lbl);
+        text_col.append(&sub_lbl);
+
+        let launch_btn = row_action_button("Launch", false);
+
+        let row = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .spacing(crate::tokens::SPACE_3)
+            .css_classes(["sc-row", "sc-row-interactive"])
+            .build();
+        row.append(icon.widget());
+        row.append(&text_col);
+        row.append(&launch_btn);
+
         let weak = Rc::downgrade(self);
-        let app = app.clone();
-        let btn = button.downgrade();
-        button.connect_clicked(move |_| {
-            if let (Some(p), Some(btn)) = (weak.upgrade(), btn.upgrade()) {
-                p.launch(&app, &btn);
+        let app_clone = app.clone();
+        let btn = launch_btn.downgrade();
+        launch_btn.connect_clicked(move |_| {
+            if let (Some(p), Some(b)) = (weak.upgrade(), btn.upgrade()) {
+                p.launch(&app_clone, &b);
             }
         });
-        button
+
+        row.upcast()
     }
 
     /// Rebuilds the Recent chips from the remembered packages that are in the current app list.
@@ -654,9 +775,12 @@ impl AppsPage {
             let st = self.state.borrow();
             st.recent.iter().filter_map(|pkg| st.apps.iter().find(|a| &a.pkg == pkg).cloned()).collect()
         };
-        for app in &apps {
-            let chip = self.recent_chip(app);
-            self.recent_flow.append(&chip);
+        for (i, app) in apps.iter().enumerate() {
+            if i > 0 {
+                self.recent_flow.append(&hairline());
+            }
+            let row = self.recent_row(app);
+            self.recent_flow.append(&row);
         }
         self.recent_group.set_visible(!apps.is_empty());
     }
@@ -685,9 +809,16 @@ impl AppsPage {
 
     fn apply_filter(&self) {
         let query = self.search.text().trim().to_lowercase();
+        let mut matches = 0;
         for tile in &self.state.borrow().rows {
-            tile.child.set_visible(query.split_whitespace().all(|w| tile.hay.contains(w)));
+            let m = query.split_whitespace().all(|w| tile.hay.contains(w));
+            tile.child.set_visible(m);
+            if m {
+                matches += 1;
+            }
         }
+        self.empty_search.set_visible(!query.is_empty() && matches == 0);
+        self.flow.set_visible(query.is_empty() || matches > 0);
     }
 
     fn launch(self: &Rc<Self>, app: &App, button: &gtk::Button) {

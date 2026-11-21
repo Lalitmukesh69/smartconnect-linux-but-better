@@ -404,6 +404,29 @@ window.sc-root button.destructive-action:hover {
   border-radius: 12px;
 }
 
+flowbox.sc-surface {
+  background-color: rgba(255, 255, 255, 0.04);
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0;
+}
+
+flowbox.sc-surface > flowboxchild {
+  padding: 0;
+  margin: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: transparent;
+}
+
+flowbox.sc-surface > flowboxchild:last-child {
+  border-bottom: none;
+}
+
+flowbox.sc-surface > flowboxchild:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
 box.sc-hairline {
   min-height: 1px;
   background-color: rgba(255, 255, 255, 0.08);

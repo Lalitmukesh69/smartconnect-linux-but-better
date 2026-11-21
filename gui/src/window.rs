@@ -1876,6 +1876,7 @@ impl Ui {
         self.window.add_action(&kitchen_act);
     }
 
+    #[cfg(test)]
     pub(crate) fn window(&self) -> &adw::ApplicationWindow { &self.window }
     pub fn present(&self) {
         self.window.present();
