@@ -7,7 +7,10 @@
 > - **Target:** `main` (`e879e5a`)
 > - **Release Title:** `Smart Connect UI v0.1.0-ui.1 — Apple Pro Dark Monochrome (Phase 1)`
 > - **Pre-release:** Checked *(recommended while Phases 2–5 are in progress; uncheck if publishing as stable)*
-> - **Attach Binary Asset:** `target/release/smartconnect-gui` *(upload as `smartconnect-gui` or `smartconnect-gui-linux-x86_64`)*
+> - **Attach Binary Assets:**
+>   - `Smart_Connect-0.1.0-x86_64.flatpak` *(Single-file Flatpak bundle for one-click installation on Fedora, Ubuntu, Arch, etc.)*
+>   - `Smart_Connect-0.1.0-anylinux-x86_64.AppImage` *(Portable AppImage)*
+>   - `target/release/smartconnect-gui` *(Standalone compiled GTK4 binary)*
 
 ---
 
