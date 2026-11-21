@@ -1743,6 +1743,7 @@ impl Ui {
         let window = adw::ApplicationWindow::builder()
             .application(app)
             .title("Smart Connect")
+            .icon_name(crate::APP_ID)
             .default_width(win_prefs.width)
             .default_height(win_prefs.height)
             .maximized(win_prefs.maximized)
