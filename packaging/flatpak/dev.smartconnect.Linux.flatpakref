@@ -1,0 +1,9 @@
+[Flatpak Ref]
+Name=dev.smartconnect.Linux
+Branch=stable
+Title=Smart Connect
+Comment=Connect, mirror and control your Motorola phone from Linux
+Description=Unofficial Linux companion for Motorola Smart Connect (pairing, screen mirroring, app streaming, Cross Control, notifications, and clipboard sync).
+Icon=https://raw.githubusercontent.com/Lalitmukesh69/smartconnect-linux-but-better/main/packaging/icons/hicolor/128x128/apps/dev.smartconnect.Linux.png
+Url=https://flathub.org/repo/flathub.flatpakrepo
+IsRuntime=false
