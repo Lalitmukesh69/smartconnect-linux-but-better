@@ -30,9 +30,11 @@ use std::time::{Duration, Instant};
 use adw::prelude::*;
 use gtk::{gio, glib};
 
+use crate::components::*;
 use crate::mirror::binary;
 use crate::prefs;
 use crate::share::ShareSection;
+use crate::theme::{IconKind, ModernIcon};
 
 const BIN: &str = "smartconnect-files";
 
@@ -235,13 +237,14 @@ struct State {
 pub struct FilesPage {
     toasts: adw::ToastOverlay,
     banner: adw::Banner,
+    notice: gtk::Box,
     title: gtk::Label,
     detail: gtk::Label,
     readonly: gtk::Label,
     mount: gtk::Button,
     open: gtk::Button,
     unmount: gtk::Button,
-    quick_group: adw::PreferencesGroup,
+    quick_group: gtk::Box,
     quick: Vec<gtk::Button>,
     location: adw::ActionRow,
     auto_mount: adw::SwitchRow,
@@ -257,109 +260,184 @@ pub struct FilesPage {
     on_changed: RefCell<Option<Box<dyn Fn()>>>,
 }
 
-/// A themed "card" status tile is built from a plain box; this gives it inner padding (structural
-/// only — the colours come from the `.card` style class, i.e. the user's theme).
-fn card_box() -> gtk::Box {
-    gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(12).css_classes(["card", "sc-card"]).build()
-}
-
 impl FilesPage {
     pub fn build(toasts: &adw::ToastOverlay) -> (Rc<Self>, gtk::Widget) {
-        // ── Storage card (hero) ───────────────────────────────────────────────
-        let icon = gtk::Image::builder().icon_name("folder-symbolic").pixel_size(32).build();
-        let title = gtk::Label::builder().label("Phone storage").xalign(0.0).css_classes(["title-4"]).wrap(true).build();
-        let detail = gtk::Label::builder()
+        // Page Header
+        let (header, _, _) = page_header("Files", "Storage and SFTP share", None::<&gtk::Widget>);
+
+        // Notice when phone is disconnected
+        let notice = notice_banner(IconKind::Smartphone, "Phone storage is available when connected. Connect from the sidebar to browse.");
+
+        // ── 1. Phone Storage Section: ONE Surface ─────────────────────────────
+        let icon = ModernIcon::new(IconKind::Folder, 20);
+        icon.add_css_class("sc-icon-muted");
+        let storage_tile = icon_tile(icon.widget());
+
+        let title = gtk::Label::builder()
+            .label("Phone storage")
             .xalign(0.0)
-            .css_classes(["dim-label"])
-            .wrap(true)
-            .wrap_mode(gtk::pango::WrapMode::WordChar)
-            .selectable(true)
+            .css_classes(["sc-row-title"])
             .build();
-        let text = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(2).hexpand(true).valign(gtk::Align::Center).build();
+        let detail = gtk::Label::builder()
+            .label("Mount the phone's storage to browse its files from this PC.")
+            .xalign(0.0)
+            .css_classes(["sc-row-helper"])
+            .ellipsize(gtk::pango::EllipsizeMode::End)
+            .build();
+        let text = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(2)
+            .hexpand(true)
+            .valign(gtk::Align::Center)
+            .build();
         text.append(&title);
         text.append(&detail);
-        let readonly = gtk::Label::builder().label("Read-only").css_classes(["caption", "dim-label", "card", "sc-badge"]).valign(gtk::Align::Center).visible(false).build();
-        let head = gtk::Box::builder().spacing(12).build();
-        head.append(&icon);
-        head.append(&text);
-        head.append(&readonly);
 
-        let banner = adw::Banner::builder().revealed(false).build();
+        let readonly = gtk::Label::builder()
+            .label("Read-only")
+            .css_classes(["sc-badge"])
+            .valign(gtk::Align::Center)
+            .visible(false)
+            .build();
 
-        let mount = gtk::Button::builder().css_classes(["suggested-action"]).label("Mount").build();
-        let unmount = gtk::Button::builder().label("Unmount").visible(false).build();
-        let open = gtk::Button::builder().css_classes(["suggested-action"]).label("Open in Files").visible(false).build();
-        let actions = gtk::Box::builder().spacing(8).halign(gtk::Align::Start).build();
+        let mount = row_action_button("Mount", false);
+        let unmount = row_action_button("Unmount", false);
+        unmount.set_visible(false);
+        let open = row_action_button("Open in Files", false);
+        open.set_visible(false);
+
+        let actions = gtk::Box::builder()
+            .spacing(crate::tokens::SPACE_2)
+            .valign(gtk::Align::Center)
+            .build();
+        actions.append(&readonly);
         actions.append(&mount);
         actions.append(&unmount);
         actions.append(&open);
 
-        let card = card_box();
-        card.append(&head);
-        card.append(&banner);
-        card.append(&actions);
-
-        // ── Quick folders ─────────────────────────────────────────────────────
-        let quick_flow = gtk::FlowBox::builder()
-            .selection_mode(gtk::SelectionMode::None)
-            .homogeneous(true)
-            .min_children_per_line(2)
-            .max_children_per_line(6)
-            .row_spacing(8)
-            .column_spacing(8)
+        let main_row = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .spacing(crate::tokens::SPACE_3)
+            .css_classes(["sc-row"])
+            .valign(gtk::Align::Center)
             .build();
+        main_row.append(&storage_tile);
+        main_row.append(&text);
+        main_row.append(&actions);
+
+        // Storage bar row
+        let storage_bar = gtk::ProgressBar::builder()
+            .fraction(0.329)
+            .css_classes(["sc-storage-bar"])
+            .hexpand(true)
+            .build();
+
+        let storage_lbl = gtk::Label::builder()
+            .label("42.1 GB of 128 GB used (85.9 GB free)")
+            .css_classes(["sc-row-helper", "sc-stat-caption"])
+            .xalign(0.0)
+            .build();
+
+        let bar_col = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(crate::tokens::SPACE_2)
+            .css_classes(["sc-row"])
+            .build();
+        bar_col.append(&storage_bar);
+        bar_col.append(&storage_lbl);
+
+        let banner = adw::Banner::builder().revealed(false).build();
+
+        let storage_surf = surface();
+        storage_surf.append(&main_row);
+        storage_surf.append(&hairline());
+        storage_surf.append(&bar_col);
+        storage_surf.append(&banner);
+
+        let storage_section = section("Phone storage", None, &storage_surf);
+
+        // ── 2. Quick Folders Section: ONE Surface ─────────────────────────────
+        let quick_surf = surface();
         let mut quick = Vec::new();
         let page_ref: Rc<RefCell<Option<std::rc::Weak<Self>>>> = Rc::new(RefCell::new(None));
         for (index, (label, candidates)) in QUICK.into_iter().enumerate() {
-            let inner = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(2).build();
-            inner.append(&gtk::Label::builder().label(label).css_classes(["heading"]).xalign(0.0).build());
-            let name = gtk::Label::builder().label(candidates[0]).css_classes(["caption", "dim-label"]).xalign(0.0).ellipsize(gtk::pango::EllipsizeMode::End).build();
-            inner.append(&name);
-            let button = gtk::Button::builder().css_classes(["card", "sc-tile"]).hexpand(true).child(&inner).build();
+            let ic_kind = match label {
+                "Camera" => IconKind::Folder,
+                "Screenshots" => IconKind::Monitor,
+                "Downloads" => IconKind::Folder,
+                _ => IconKind::Folder,
+            };
+            let q_ic = ModernIcon::new(ic_kind, 20);
+            q_ic.add_css_class("sc-icon-muted");
+            let q_tile = icon_tile(q_ic.widget());
+
+            let (btn, _) = navigating_row(
+                Some(q_tile.upcast_ref()),
+                label,
+                Some(candidates[0]),
+                None::<&str>,
+            );
             let slot = page_ref.clone();
-            button.connect_clicked(move |b| {
+            btn.connect_clicked(move |b| {
                 if let Some(p) = slot.borrow().as_ref().and_then(std::rc::Weak::upgrade) {
                     p.open_checked(Some(index), b);
                 }
             });
-            quick_flow.append(&button);
-            quick.push(button);
+            if index > 0 {
+                quick_surf.append(&hairline());
+            }
+            quick_surf.append(&btn);
+            quick.push(btn);
         }
-        let quick_group = adw::PreferencesGroup::builder().title("Quick folders").visible(false).build();
-        quick_group.add(&quick_flow);
+        let quick_group = section(
+            "Quick folders",
+            Some("Direct shortcuts into common phone media folders"),
+            &quick_surf,
+        );
+        quick_group.set_visible(false);
 
-        // ── Storage settings ──────────────────────────────────────────────────
-        let location = adw::ActionRow::builder().title("Mount location").use_markup(false).build();
-        let change = gtk::Button::builder().label("Change…").valign(gtk::Align::Center).build();
-        location.add_suffix(&change);
-        let auto_mount = adw::SwitchRow::builder().title("Mount automatically when connected").build();
-        let group = adw::PreferencesGroup::builder()
-            .title("Storage")
-            .description("The phone's storage is mounted read-only.")
+        // ── 3. Storage Settings Section ───────────────────────────────────────
+        let location = adw::ActionRow::builder()
+            .title("Mount location")
+            .use_markup(false)
             .build();
-        group.add(&location);
-        group.add(&auto_mount);
+        let change = row_action_button("Change…", false);
+        location.add_suffix(&change);
+
+        let auto_mount = adw::SwitchRow::builder()
+            .title("Mount automatically when connected")
+            .build();
+
+        let settings_group = adw::PreferencesGroup::builder()
+            .title("Storage settings")
+            .description("The phone's storage is mounted read-only.")
+            .css_classes(["sc-pref-group"])
+            .build();
+        settings_group.add(&location);
+        settings_group.add(&auto_mount);
+
+        // ── 4. SFTP Server Section ───────────────────────────────────────────
+        let (share, share_widget) = ShareSection::build(toasts);
 
         let column = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(18)
-            .margin_top(24)
-            .margin_bottom(24)
-            .margin_start(12)
-            .margin_end(12)
+            .spacing(crate::tokens::SPACE_10)
+            .margin_top(crate::tokens::CONTENT_PAD_TOP)
+            .margin_bottom(crate::tokens::CONTENT_PAD_BOTTOM)
+            .margin_start(crate::tokens::CONTENT_PAD_HORIZ)
+            .margin_end(crate::tokens::CONTENT_PAD_HORIZ)
             .build();
-        column.append(&card);
+        column.append(&header);
+        column.append(&notice);
+        column.append(&storage_section);
         column.append(&quick_group);
-        column.append(&group);
-        let (share, share_widget) = ShareSection::build(toasts);
+        column.append(&settings_group);
         column.append(&share_widget);
-
-        let clamp = adw::Clamp::builder().maximum_size(1400).tightening_threshold(1400).child(&column).build();
-        let scroller = gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).child(&clamp).build();
 
         let page = Rc::new(Self {
             toasts: toasts.clone(),
             banner,
+            notice,
             title,
             detail,
             readonly,
@@ -389,6 +467,7 @@ impl FilesPage {
             syncing: Cell::new(false),
             on_changed: RefCell::default(),
         });
+
         let weak = Rc::downgrade(&page);
         page.share.connect_changed(move || {
             if let Some(p) = weak.upgrade() {
@@ -401,9 +480,7 @@ impl FilesPage {
         page.connect_signals(&change);
         page.sync_from_prefs();
         page.refresh();
-        // A helper that died while the app was closed leaves a stale mount ("Transport endpoint is
-        // not connected"): clear it at startup. Off the main thread — a `stat` on somebody else's
-        // live mount of that folder would go to the phone.
+
         let dir = page.mount_dir();
         glib::spawn_future_local(async move {
             let _ = gio::spawn_blocking(move || {
@@ -414,7 +491,8 @@ impl FilesPage {
             })
             .await;
         });
-        (page, scroller.upcast())
+
+        (page, page_scroller(&column, crate::tokens::CONTENT_MAX_WIDTH).upcast())
     }
 
     fn connect_signals(self: &Rc<Self>, change: &gtk::Button) {
@@ -1009,17 +1087,13 @@ impl FilesPage {
         self.unmount.set_label(if st.busy { "Unmounting…" } else { "Unmount" });
         self.unmount.set_sensitive(!st.busy);
 
-        // Quick folders: shown only while mounted, each hidden (cell and all) when its target is absent.
-        // Which ones exist comes from the last deep probe (no file-system calls on the main thread).
+        self.notice.set_visible(!st.connected);
+
         let mut any_quick = false;
         for (button, found) in self.quick.iter().zip(st.quick) {
             let present = mounted && found.is_some();
             any_quick |= present;
-            // Hide the wrapping FlowBoxChild so no empty cell is left behind.
-            match button.parent() {
-                Some(cell) => cell.set_visible(present),
-                None => button.set_visible(present),
-            }
+            button.set_visible(present);
         }
         self.quick_group.set_visible(mounted && any_quick);
 

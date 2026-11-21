@@ -366,11 +366,6 @@ struct NotifRow {
     data: Notification,
 }
 
-fn page_scroller(child: &impl IsA<gtk::Widget>, max: i32) -> gtk::ScrolledWindow {
-    let clamp = adw::Clamp::builder().maximum_size(max).tightening_threshold(max).child(child).build();
-    gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).child(&clamp).build()
-}
-
 /// Shows the image at `path` (a `?md5` suffix is ignored) or the icon placeholder.
 fn show_wallpaper(picture: &gtk::Picture, stack: &gtk::Stack, path: Option<&str>) {
     match path.map(|p| p.split('?').next().unwrap_or(p)).map(gdk::Texture::from_filename) {

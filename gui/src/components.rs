@@ -76,6 +76,20 @@ pub fn page_header(
     (row, title_lbl, desc_lbl)
 }
 
+/// Unified page scroller with centered max-width clamp and overlay scrollbar
+pub fn page_scroller(child: &impl IsA<gtk::Widget>, max_width: i32) -> gtk::ScrolledWindow {
+    let clamp = adw::Clamp::builder()
+        .maximum_size(max_width)
+        .tightening_threshold(max_width)
+        .child(child)
+        .build();
+    gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .vexpand(true)
+        .child(&clamp)
+        .build()
+}
+
 // ── 2. Section & Surface ────────────────────────────────────────────────────
 
 /// Standard Section: title 16/600, optional 13/20 muted description, 12px gap, then ONE Surface.
@@ -128,6 +142,14 @@ pub fn surface() -> gtk::Box {
     gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
         .css_classes(["sc-surface"])
+        .build()
+}
+
+/// 1px hairline divider (border color: rgba(255, 255, 255, 0.08))
+pub fn hairline() -> gtk::Box {
+    gtk::Box::builder()
+        .css_classes(["sc-hairline"])
+        .hexpand(true)
         .build()
 }
 

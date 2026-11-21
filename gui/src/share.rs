@@ -134,8 +134,13 @@ impl ShareSection {
             .subtitle("The phone can browse it in its Files app while it's connected")
             .build();
         let folder = adw::ActionRow::builder().title("Shared folder").use_markup(false).build();
-        let open = gtk::Button::builder().icon_name("folder-open-symbolic").tooltip_text("Open the shared folder").valign(gtk::Align::Center).css_classes(["flat"]).build();
-        let change = gtk::Button::builder().label("Change…").valign(gtk::Align::Center).build();
+        let open = gtk::Button::builder()
+            .icon_name("folder-open-symbolic")
+            .tooltip_text("Open the shared folder")
+            .valign(gtk::Align::Center)
+            .css_classes(["sc-btn-icon"])
+            .build();
+        let change = crate::components::row_action_button("Change…", false);
         folder.add_suffix(&open);
         folder.add_suffix(&change);
         let hidden = adw::SwitchRow::builder()
@@ -148,8 +153,9 @@ impl ShareSection {
             .build();
         let status = adw::ActionRow::builder().title("Status").use_markup(false).subtitle_selectable(true).build();
         let group = adw::PreferencesGroup::builder()
-            .title("Share with the phone")
+            .title("SFTP server")
             .description("The phone sees the folder in its Files app and in Smart Connect's Files tab. It can open and copy files, but not change them.")
+            .css_classes(["sc-pref-group"])
             .build();
         group.add(&switch);
         group.add(&folder);

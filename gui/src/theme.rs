@@ -404,6 +404,42 @@ window.sc-root button.destructive-action:hover {
   border-radius: 12px;
 }
 
+box.sc-hairline {
+  min-height: 1px;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+progressbar.sc-storage-bar trough {
+  min-height: 4px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+progressbar.sc-storage-bar progress {
+  background-color: var(--accent);
+  border-radius: 999px;
+}
+
+.sc-pref-group list.boxed-list {
+  background-color: rgba(255, 255, 255, 0.04);
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.sc-pref-group list.boxed-list > row {
+  min-height: 56px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: transparent;
+  background-image: none;
+}
+
+.sc-pref-group list.boxed-list > row:last-child {
+  border-bottom: none;
+}
+
 .sc-row {
   min-height: 56px;
   padding: 12px 16px;
