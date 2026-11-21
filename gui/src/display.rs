@@ -38,6 +38,7 @@ use adw::prelude::*;
 use gtk::{gio, glib};
 use serde_json::Value;
 
+use crate::components::*;
 use crate::mirror::binary;
 use crate::prefs::{self, DisplayPrefs, Prefs};
 
@@ -850,13 +851,11 @@ impl DisplayPage {
             .wrap_mode(gtk::pango::WrapMode::WordChar)
             .selectable(true)
             .build();
-        let start = gtk::Button::builder().css_classes(["suggested-action"]).label("Start").valign(gtk::Align::Center).build();
-        let apply = gtk::Button::builder()
-            .label("Apply")
-            .tooltip_text("Restart the session with these settings")
-            .valign(gtk::Align::Center)
-            .visible(false)
-            .build();
+        let start = row_action_button("Start", false);
+        let apply = ghost_button("Apply");
+        apply.set_tooltip_text(Some("Restart the session with these settings"));
+        apply.set_valign(gtk::Align::Center);
+        apply.set_visible(false);
         let buttons = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(6).valign(gtk::Align::Center).build();
         buttons.append(&start);
         buttons.append(&apply);
@@ -937,6 +936,7 @@ impl DisplayPage {
                 "For Duplicate display and Extend display above. To see the phone's screen on this PC \
                  instead, use Mirror Screen on the Phone page.",
             )
+            .css_classes(["sc-pref-group"])
             .build();
         // The mode is picked with the Cross Control cards above; the row stays for its state.
         mode_row.set_visible(false);
@@ -952,10 +952,15 @@ impl DisplayPage {
         ] {
             layout_group.add(row);
         }
-        let experimental_group = adw::PreferencesGroup::builder().title("Experimental").build();
+        let experimental_group = adw::PreferencesGroup::builder()
+            .title("Experimental")
+            .css_classes(["sc-pref-group"])
+            .build();
         experimental_group.add(&audio);
         experimental_group.add(&rotate);
-        let advanced_group = adw::PreferencesGroup::new();
+        let advanced_group = adw::PreferencesGroup::builder()
+            .css_classes(["sc-pref-group"])
+            .build();
         advanced_group.add(&advanced);
 
         // ── Phone-as-display card (hero) ──────────────────────────────────────
@@ -967,7 +972,7 @@ impl DisplayPage {
         head.append(&icon);
         head.append(&text);
         head.append(&buttons);
-        let card = gtk::Box::builder().css_classes(["card", "sc-card"]).hexpand(true).build();
+        let card = gtk::Box::builder().css_classes(["sc-surface", "sc-row"]).hexpand(true).build();
         card.append(&head);
 
         // Stacked: in a grid every group took the height of the tallest one, leaving empty space.

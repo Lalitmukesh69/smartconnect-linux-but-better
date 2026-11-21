@@ -570,7 +570,8 @@ switch.sc-toggle:checked > slider {
   background-color: #FFFFFF;
 }
 
-checkbutton.sc-option-card {
+checkbutton.sc-option-card,
+button.sc-option-card {
   background-color: rgba(255, 255, 255, 0.04);
   background-image: none;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -580,35 +581,42 @@ checkbutton.sc-option-card {
   transition: background-color 140ms ease, border-color 140ms ease;
 }
 
-checkbutton.sc-option-card:hover {
+checkbutton.sc-option-card:hover,
+button.sc-option-card:hover {
   background-color: rgba(255, 255, 255, 0.07);
 }
 
-checkbutton.sc-option-card:checked {
+checkbutton.sc-option-card:checked,
+button.sc-option-card:checked {
   background-color: rgba(31, 122, 140, 0.18);
   border: 1.5px solid #1F7A8C;
 }
 
-checkbutton.sc-option-card .sc-card-title {
+checkbutton.sc-option-card .sc-card-title,
+button.sc-option-card .sc-card-title {
   font-size: 14px;
   font-weight: 600;
   color: #FFFFFF;
 }
 
-checkbutton.sc-option-card .sc-card-desc {
+checkbutton.sc-option-card .sc-card-desc,
+button.sc-option-card .sc-card-desc {
   font-size: 13px;
   color: rgba(225, 229, 242, 0.75);
 }
 
-checkbutton.sc-option-card .sc-card-icon {
+checkbutton.sc-option-card .sc-card-icon,
+button.sc-option-card .sc-card-icon {
   color: rgba(225, 229, 242, 0.75);
 }
 
-checkbutton.sc-option-card:checked .sc-card-icon {
+checkbutton.sc-option-card:checked .sc-card-icon,
+button.sc-option-card:checked .sc-card-icon {
   color: #BFDBF7;
 }
 
-checkbutton.sc-option-card:disabled {
+checkbutton.sc-option-card:disabled,
+button.sc-option-card:disabled {
   opacity: 0.50;
 }
 

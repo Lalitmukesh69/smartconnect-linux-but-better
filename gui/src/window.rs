@@ -1474,18 +1474,17 @@ impl Ui {
         let (cross, cross_modes, cross_position) = CrossControlPage::build(&toasts, display.clone());
         let display_column = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(24)
+            .spacing(crate::tokens::SPACE_10)
             .valign(gtk::Align::Start)
-            .margin_top(24)
-            .margin_bottom(36)
-            .margin_start(28)
-            .margin_end(28)
+            .margin_top(crate::tokens::CONTENT_PAD_TOP)
+            .margin_bottom(crate::tokens::CONTENT_PAD_BOTTOM)
+            .margin_start(crate::tokens::CONTENT_PAD_HORIZ)
+            .margin_end(crate::tokens::CONTENT_PAD_HORIZ)
             .build();
         display_column.append(&cross_modes);
         display_column.append(&cross_position);
         display_column.append(&display_w);
-        let display_clamp = adw::Clamp::builder().maximum_size(1060).tightening_threshold(1060).child(&display_column).build();
-        let display_w = gtk::ScrolledWindow::builder().hscrollbar_policy(gtk::PolicyType::Never).vexpand(true).child(&display_clamp).build();
+        let display_w = page_scroller(&display_column, crate::tokens::CONTENT_MAX_WIDTH);
         let (files, files_w) = FilesPage::build(&toasts);
 
         views.add_named(&phone_w, Some("phone"));

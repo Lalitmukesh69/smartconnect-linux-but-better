@@ -21,8 +21,10 @@ use adw::prelude::*;
 use gtk::{cairo, gdk, glib};
 use serde_json::{Value, json};
 
+use crate::components::*;
 use crate::display::DisplayPage;
 use crate::mirror::{Exit, Mirror};
+use crate::theme::{IconKind, ModernIcon};
 
 /// The phone's place next to the screen: a side, and the centre of the phone along that side
 /// (0..1 from the top or the left).
@@ -202,7 +204,8 @@ enum Mode {
 pub struct CrossControlPage {
     toasts: adw::ToastOverlay,
     display: Rc<DisplayPage>,
-    cards: Vec<(Mode, gtk::ToggleButton, gtk::Image)>,
+    cards: Vec<(Mode, gtk::ToggleButton, ModernIcon, gtk::Image)>,
+    notice: gtk::Box,
     status: gtk::Label,
     canvas: gtk::DrawingArea,
     position: gtk::Label,
@@ -220,77 +223,155 @@ pub struct CrossControlPage {
     on_state: RefCell<Option<Box<dyn Fn()>>>,
 }
 
-fn mode_card(icon: &str, title: &str, subtitle: &str) -> (gtk::ToggleButton, gtk::Image) {
-    let image = gtk::Image::builder().icon_name(icon).pixel_size(40).margin_bottom(6).build();
-    let title = gtk::Label::builder().label(title).css_classes(["heading"]).wrap(true).justify(gtk::Justification::Center).build();
+fn mode_card(kind: IconKind, title: &str, subtitle: &str) -> (gtk::ToggleButton, ModernIcon, gtk::Image) {
+    let icon = ModernIcon::new(kind, 24);
+    icon.add_css_class("sc-card-icon");
+
+    let title_lbl = gtk::Label::builder()
+        .label(title)
+        .xalign(0.0)
+        .css_classes(["sc-card-title"])
+        .wrap(true)
+        .build();
+
     let sub = gtk::Label::builder()
         .label(subtitle)
-        .css_classes(["dim-label", "caption"])
+        .xalign(0.0)
+        .css_classes(["sc-card-desc"])
         .wrap(true)
-        .justify(gtk::Justification::Center)
-        .max_width_chars(18)
         .build();
-    let check = gtk::Image::builder().icon_name("object-select-symbolic").css_classes(["accent"]).visible(false).build();
-    let content = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(4).valign(gtk::Align::Center).build();
-    content.append(&image);
-    content.append(&title);
+
+    let check = gtk::Image::builder()
+        .icon_name("emblem-ok-symbolic")
+        .css_classes(["sc-highlight"])
+        .visible(false)
+        .build();
+
+    let top_row = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .spacing(crate::tokens::SPACE_2)
+        .build();
+    top_row.append(icon.widget());
+    let spacer = gtk::Box::builder().hexpand(true).build();
+    top_row.append(&spacer);
+    top_row.append(&check);
+
+    let content = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(crate::tokens::SPACE_3)
+        .valign(gtk::Align::Center)
+        .build();
+    content.append(&top_row);
+    content.append(&title_lbl);
     content.append(&sub);
-    content.append(&check);
-    let button = gtk::ToggleButton::builder().child(&content).css_classes(["card", "sc-mode"]).hexpand(true).build();
-    (button, check)
+
+    let button = gtk::ToggleButton::builder()
+        .child(&content)
+        .css_classes(["sc-option-card"])
+        .hexpand(true)
+        .build();
+    (button, icon, check)
 }
 
 impl CrossControlPage {
-    /// Returns the page, the modes (title, cards, status) and the phone-position group, for the
-    /// Display tab to place around the display settings.
     pub fn build(toasts: &adw::ToastOverlay, display: Rc<DisplayPage>) -> (Rc<Self>, gtk::Widget, gtk::Widget) {
-        let title = gtk::Label::builder().label("Cross Control").xalign(0.0).css_classes(["title-2"]).build();
-        let intro = gtk::Label::builder()
-            .label("Use your phone next to this PC: share this PC's mouse and keyboard with it, or use it as a second display.")
+        let (header, _, _) = page_header("Display", "Cross Control Studio", None::<&gtk::Widget>);
+
+        let notice = notice_banner(
+            IconKind::Smartphone,
+            "Phone display is available when connected. Connect from the sidebar to start.",
+        );
+
+        let modes = gtk::Box::builder()
+            .spacing(crate::tokens::SPACE_4)
+            .homogeneous(true)
+            .build();
+        let mut cards = Vec::new();
+        for (mode, kind, name, sub) in [
+            (
+                Mode::Shared,
+                IconKind::Mouse,
+                "Shared mouse and keyboard",
+                "Move the pointer past the screen edge onto the phone",
+            ),
+            (
+                Mode::Duplicate,
+                IconKind::Monitor,
+                "Duplicate display",
+                "The phone shows this PC's screen",
+            ),
+            (
+                Mode::Extend,
+                IconKind::Monitor,
+                "Extend display",
+                "The phone becomes a second screen",
+            ),
+        ] {
+            let (button, icon, check) = mode_card(kind, name, sub);
+            modes.append(&button);
+            cards.push((mode, button, icon, check));
+        }
+        let status = gtk::Label::builder()
             .xalign(0.0)
             .wrap(true)
-            .css_classes(["dim-label"])
+            .css_classes(["sc-row-helper"])
             .build();
 
-        let modes = gtk::Box::builder().spacing(12).homogeneous(true).build();
-        let mut cards = Vec::new();
-        for (mode, icon, name, sub) in [
-            (Mode::Shared, "input-mouse-symbolic", "Shared mouse and keyboard", "Move the pointer past the screen edge onto the phone"),
-            (Mode::Duplicate, "video-joined-displays-symbolic", "Duplicate display", "The phone shows this PC's screen"),
-            (Mode::Extend, "video-display-symbolic", "Extend display", "The phone becomes a second screen"),
-        ] {
-            let (button, check) = mode_card(icon, name, sub);
-            modes.append(&button);
-            cards.push((mode, button, check));
-        }
-        let status = gtk::Label::builder().xalign(0.0).wrap(true).css_classes(["dim-label"]).build();
-
-        let canvas = gtk::DrawingArea::builder().content_height(260).hexpand(true).cursor(&gdk::Cursor::from_name("grab", None).expect("cursor")).build();
-        let canvas_card = gtk::Box::builder().css_classes(["card"]).build();
-        canvas_card.append(&canvas);
-        let position = gtk::Label::builder().xalign(0.0).wrap(true).css_classes(["dim-label", "caption"]).build();
-        let arrange = adw::PreferencesGroup::builder()
-            .title("Phone position")
-            .description("Drag the phone to the side of the screen where it sits. Extend display puts the phone's screen there, and shared mouse and keyboard crosses over along the highlighted part of that edge.")
+        let mode_col = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(crate::tokens::SPACE_3)
             .build();
-        let arrange_box = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(8).build();
-        arrange_box.append(&canvas_card);
-        arrange_box.append(&position);
-        arrange.add(&arrange_box);
+        mode_col.append(&modes);
+        mode_col.append(&status);
+
+        let mode_section = section("Mode", Some("Select how your phone works with this PC"), &mode_col);
+
+        let top = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(crate::tokens::SPACE_4)
+            .build();
+        top.append(&header);
+        top.append(&notice);
+        top.append(&mode_section);
+
+        let canvas = gtk::DrawingArea::builder()
+            .content_height(180)
+            .hexpand(true)
+            .focusable(true)
+            .cursor(&gdk::Cursor::from_name("grab", None).expect("cursor"))
+            .build();
+
+        let position = gtk::Label::builder()
+            .xalign(0.0)
+            .wrap(true)
+            .css_classes(["sc-row-title"])
+            .build();
 
         let shortcuts = gtk::Label::builder()
-            .label("Push the pointer back out of the phone, or press Ctrl+Alt+Esc, to return to this PC.")
+            .label("Use arrow keys or drag to reposition · Push pointer back or press Ctrl+Alt+Esc to return to PC")
             .xalign(0.0)
             .wrap(true)
-            .css_classes(["dim-label", "caption"])
+            .css_classes(["sc-row-helper"])
             .build();
 
-        let top = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(12).build();
-        top.append(&title);
-        top.append(&intro);
-        top.append(&modes);
-        top.append(&status);
-        top.append(&shortcuts);
+        let info_col = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(crate::tokens::SPACE_1)
+            .css_classes(["sc-row"])
+            .build();
+        info_col.append(&position);
+        info_col.append(&shortcuts);
+
+        let arrange_surf = surface();
+        arrange_surf.append(&canvas);
+        arrange_surf.append(&hairline());
+        arrange_surf.append(&info_col);
+
+        let arrange = section(
+            "Arrangement",
+            Some("Drag or use arrow keys to position the phone relative to your PC screen"),
+            &arrange_surf,
+        );
 
         let layout = match load_layout() {
             Some((edge, start, end)) => Layout { edge, center: (start + end) / 2.0 },
@@ -300,6 +381,7 @@ impl CrossControlPage {
             toasts: toasts.clone(),
             display,
             cards,
+            notice,
             status,
             canvas,
             position,
@@ -320,7 +402,7 @@ impl CrossControlPage {
     }
 
     fn connect(self: &Rc<Self>) {
-        for (mode, button, _) in &self.cards {
+        for (mode, button, _, _) in &self.cards {
             let weak = Rc::downgrade(self);
             let mode = *mode;
             button.connect_toggled(move |_| {
@@ -331,6 +413,26 @@ impl CrossControlPage {
                 }
             });
         }
+
+        // Arrow keys reposition phone
+        let key_ctrl = gtk::EventControllerKey::new();
+        let weak_key = Rc::downgrade(self);
+        key_ctrl.connect_key_pressed(move |_, key, _, _| {
+            let Some(page) = weak_key.upgrade() else { return glib::Propagation::Proceed };
+            let edge = match key {
+                gdk::Key::Left => Edge::Left,
+                gdk::Key::Right => Edge::Right,
+                gdk::Key::Up => Edge::Top,
+                gdk::Key::Down => Edge::Bottom,
+                _ => return glib::Propagation::Proceed,
+            };
+            let mut l = page.layout.get();
+            l.edge = edge;
+            page.set_layout(l);
+            page.canvas.queue_draw();
+            glib::Propagation::Stop
+        });
+        self.canvas.add_controller(key_ctrl);
 
         let weak: Weak<Self> = Rc::downgrade(self);
         self.canvas.set_draw_func(move |area, cr, w, h| {
@@ -389,10 +491,10 @@ impl CrossControlPage {
 
     pub fn edge_label(&self) -> &'static str {
         match self.layout.get().edge {
-            Edge::Left => "LEFT",
-            Edge::Right => "RIGHT",
-            Edge::Top => "TOP",
-            Edge::Bottom => "BOTTOM",
+            Edge::Left => "Left",
+            Edge::Right => "Right",
+            Edge::Top => "Top",
+            Edge::Bottom => "Bottom",
         }
     }
 
@@ -523,8 +625,9 @@ impl CrossControlPage {
 
     fn sync(&self) {
         let running = self.running();
+        self.notice.set_visible(!self.connected.get());
         self.syncing.set(true);
-        for (mode, button, check) in &self.cards {
+        for (mode, button, _, check) in &self.cards {
             let on = running == Some(*mode);
             button.set_active(on);
             check.set_visible(on);
@@ -600,25 +703,22 @@ impl CrossControlPage {
         self.position.set_label(&format!("The phone is {side} this PC's screen."));
     }
 
-    fn draw(&self, area: &gtk::DrawingArea, cr: &cairo::Context, w: f64, h: f64) {
+    fn draw(&self, _area: &gtk::DrawingArea, cr: &cairo::Context, w: f64, h: f64) {
         let g = Geometry::new(w, h, self.screen_aspect(), self.landscape.get());
-        let fg = area.color();
-        let accent = adw::StyleManager::default().accent_color_rgba();
-        let set = |c: &gdk::RGBA, alpha: f32| cr.set_source_rgba(c.red() as f64, c.green() as f64, c.blue() as f64, (c.alpha() * alpha) as f64);
         let layout = g.clamped(self.layout.get());
 
-        // This PC's screen.
+        // This PC's screen: 1.5px soft outline with label "This PC"
         let (x, y, sw, sh) = g.pc;
         rounded(cr, x, y, sw, sh, 8.0);
-        set(&fg, 0.08);
+        cr.set_source_rgba(1.0, 1.0, 1.0, 0.04);
         let _ = cr.fill_preserve();
-        set(&fg, 0.4);
-        cr.set_line_width(2.0);
+        cr.set_source_rgba(0.88, 0.90, 0.95, 0.40);
+        cr.set_line_width(1.5);
         let _ = cr.stroke();
-        set(&fg, 0.7);
-        label(cr, "This PC", x + sw / 2.0, y + sh / 2.0, 14.0);
+        cr.set_source_rgba(1.0, 1.0, 1.0, 0.90);
+        label(cr, "This PC", x + sw / 2.0, y + sh / 2.0, 13.0);
 
-        // Where the pointer crosses over: the part of the edge the phone touches.
+        // Active edge bar: 3px accent indicator (#1F7A8C)
         if self.drag.get().is_none() {
             let half = g.span_len(layout.edge) / 2.0;
             let (a, b) = (layout.center - half, layout.center + half);
@@ -628,28 +728,28 @@ impl CrossControlPage {
                 Edge::Top => (x + a * sw, y, x + b * sw, y),
                 Edge::Bottom => (x + a * sw, y + sh, x + b * sw, y + sh),
             };
-            set(&accent, 1.0);
-            cr.set_line_width(4.0);
+            cr.set_source_rgba(0.12, 0.48, 0.55, 1.0);
+            cr.set_line_width(3.0);
             cr.set_line_cap(cairo::LineCap::Round);
             cr.move_to(x1, y1);
             cr.line_to(x2, y2);
             let _ = cr.stroke();
         }
 
-        // The phone (where it is being dragged, or its saved place).
+        // The phone: 1.5px #BFDBF7 outline with accent-tint fill
         let (px, py) = self.drag.get().map(|(p, _)| p).unwrap_or_else(|| g.phone_at(layout));
         let (pw, ph) = g.phone;
         rounded(cr, px, py, pw, ph, 7.0);
-        set(&accent, 0.22);
+        cr.set_source_rgba(0.12, 0.48, 0.55, 0.18);
         let _ = cr.fill_preserve();
-        set(&accent, 1.0);
-        cr.set_line_width(2.0);
+        cr.set_source_rgba(0.75, 0.86, 0.97, 1.0);
+        cr.set_line_width(1.5);
         let _ = cr.stroke();
-        // Speaker slot, so it reads as a phone.
-        set(&accent, 0.8);
-        rounded(cr, px + pw * 0.35, py + 5.0, pw * 0.3, 3.0, 1.5);
+        // Speaker slot
+        cr.set_source_rgba(0.75, 0.86, 0.97, 0.80);
+        rounded(cr, px + pw * 0.35, py + 4.0, pw * 0.3, 2.0, 1.0);
         let _ = cr.fill();
-        set(&fg, 0.7);
+        cr.set_source_rgba(1.0, 1.0, 1.0, 0.90);
         label(cr, "Phone", px + pw / 2.0, py + ph / 2.0, 11.0);
     }
 }
