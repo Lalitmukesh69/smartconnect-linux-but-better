@@ -647,6 +647,16 @@ impl SidebarNav {
         count: Option<gtk::Label>,
     ) -> (gtk::Button, ModernIcon) {
         let icon = ModernIcon::new(kind, crate::tokens::ICON_SIZE_NAV);
+        let icon_box = gtk::Box::builder()
+            .width_request(24)
+            .height_request(24)
+            .halign(gtk::Align::Center)
+            .valign(gtk::Align::Center)
+            .hexpand(false)
+            .vexpand(false)
+            .build();
+        icon_box.append(icon.widget());
+
         let title_lbl = gtk::Label::builder()
             .label(title)
             .xalign(0.0)
@@ -667,7 +677,7 @@ impl SidebarNav {
         right_box.append(&shortcut_lbl);
 
         let row = gtk::Box::builder().spacing(space::S3).valign(gtk::Align::Center).build();
-        row.append(icon.widget());
+        row.append(&icon_box);
         row.append(&title_lbl);
         row.append(&right_box);
 
