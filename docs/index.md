@@ -9,6 +9,7 @@ Welcome to the documentation for **Smart Connect for Linux**. This guide provide
 | Document | Description |
 |---|---|
 | **[Installation Guide](installation.md)** | Step-by-step setup for Flatpak, AppImage, and distribution packages (Arch, Fedora, Ubuntu/Debian). Covers firewall setup and systemd user services. |
+| **[Software Updates & Releases](updater.md)** | In-app GitHub update checker, release changelog modal, and binary auto-replacement. |
 | **[Usage & Features](usage.md)** | Complete walkthrough of pairing, auto-connect, screen mirroring, second monitor setup, Cross Control, and file sharing. |
 | **[Feature Status & Compatibility](feature-status.md)** | Exhaustive matrix of implemented features, hardware verification status, and tested phone models. |
 | **[System & Hardware Requirements](requirements.md)** | Operating system, Wayland compositor, kernel module, and network requirements. |
