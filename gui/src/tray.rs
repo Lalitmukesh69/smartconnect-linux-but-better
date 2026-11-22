@@ -14,6 +14,12 @@ pub enum Command {
     ToggleWindow,
     Connect,
     Disconnect,
+    OpenPhone,
+    OpenApps,
+    OpenDisplay,
+    OpenFiles,
+    OpenNotifications,
+    Pair,
     /// Quit the app *and* stop the daemon (the only thing that does).
     Quit,
 }
@@ -29,12 +35,25 @@ pub enum State {
     Connected,
 }
 
+/// Rich phone telemetry displayed on tray hover tooltip.
+#[derive(Clone, Debug, Default)]
+pub struct PhoneTelemetry {
+    pub name: String,
+    pub status: String,
+    pub battery: Option<i64>,
+    pub charging: bool,
+    pub wifi_word: String,
+    pub cell_word: String,
+    pub bluetooth: bool,
+}
+
 /// The actual StatusNotifierItem. Lives on the ksni thread; the GTK side only reaches it through
 /// the [`Handle`] in [`Tray`].
 struct Item {
     state: State,
     /// Drives the Show/Hide label.
     window_visible: bool,
+    telemetry: Option<PhoneTelemetry>,
     tx: async_channel::Sender<Command>,
 }
 
@@ -74,17 +93,38 @@ impl ksni::Tray for Item {
     }
 
     fn tool_tip(&self) -> ksni::ToolTip {
-        let description = match self.state {
-            State::DaemonDown => "Daemon not running",
-            State::Starting => "Starting…",
-            State::Disconnected => "Phone disconnected",
-            State::Connected => "Phone connected",
+        let title = match &self.telemetry {
+            Some(t) if !t.name.is_empty() => format!("Smart Connect · {}", t.name),
+            _ => "Smart Connect for Linux".to_string(),
         };
+
+        let description = if let Some(t) = &self.telemetry {
+            let mut lines = Vec::new();
+            lines.push(format!("Status: {}", t.status));
+            if let Some(b) = t.battery {
+                if t.charging {
+                    lines.push(format!("Battery: {}% (Charging)", b));
+                } else {
+                    lines.push(format!("Battery: {}%", b));
+                }
+            }
+            lines.push(format!("Wi-Fi: {} · Cellular: {}", t.wifi_word, t.cell_word));
+            lines.push(format!("Bluetooth: {}", if t.bluetooth { "Active" } else { "Off" }));
+            lines.join("\n")
+        } else {
+            match self.state {
+                State::DaemonDown => "Daemon not running".into(),
+                State::Starting => "Starting…".into(),
+                State::Disconnected => "Phone disconnected · Ready to connect".into(),
+                State::Connected => "Phone connected".into(),
+            }
+        };
+
         ksni::ToolTip {
             icon_name: self.icon_name(),
             icon_pixmap: Vec::new(),
-            title: "Smart Connect".into(),
-            description: description.into(),
+            title,
+            description,
         }
     }
 
@@ -95,37 +135,113 @@ impl ksni::Tray for Item {
 
     fn menu(&self) -> Vec<ksni::MenuItem<Self>> {
         use ksni::menu::{MenuItem, StandardItem};
-        vec![
+        let mut items = Vec::new();
+
+        items.push(
             StandardItem {
-                label: if self.window_visible { "Hide Window".into() } else { "Show Window".into() },
+                label: if self.window_visible { "Hide Smart Connect".into() } else { "Open Smart Connect".into() },
                 activate: Box::new(|this: &mut Self| this.send(Command::ToggleWindow)),
                 ..Default::default()
             }
             .into(),
-            MenuItem::Separator,
+        );
+
+        items.push(MenuItem::Separator);
+
+        items.push(
             StandardItem {
-                label: "Connect".into(),
-                enabled: matches!(self.state, State::Disconnected),
-                activate: Box::new(|this: &mut Self| this.send(Command::Connect)),
+                label: "Phone Overview".into(),
+                icon_name: "phone-symbolic".into(),
+                activate: Box::new(|this: &mut Self| this.send(Command::OpenPhone)),
                 ..Default::default()
             }
             .into(),
+        );
+        items.push(
             StandardItem {
-                label: "Disconnect".into(),
-                enabled: matches!(self.state, State::Connected),
-                activate: Box::new(|this: &mut Self| this.send(Command::Disconnect)),
+                label: "Apps Launchpad".into(),
+                icon_name: "view-app-grid-symbolic".into(),
+                activate: Box::new(|this: &mut Self| this.send(Command::OpenApps)),
                 ..Default::default()
             }
             .into(),
-            MenuItem::Separator,
+        );
+        items.push(
             StandardItem {
-                label: "Quit".into(),
+                label: "Display Studio".into(),
+                icon_name: "video-display-symbolic".into(),
+                activate: Box::new(|this: &mut Self| this.send(Command::OpenDisplay)),
+                ..Default::default()
+            }
+            .into(),
+        );
+        items.push(
+            StandardItem {
+                label: "Files & Storage".into(),
+                icon_name: "folder-symbolic".into(),
+                activate: Box::new(|this: &mut Self| this.send(Command::OpenFiles)),
+                ..Default::default()
+            }
+            .into(),
+        );
+        items.push(
+            StandardItem {
+                label: "Notifications".into(),
+                icon_name: "preferences-system-notifications-symbolic".into(),
+                activate: Box::new(|this: &mut Self| this.send(Command::OpenNotifications)),
+                ..Default::default()
+            }
+            .into(),
+        );
+
+        items.push(MenuItem::Separator);
+
+        if matches!(self.state, State::Connected) {
+            items.push(
+                StandardItem {
+                    label: "Disconnect".into(),
+                    icon_name: "network-offline-symbolic".into(),
+                    activate: Box::new(|this: &mut Self| this.send(Command::Disconnect)),
+                    ..Default::default()
+                }
+                .into(),
+            );
+        } else {
+            items.push(
+                StandardItem {
+                    label: "Connect".into(),
+                    icon_name: "network-wireless-symbolic".into(),
+                    enabled: matches!(self.state, State::Disconnected),
+                    activate: Box::new(|this: &mut Self| this.send(Command::Connect)),
+                    ..Default::default()
+                }
+                .into(),
+            );
+        }
+
+        items.push(
+            StandardItem {
+                label: "Pair New Phone…".into(),
+                icon_name: "list-add-symbolic".into(),
+                activate: Box::new(|this: &mut Self| this.send(Command::Pair)),
+                ..Default::default()
+            }
+            .into(),
+        );
+
+        items.push(MenuItem::Separator);
+
+        items.push(
+            StandardItem {
+                label: "Quit Smart Connect".into(),
                 icon_name: "application-exit-symbolic".into(),
                 activate: Box::new(|this: &mut Self| this.send(Command::Quit)),
                 ..Default::default()
             }
             .into(),
-        ]
+        );
+
+        items
     }
 }
 
@@ -139,7 +255,12 @@ impl Tray {
     /// `None` when the desktop has no StatusNotifierHost (then the app just runs without a tray).
     pub fn spawn() -> Option<(Tray, async_channel::Receiver<Command>)> {
         let (tx, rx) = async_channel::unbounded();
-        let item = Item { state: State::Starting, window_visible: true, tx };
+        let item = Item {
+            state: State::Starting,
+            window_visible: true,
+            telemetry: None,
+            tx,
+        };
         match item.spawn() {
             Ok(handle) => Some((Tray { handle }, rx)),
             Err(e) => {
@@ -149,12 +270,12 @@ impl Tray {
         }
     }
 
-    /// Pushes the current connection state and window visibility to the tray (icon, tooltip and the
-    /// enabled state of Connect/Disconnect, Show/Hide label).
-    pub fn set(&self, state: State, window_visible: bool) {
+    /// Pushes the current connection state, window visibility, and phone telemetry to the tray.
+    pub fn set(&self, state: State, window_visible: bool, telemetry: Option<PhoneTelemetry>) {
         self.handle.update(|item| {
             item.state = state;
             item.window_visible = window_visible;
+            item.telemetry = telemetry;
         });
     }
 }

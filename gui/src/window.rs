@@ -2486,6 +2486,36 @@ impl Ui {
                     tray::Command::ToggleWindow => ui.toggle_window(),
                     tray::Command::Connect => ui.tray_connect(true),
                     tray::Command::Disconnect => ui.tray_connect(false),
+                    tray::Command::OpenPhone => {
+                        ui.window.present();
+                        ui.switch_tab("phone");
+                        ui.refresh_tray();
+                    }
+                    tray::Command::OpenApps => {
+                        ui.window.present();
+                        ui.switch_tab("apps");
+                        ui.refresh_tray();
+                    }
+                    tray::Command::OpenDisplay => {
+                        ui.window.present();
+                        ui.switch_tab("display");
+                        ui.refresh_tray();
+                    }
+                    tray::Command::OpenFiles => {
+                        ui.window.present();
+                        ui.switch_tab("files");
+                        ui.refresh_tray();
+                    }
+                    tray::Command::OpenNotifications => {
+                        ui.window.present();
+                        ui.switch_tab("notifications");
+                        ui.refresh_tray();
+                    }
+                    tray::Command::Pair => {
+                        ui.window.present();
+                        ui.open_pair_dialog();
+                        ui.refresh_tray();
+                    }
                     tray::Command::Quit => ui.quit(),
                 }
             }
@@ -2846,8 +2876,38 @@ impl Ui {
     fn refresh_tray(&self) {
         let state = self.tray_state();
         let visible = self.window.is_visible();
+        let telemetry = {
+            let st = self.state.borrow();
+            let v = st.status.as_ref().map(|s| {
+                let mut d = st.last.clone();
+                d.absorb(s);
+                d
+            }).unwrap_or_else(|| st.last.clone());
+
+            if v.known() {
+                let name = v.name.clone().or_else(|| v.model.clone()).unwrap_or_else(|| "Phone".to_string());
+                let status = match state {
+                    tray::State::Connected => "Connected".to_string(),
+                    tray::State::Disconnected => "Standby · Disconnected".to_string(),
+                    tray::State::Starting => "Starting…".to_string(),
+                    tray::State::DaemonDown => "Daemon Offline".to_string(),
+                };
+                Some(tray::PhoneTelemetry {
+                    name,
+                    status,
+                    battery: v.battery,
+                    charging: v.charging,
+                    wifi_word: wifi_summary_word(&v).to_string(),
+                    cell_word: signal_text(v.cell_signal).to_string(),
+                    bluetooth: v.bluetooth,
+                })
+            } else {
+                None
+            }
+        };
+
         if let Some(tray) = self.tray.borrow().as_ref() {
-            tray.set(state, visible);
+            tray.set(state, visible, telemetry);
         }
     }
 
