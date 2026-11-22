@@ -2,7 +2,7 @@
 //!
 //! Build once, use everywhere: PageHeader, Section, Surface, Row, Toggle, Button,
 //! IconButton, SegmentedControl, OptionCard, Kbd, StatusDot, Notice, Tooltip,
-//! Input/PathPicker, Stat, EmptyState, Skeleton, and a complete Kitchen Sink preview page.
+//! Input/PathPicker, Stat, EmptyState, Skeleton.
 
 use adw::prelude::*;
 
@@ -578,6 +578,10 @@ pub fn skeleton(width: i32, height: i32) -> gtk::Box {
 
 /// 40px Icon Tile with 12px rounded corner for continuity and app rows.
 pub fn icon_tile(child: &impl IsA<gtk::Widget>) -> gtk::Box {
+    child.set_hexpand(true);
+    child.set_vexpand(true);
+    child.set_halign(gtk::Align::Center);
+    child.set_valign(gtk::Align::Center);
     let tile = gtk::Box::builder()
         .width_request(ICON_TILE_SIZE)
         .height_request(ICON_TILE_SIZE)
@@ -589,113 +593,4 @@ pub fn icon_tile(child: &impl IsA<gtk::Widget>) -> gtk::Box {
     tile
 }
 
-// ── 9. Kitchen Sink Demo Page ───────────────────────────────────────────────
 
-/// Complete interactive Kitchen Sink page demonstrating every component in every state.
-pub fn build_kitchen_sink_page() -> gtk::Widget {
-    let content = gtk::Box::builder()
-        .orientation(gtk::Orientation::Vertical)
-        .spacing(0)
-        .margin_start(CONTENT_PAD_HORIZ)
-        .margin_end(CONTENT_PAD_HORIZ)
-        .margin_top(CONTENT_PAD_TOP)
-        .margin_bottom(CONTENT_PAD_BOTTOM)
-        .build();
-
-    // 1. Page Header with optional action
-    let refresh_btn = secondary_button("Refresh");
-    let (header, _, _) = page_header(
-        "Design System Kitchen Sink",
-        "Visual verification of all tokens and components under the 2026 dark palette.",
-        Some(&refresh_btn),
-    );
-    content.append(&header);
-
-    // 2. Notices
-    let notice = notice_banner(
-        IconKind::Smartphone,
-        "Connect your phone from the bottom of the sidebar to activate system continuity.",
-    );
-    content.append(&notice);
-
-    // 3. Section with Buttons & Controls
-    let btn_row = gtk::Box::builder().spacing(SPACE_3).build();
-    btn_row.append(&primary_button("Primary Button"));
-    btn_row.append(&secondary_button("Secondary Button"));
-    btn_row.append(&ghost_button("Ghost Button"));
-    btn_row.append(&destructive_button("Destructive"));
-    btn_row.append(&row_action_button("Action", false));
-
-    let surf_btns = surface();
-    surf_btns.append(&surface_row(None, "Standard Buttons", Some("Accent fill, surface-2, ghost, and danger states"), &btn_row));
-
-    let toggle = toggle_switch(true);
-    surf_btns.append(&surface_row(None, "Toggle Switch (Role=Switch)", Some("40×24px, 18px thumb with border-control outline"), &toggle));
-
-    let (nav_row, _) = navigating_row(None, "Interactive Navigating Row", Some("Clickable row with hover surface and chevron"), Some("Meta: Ready"));
-    surf_btns.append(&nav_row);
-
-    content.append(&section("Buttons and Surfaces", Some("Single Surface with hairline-separated rows"), &surf_btns));
-
-    // 4. Section with OptionCards
-    let cards_box = gtk::Box::builder().spacing(SPACE_4).homogeneous(true).build();
-    let (card1, _) = option_card(None, IconKind::Mouse, "Shared mouse", "Universal cursor control");
-    card1.set_active(true);
-    let (card2, _) = option_card(Some(&card1), IconKind::Monitor, "Duplicate display", "Mirror this PC screen");
-    let (card3, _) = option_card(Some(&card1), IconKind::Monitor, "Extend display", "Secondary workspace monitor");
-    cards_box.append(&card1);
-    cards_box.append(&card2);
-    cards_box.append(&card3);
-    content.append(&section("Option Cards (Single Select)", Some("Accent-tint fill and border on active state"), &cards_box));
-
-    // 5. Section with Stats Strip
-    let stat_surface = surface();
-    let stats_strip = gtk::Box::builder().homogeneous(true).css_classes(["sc-stat-strip"]).build();
-    let ind1 = gtk::Box::builder().height_request(4).css_classes(["sc-indicator-fill"]).build();
-    let (stat1, _, _) = stat_widget("Battery", "85%", Some(&ind1));
-    let ind2 = gtk::Box::builder().height_request(4).css_classes(["sc-indicator-fill"]).build();
-    let (stat2, _, _) = stat_widget("Wi-Fi link", "5 GHz", Some(&ind2));
-    let ind3 = gtk::Box::builder().height_request(4).css_classes(["sc-indicator-fill"]).build();
-    let (stat3, _, _) = stat_widget("Cellular", "5G Full", Some(&ind3));
-    let (stat4, _, _) = stat_widget("Bluetooth", "Active", None::<&gtk::Widget>);
-    stats_strip.append(&stat1);
-    stats_strip.append(&stat2);
-    stats_strip.append(&stat3);
-    stats_strip.append(&stat4);
-    stat_surface.append(&stats_strip);
-    content.append(&section("4-Column Stat Strip", Some("Reserved 4px indicator slot for tabular alignment"), &stat_surface));
-
-    // 6. Section with Status Dots, Badges, and Skeletons
-    let status_surface = surface();
-    let dots_box = gtk::Box::builder().spacing(SPACE_4).build();
-    let (c1, _, _) = status_indicator(ConnectionState::Connected);
-    let (c2, _, _) = status_indicator(ConnectionState::Connecting);
-    let (c3, _, _) = status_indicator(ConnectionState::Disconnected);
-    let (c4, _, _) = status_indicator(ConnectionState::Error);
-    dots_box.append(&c1);
-    dots_box.append(&c2);
-    dots_box.append(&c3);
-    dots_box.append(&c4);
-    status_surface.append(&surface_row(None, "Status Dots & Vocabulary", Some("Dot plus text, never color alone"), &dots_box));
-
-    let skel = skeleton(140, 24);
-    status_surface.append(&surface_row(None, "Skeleton Loading Shimmer", Some("Connecting and loading state placeholder"), &skel));
-
-    let empty = empty_state(IconKind::Bell, "No notifications from the phone");
-    status_surface.append(&empty);
-
-    content.append(&section("States & Indicators", Some("Accessibility-compliant indicators and empty states"), &status_surface));
-
-    let clamp = adw::Clamp::builder()
-        .maximum_size(CONTENT_MAX_WIDTH)
-        .tightening_threshold(CONTENT_MAX_WIDTH)
-        .child(&content)
-        .build();
-
-    gtk::ScrolledWindow::builder()
-        .hscrollbar_policy(gtk::PolicyType::Never)
-        .vexpand(true)
-        .child(&clamp)
-        .build()
-        .upcast()
-}
