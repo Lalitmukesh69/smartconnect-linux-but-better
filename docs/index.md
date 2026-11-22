@@ -1,57 +1,38 @@
-# smartconnect-linux documentation
+# Smart Connect for Linux Documentation
 
-smartconnect-linux lets the unmodified Motorola Smart Connect app treat a Linux desktop as a Windows
-PC. The [README](../README.md) has the pitch, the feature status matrix and a quick start. These
-pages go into detail.
+Welcome to the documentation for **Smart Connect for Linux**. This guide provides comprehensive information for users, system administrators, and developers.
 
-## For users
+---
 
-| Page | What it covers |
+## 📖 For Users
+
+| Document | Description |
 |---|---|
-| [Installation](installation.md) | Dependencies (Arch package names, plus Debian and Fedora hints), `packaging/install.sh`, building by hand, the Arch package, how the programs find each other (`SMARTCONNECT_*_BIN`), the systemd user service, firewall rules, the Noctalia plugin and the GTK app. |
-| [Usage](usage.md) | Pairing, connecting and disconnecting (from the phone, the desktop and the CLI), each feature with its verification status (including browsing the phone's files and sharing a PC folder), and the command-line reference for every binary. |
-| [Troubleshooting](troubleshooting.md) | Symptom-by-symptom fixes: pairing, missing tiles, the phone not found over Bluetooth, silent mirroring timeouts, phone files (`~/Phone`) and sharing a folder, phone-side debug logs, and where every log file lives. |
-| [Security](security.md) | What is exposed on the LAN and locally, how pairing and encryption work, where keys and state are stored (with permissions), what gets logged and redacted, and known gaps. |
+| **[Installation Guide](installation.md)** | Step-by-step setup for Flatpak, AppImage, and distribution packages (Arch, Fedora, Ubuntu/Debian). Covers firewall setup and systemd user services. |
+| **[Usage & Features](usage.md)** | Complete walkthrough of pairing, auto-connect, screen mirroring, second monitor setup, Cross Control, and file sharing. |
+| **[Feature Status & Compatibility](feature-status.md)** | Exhaustive matrix of implemented features, hardware verification status, and tested phone models. |
+| **[System & Hardware Requirements](requirements.md)** | Operating system, Wayland compositor, kernel module, and network requirements. |
+| **[Troubleshooting & Diagnostics](troubleshooting.md)** | Common connection issues, firewall fixes, Bluetooth LE wake tips, and log locations. |
 
-## For developers
+---
 
-| Page | What it covers |
+## 🛠️ For Developers & Advanced Users
+
+| Document | Description |
 |---|---|
-| [Architecture](architecture.md) | Processes, the daemon's relay model, the control socket, helper supervision, session lifecycle and data flows, with diagrams. |
-| [Control socket API](control-socket-api.md) | The full reference for `$XDG_RUNTIME_DIR/smartconnectd.sock`: every command, request and reply shapes, the `watch`/`subscribe` streams, errors, and examples with `socat` and `nc`. Also covers the stream host's socket. |
-| [Development](development.md) | Repository layout, building and testing the Cargo workspace, how helpers implement phone services through the relay, adding a new service, and debugging techniques. |
-| [Protocol notes](protocol/README.md) | The Smart Connect wire protocol, one page per service. Facts are tagged OBSERVED or INFERRED. |
+| **[Architecture & Components](components.md)** | Overview of the 8 modular binaries, daemon coordination, and process lifecycle. |
+| **[Internal Architecture](architecture.md)** | Deep dive into the daemon's internal relay model, WebRTC pipeline, and FUSE mount implementation. |
+| **[Notification Actions & Streaming](notification-actions.md)** | How background virtual displays and remote notification intents are dispatched. |
+| **[Control Socket API](control-socket-api.md)** | Complete JSON-RPC specification for `$XDG_RUNTIME_DIR/smartconnectd.sock`. |
+| **[Security & Privacy](security.md)** | Encryption standards, TLS certificates, credential storage, and privacy redaction rules. |
+| **[Development Guide](development.md)** | Workspace layout, build instructions, unit tests, and adding new phone features. |
+| **[Protocol Specifications](protocol/README.md)** | Reverse-engineered wire protocol specifications for every Motorola companion service. |
 
-Protocol pages by service:
-[pairing and discovery](protocol/pairing-and-discovery.md) ·
-[device status and tiles](protocol/device-status-and-tiles.md) ·
-[clipboard](protocol/clipboard.md) ·
-[notifications](protocol/notifications.md) ·
-[SMS](protocol/sms.md) ·
-[mirroring](protocol/mirroring.md) ·
-[app streaming](protocol/app-streaming.md) ·
-[Cross Control](protocol/cross-control.md) ·
-[PC lock](protocol/pc-lock.md) ·
-[Hotspot](protocol/hotspot.md) ·
-[phone as display](protocol/phone-as-display.md) ·
-[webcam](protocol/webcam.md) ·
-[file exchange](protocol/file-exchange.md)
+---
 
-## Elsewhere in the repository
+## 🔗 Project Links
 
-- [CONTRIBUTING.md](../CONTRIBUTING.md): ground rules (documentation and privacy), the PR checklist
-  and how to report bugs.
-- [CHANGELOG.md](../CHANGELOG.md): user-visible changes.
-- [`.notes/`](../.notes/index.md): the design log. Each note records what was built, how and why.
-- [`packaging/README.md`](../packaging/README.md): the short guide that `install.sh` copies to
-  `~/.local/share/doc/smartconnect-linux/`.
-
-## Where to start
-
-- **New user:** [Installation](installation.md), then the pairing section of [Usage](usage.md#pairing).
-- **Something doesn't work:** [Troubleshooting](troubleshooting.md). Collect logs as described in
-  [Where the logs are](troubleshooting.md#where-the-logs-are), and remove personal data before you
-  share them.
-- **Building a front-end or script:** [Control socket API](control-socket-api.md).
-- **Adding a phone feature:** [Architecture](architecture.md), [Development](development.md#adding-a-service)
-  and the matching [protocol page](protocol/README.md).
+- **Source Code**: [GitHub Repository](https://github.com/Lalitmukesh69/smartconnect-linux-but-better)
+- **Issue Tracker**: [GitHub Issues](https://github.com/Lalitmukesh69/smartconnect-linux-but-better/issues)
+- **Contributing Guidelines**: [CONTRIBUTING.md](../CONTRIBUTING.md)
+- **Changelog**: [CHANGELOG.md](../CHANGELOG.md)
