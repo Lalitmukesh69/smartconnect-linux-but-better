@@ -10,7 +10,12 @@ use gtk::{gdk, gio, glib};
 use serde::{Deserialize, Serialize};
 
 use crate::apps::App;
-use crate::theme::{overline, IconKind, ModernIcon};
+use crate::components::{
+    empty_state, ghost_button, notice_banner, secondary_button, skeleton, status_dot,
+    ConnectionState, DialogPrimitive, DialogSize,
+};
+use crate::theme::{IconKind, ModernIcon};
+use crate::tokens::*;
 
 #[derive(Clone)]
 pub struct CommandEntry {
@@ -664,296 +669,502 @@ fn fetch_developer_from_github() -> Result<(DeveloperProfile, Option<PathBuf>), 
     Ok((profile, avatar_path))
 }
 
-fn open_url(widget: &impl IsA<gtk::Widget>, url: &str) {
-    let win = widget.root().and_downcast::<gtk::Window>();
-    gtk::UriLauncher::new(url).launch(win.as_ref(), gio::Cancellable::NONE, |_| {});
-}
-
-fn external_cta(label: &str, _primary: bool, url: &str) -> gtk::Button {
-    let ic = ModernIcon::new(IconKind::ExternalLink, 11);
-    let inner = gtk::Box::builder().spacing(6).halign(gtk::Align::Center).valign(gtk::Align::Center).build();
-    let lbl = gtk::Label::builder().label(label).css_classes(["sc-dev-pill-label"]).build();
-    inner.append(&lbl);
-    inner.append(ic.widget());
-    let btn = gtk::Button::builder()
-        .child(&inner)
-        .css_classes(["sc-dev-pill"])
-        .tooltip_text(url)
+fn platform_link_button(
+    platform_icon: IconKind,
+    label: &str,
+    url: &str,
+    tooltip: &str,
+    accessible_name: &str,
+) -> gtk::Button {
+    let row = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .spacing(SPACE_2)
         .valign(gtk::Align::Center)
         .build();
-    let u = url.to_owned();
-    btn.connect_clicked(move |b| open_url(b, &u));
+    let p_ic = ModernIcon::new(platform_icon, 16);
+    let lbl = gtk::Label::builder().label(label).build();
+    let ext_ic = ModernIcon::new(IconKind::ExternalLink, 12);
+    ext_ic.add_css_class("sc-secondary");
+    row.append(p_ic.widget());
+    row.append(&lbl);
+    row.append(ext_ic.widget());
+
+    let btn = gtk::Button::builder()
+        .child(&row)
+        .css_classes(["sc-dialog-link-btn"])
+        .tooltip_text(tooltip)
+        .valign(gtk::Align::Center)
+        .build();
+    btn.update_property(&[gtk::accessible::Property::Label(accessible_name)]);
+
+    let url_owned = url.to_owned();
+    btn.connect_clicked(move |b| {
+        let win = b.root().and_downcast::<gtk::Window>();
+        gtk::UriLauncher::new(&url_owned).launch(win.as_ref(), gio::Cancellable::NONE, |_| {});
+    });
     btn
 }
 
-#[allow(dead_code)]
-fn stat_bento(title: &str) -> (gtk::Box, gtk::Label) {
-    let value = gtk::Label::builder().label("0").xalign(0.0).css_classes(["sc-metric"]).build();
-    let tile = gtk::Box::builder()
-        .orientation(gtk::Orientation::Vertical)
-        .spacing(6)
-        .hexpand(true)
-        .css_classes(["sc-stat-tile"])
-        .build();
-    tile.append(&overline(title));
-    tile.append(&value);
-    (tile, value)
+#[derive(Clone, Debug)]
+pub enum DeveloperDialogState {
+    Loading,
+    Loaded {
+        profile: DeveloperProfile,
+        avatar_path: Option<PathBuf>,
+        updated_caption: String,
+    },
+    Error {
+        message: String,
+        cached: Option<(DeveloperProfile, Option<PathBuf>, String)>,
+    },
 }
 
-/// Presents the Apple Pro Dark Monochrome "About Developer" modal populated from GitHub (`Lalitmukesh69`).
+fn build_loaded_profile_content(
+    prim: &DialogPrimitive,
+    profile: &DeveloperProfile,
+    avatar_path: Option<&Path>,
+) {
+    // 1. Profile row: 72x72 avatar + text stack (left-aligned)
+    let avatar_frame = gtk::Box::builder()
+        .width_request(72)
+        .height_request(72)
+        .css_classes(["sc-dialog-avatar"])
+        .overflow(gtk::Overflow::Hidden)
+        .valign(gtk::Align::Center)
+        .build();
+
+    let avatar_stack = gtk::Stack::new();
+    let fallback = adw::Avatar::builder()
+        .size(72)
+        .text(&profile.name)
+        .show_initials(true)
+        .build();
+    let pic = gtk::Picture::builder()
+        .content_fit(gtk::ContentFit::Cover)
+        .width_request(72)
+        .height_request(72)
+        .css_classes(["sc-dialog-avatar-img"])
+        .overflow(gtk::Overflow::Hidden)
+        .build();
+
+    avatar_stack.add_named(&fallback, Some("fallback"));
+    avatar_stack.add_named(&pic, Some("image"));
+
+    if let Some(Ok(tex)) = avatar_path.map(gdk::Texture::from_filename) {
+        pic.set_paintable(Some(&tex));
+        avatar_stack.set_visible_child_name("image");
+    } else {
+        avatar_stack.set_visible_child_name("fallback");
+    }
+    avatar_frame.append(&avatar_stack);
+
+    // Text stack
+    let name_lbl = gtk::Label::builder()
+        .label(&profile.name)
+        .xalign(0.0)
+        .css_classes(["sc-dialog-dev-name"])
+        .build();
+
+    let handle_str = format!("@{}", profile.login);
+    let handle_url = profile.html_url.clone();
+    let handle_btn = gtk::Button::builder()
+        .label(&handle_str)
+        .css_classes(["flat", "sc-dialog-dev-handle"])
+        .halign(gtk::Align::Start)
+        .tooltip_text(format!("View GitHub profile ({})", profile.html_url))
+        .build();
+    handle_btn.update_property(&[gtk::accessible::Property::Label(
+        &format!("GitHub handle @{}, opens in browser", profile.login),
+    )]);
+    handle_btn.connect_clicked(move |b| {
+        let win = b.root().and_downcast::<gtk::Window>();
+        gtk::UriLauncher::new(&handle_url).launch(win.as_ref(), gio::Cancellable::NONE, |_| {});
+    });
+
+    let meta_box = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .spacing(6)
+        .valign(gtk::Align::Center)
+        .build();
+
+    if !profile.location.is_empty() {
+        let pin = ModernIcon::new(IconKind::MapPin, 13);
+        pin.add_css_class("sc-secondary");
+        let loc_lbl = gtk::Label::builder().label(&profile.location).css_classes(["sc-dialog-dev-meta"]).build();
+        meta_box.append(pin.widget());
+        meta_box.append(&loc_lbl);
+    }
+    if !profile.location.is_empty() && !profile.company.is_empty() {
+        let dot_sep = gtk::Label::builder().label("·").css_classes(["sc-dialog-dev-meta"]).build();
+        meta_box.append(&dot_sep);
+    }
+    if !profile.company.is_empty() {
+        let bld = ModernIcon::new(IconKind::Building, 13);
+        bld.add_css_class("sc-secondary");
+        let comp_lbl = gtk::Label::builder().label(&profile.company).css_classes(["sc-dialog-dev-meta"]).build();
+        meta_box.append(bld.widget());
+        meta_box.append(&comp_lbl);
+    }
+
+    let text_stack = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(2)
+        .hexpand(true)
+        .valign(gtk::Align::Center)
+        .build();
+    text_stack.append(&name_lbl);
+    text_stack.append(&handle_btn);
+    if !profile.location.is_empty() || !profile.company.is_empty() {
+        text_stack.append(&meta_box);
+    }
+
+    let profile_row = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .spacing(16)
+        .valign(gtk::Align::Center)
+        .build();
+    profile_row.append(&avatar_frame);
+    profile_row.append(&text_stack);
+    prim.body_box.append(&profile_row);
+
+    // 2. Bio: 14/22, max 56ch, left-aligned, 16px below header row
+    if !profile.bio.is_empty() {
+        let bio_lbl = gtk::Label::builder()
+            .label(&profile.bio)
+            .xalign(0.0)
+            .wrap(true)
+            .wrap_mode(gtk::pango::WrapMode::WordChar)
+            .max_width_chars(56)
+            .css_classes(["sc-dialog-bio"])
+            .build();
+        prim.body_box.append(&bio_lbl);
+    }
+
+    // 3. Links row: secondary 36px link buttons, 8px gap
+    let links_box = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .spacing(8)
+        .build();
+
+    // GitHub
+    links_box.append(&platform_link_button(
+        IconKind::Github,
+        "GitHub",
+        &profile.html_url,
+        &profile.html_url,
+        "GitHub profile (opens in browser)",
+    ));
+
+    // Blog / Website
+    if let Some(site) = profile.website_url() {
+        let label = if profile.blog.trim().is_empty() { "Website" } else { profile.blog.trim() };
+        links_box.append(&platform_link_button(
+            IconKind::Globe,
+            label,
+            &site,
+            &site,
+            "Personal website (opens in browser)",
+        ));
+    }
+
+    // X / Twitter
+    if let Some(tw) = profile.twitter_url() {
+        let handle = profile.twitter_username.trim().trim_start_matches('@');
+        let label = format!("X @{handle}");
+        links_box.append(&platform_link_button(
+            IconKind::XLogo,
+            &label,
+            &tw,
+            &tw,
+            "X profile (opens in browser)",
+        ));
+    }
+
+    prim.body_box.append(&links_box);
+}
+
+/// Builds a modern libadwaita "About the developer" dialog primitive for a given state.
+pub fn build_developer_dialog_for_state(
+    dialog: Option<adw::Dialog>,
+    state: &DeveloperDialogState,
+    on_refresh: Rc<dyn Fn()>,
+    on_retry: Rc<dyn Fn()>,
+) -> DialogPrimitive {
+    let prim = match dialog {
+        Some(d) => DialogPrimitive::with_dialog(d, DialogSize::Md, "About the developer", None),
+        None => DialogPrimitive::new(DialogSize::Md, "About the developer", None),
+    };
+    prim.close_button.grab_focus();
+
+    match state {
+        DeveloperDialogState::Loading => {
+            // Skeletons
+            let avatar_skel = skeleton(72, 72);
+            avatar_skel.set_css_classes(&["sc-skeleton", "sc-dialog-avatar"]);
+
+            let name_skel = skeleton(150, 24);
+            let handle_skel = skeleton(100, 14);
+            let meta_skel = skeleton(120, 14);
+
+            let text_stack = gtk::Box::builder()
+                .orientation(gtk::Orientation::Vertical)
+                .spacing(6)
+                .hexpand(true)
+                .valign(gtk::Align::Center)
+                .build();
+            text_stack.append(&name_skel);
+            text_stack.append(&handle_skel);
+            text_stack.append(&meta_skel);
+
+            let profile_row = gtk::Box::builder()
+                .orientation(gtk::Orientation::Horizontal)
+                .spacing(16)
+                .valign(gtk::Align::Center)
+                .build();
+            profile_row.append(&avatar_skel);
+            profile_row.append(&text_stack);
+            prim.body_box.append(&profile_row);
+
+            // Bio skeletons (3 lines)
+            let bio_box = gtk::Box::builder()
+                .orientation(gtk::Orientation::Vertical)
+                .spacing(8)
+                .margin_top(8)
+                .build();
+            bio_box.append(&skeleton(420, 14));
+            bio_box.append(&skeleton(360, 14));
+            bio_box.append(&skeleton(240, 14));
+            prim.body_box.append(&bio_box);
+
+            // Link skeletons (3 buttons)
+            let links_box = gtk::Box::builder()
+                .orientation(gtk::Orientation::Horizontal)
+                .spacing(8)
+                .margin_top(8)
+                .build();
+            links_box.append(&skeleton(96, 36));
+            links_box.append(&skeleton(108, 36));
+            links_box.append(&skeleton(120, 36));
+            prim.body_box.append(&links_box);
+
+            // Footer
+            let caption_lbl = gtk::Label::builder()
+                .label("Connecting to GitHub…")
+                .xalign(0.0)
+                .css_classes(["sc-dialog-footer-caption"])
+                .build();
+            prim.footer_left_caption.append(&caption_lbl);
+
+            let refresh_btn = ghost_button("Refresh");
+            refresh_btn.set_sensitive(false);
+            let spin = adw::Spinner::builder().width_request(16).height_request(16).build();
+            let refresh_box = gtk::Box::builder()
+                .orientation(gtk::Orientation::Horizontal)
+                .spacing(6)
+                .valign(gtk::Align::Center)
+                .build();
+            refresh_box.append(&spin);
+            refresh_box.append(&gtk::Label::new(Some("Refresh")));
+            refresh_btn.set_child(Some(&refresh_box));
+            prim.footer_actions.append(&refresh_btn);
+
+            prim.announce("Loading developer profile from GitHub");
+        }
+        DeveloperDialogState::Loaded { profile, avatar_path, updated_caption } => {
+            build_loaded_profile_content(&prim, profile, avatar_path.as_deref());
+
+            // Footer
+            let dot = status_dot(ConnectionState::Connected);
+            let caption_lbl = gtk::Label::builder()
+                .label(updated_caption)
+                .xalign(0.0)
+                .css_classes(["sc-dialog-footer-caption"])
+                .tooltip_text(format!("https://api.github.com/users/{}", profile.login))
+                .build();
+            prim.footer_left_caption.append(&dot);
+            prim.footer_left_caption.append(&caption_lbl);
+
+            let refresh_btn = ghost_button("Refresh");
+            let r_ic = ModernIcon::new(IconKind::Refresh, 14);
+            let refresh_box = gtk::Box::builder()
+                .orientation(gtk::Orientation::Horizontal)
+                .spacing(6)
+                .valign(gtk::Align::Center)
+                .build();
+            refresh_box.append(r_ic.widget());
+            refresh_box.append(&gtk::Label::new(Some("Refresh")));
+            refresh_btn.set_child(Some(&refresh_box));
+            let on_r = on_refresh.clone();
+            refresh_btn.connect_clicked(move |_| on_r());
+            prim.footer_actions.append(&refresh_btn);
+
+            prim.announce(&format!("Loaded developer profile for {}", profile.name));
+        }
+        DeveloperDialogState::Error { message, cached } => {
+            let notice = notice_banner(IconKind::WifiOff, message);
+            prim.body_box.append(&notice);
+
+            if let Some((cached_prof, cached_av, caption)) = cached {
+                build_loaded_profile_content(&prim, cached_prof, cached_av.as_deref());
+
+                let caption_lbl = gtk::Label::builder()
+                    .label(caption)
+                    .xalign(0.0)
+                    .css_classes(["sc-dialog-footer-caption"])
+                    .tooltip_text(format!("https://api.github.com/users/{}", cached_prof.login))
+                    .build();
+                prim.footer_left_caption.append(&caption_lbl);
+            } else {
+                let empty = empty_state(IconKind::User, "No cached developer profile available offline.");
+                prim.body_box.append(&empty);
+
+                let caption_lbl = gtk::Label::builder()
+                    .label("Offline")
+                    .xalign(0.0)
+                    .css_classes(["sc-dialog-footer-caption"])
+                    .build();
+                prim.footer_left_caption.append(&caption_lbl);
+            }
+
+            let retry_btn = secondary_button("Retry");
+            let on_ret = on_retry.clone();
+            retry_btn.connect_clicked(move |_| on_ret());
+            prim.footer_actions.append(&retry_btn);
+
+            prim.announce("Couldn't load latest profile from GitHub");
+        }
+    }
+
+    prim
+}
+
+/// Presents the redesigned "About Developer" modal populated from GitHub (`Lalitmukesh69`).
 pub fn present_developer_dialog(parent: &impl IsA<gtk::Widget>) {
+    let state_cell: Rc<RefCell<DeveloperDialogState>> = Rc::new(RefCell::new(DeveloperDialogState::Loading));
+
     let dialog = adw::Dialog::builder()
-        .content_width(460)
+        .content_width(DIALOG_WIDTH_MD)
         .can_close(true)
         .css_classes(["sc-dialog"])
         .build();
 
-    let title_ic = ModernIcon::new(IconKind::User, 15);
-    let title_lbl = gtk::Label::builder().label("About Developer").xalign(0.0).css_classes(["sc-dialog-title"]).build();
-    let gh_tag = gtk::Label::builder().label(format!("@{GITHUB_LOGIN}")).css_classes(["sc-tag"]).valign(gtk::Align::Center).build();
+    let redraw: Rc<RefCell<Option<Rc<dyn Fn()>>>> = Rc::default();
 
-    let sync_spinner = adw::Spinner::builder().visible(false).valign(gtk::Align::Center).build();
-    let sync_ic = ModernIcon::new(IconKind::Refresh, 14);
-    let sync_btn = gtk::Button::builder()
-        .child(sync_ic.widget())
-        .css_classes(["sc-btn-icon"])
-        .tooltip_text("Pull latest profile from GitHub")
-        .valign(gtk::Align::Center)
-        .build();
-    let close_ic = ModernIcon::new(IconKind::Close, 14);
-    let close_btn = gtk::Button::builder()
-        .child(close_ic.widget())
-        .css_classes(["sc-btn-icon"])
-        .tooltip_text("Close")
-        .valign(gtk::Align::Center)
-        .build();
+    let redraw_fn: Rc<dyn Fn()> = {
+        let dialog = dialog.clone();
+        let state_cell = state_cell.clone();
+        let redraw = redraw.clone();
 
-    let header_left = gtk::Box::builder().spacing(8).hexpand(true).valign(gtk::Align::Center).build();
-    header_left.append(title_ic.widget());
-    header_left.append(&title_lbl);
-    header_left.append(&gh_tag);
-
-    let title_row = gtk::Box::builder().spacing(6).valign(gtk::Align::Center).build();
-    title_row.append(&header_left);
-    title_row.append(&sync_spinner);
-    title_row.append(&sync_btn);
-    title_row.append(&close_btn);
-
-    // Profile Card
-    let avatar_fallback = adw::Avatar::builder().size(72).text("Lalit mukesh").show_initials(true).build();
-    let avatar_pic = gtk::Picture::builder()
-        .content_fit(gtk::ContentFit::Cover)
-        .width_request(72)
-        .height_request(72)
-        .css_classes(["sc-dev-avatar-img"])
-        .overflow(gtk::Overflow::Hidden)
-        .build();
-    let avatar_stack = gtk::Stack::new();
-    avatar_stack.add_named(&avatar_fallback, Some("fallback"));
-    avatar_stack.add_named(&avatar_pic, Some("image"));
-    let avatar_frame = gtk::Box::builder()
-        .width_request(72)
-        .height_request(72)
-        .halign(gtk::Align::Center)
-        .valign(gtk::Align::Center)
-        .css_classes(["sc-dev-avatar"])
-        .overflow(gtk::Overflow::Hidden)
-        .build();
-    avatar_frame.append(&avatar_stack);
-
-    let name_lbl = gtk::Label::builder()
-        .label("Lalit Mukesh")
-        .xalign(0.5)
-        .css_classes(["sc-dev-name"])
-        .build();
-    let meta_lbl = gtk::Label::builder()
-        .label("@Lalitmukesh69  ·  Berlin  ·  IRM")
-        .xalign(0.5)
-        .css_classes(["sc-dev-meta"])
-        .build();
-    let bio_lbl = gtk::Label::builder()
-        .xalign(0.5)
-        .justify(gtk::Justification::Center)
-        .css_classes(["sc-dev-bio"])
-        .wrap(true)
-        .wrap_mode(gtk::pango::WrapMode::WordChar)
-        .max_width_chars(44)
-        .build();
-
-    let hero_links = gtk::Box::builder()
-        .spacing(8)
-        .halign(gtk::Align::Center)
-        .valign(gtk::Align::Center)
-        .margin_top(4)
-        .build();
-
-    let profile_card = gtk::Box::builder()
-        .orientation(gtk::Orientation::Vertical)
-        .spacing(6)
-        .halign(gtk::Align::Fill)
-        .valign(gtk::Align::Center)
-        .css_classes(["sc-dev-card"])
-        .build();
-    profile_card.append(&avatar_frame);
-    profile_card.append(&name_lbl);
-    profile_card.append(&meta_lbl);
-    profile_card.append(&bio_lbl);
-    profile_card.append(&hero_links);
-
-    // Footer status + Done
-    let sync_status = gtk::Label::builder()
-        .label("Live from api.github.com/users/Lalitmukesh69")
-        .xalign(0.0)
-        .hexpand(true)
-        .ellipsize(gtk::pango::EllipsizeMode::End)
-        .css_classes(["caption", "sc-muted"])
-        .build();
-    let done_btn = gtk::Button::builder().label("Close").css_classes(["sc-btn-secondary"]).build();
-    let footer = gtk::Box::builder().spacing(12).valign(gtk::Align::Center).build();
-    footer.append(&sync_status);
-    footer.append(&done_btn);
-
-    let body = gtk::Box::builder()
-        .orientation(gtk::Orientation::Vertical)
-        .spacing(14)
-        .margin_top(16)
-        .margin_bottom(16)
-        .margin_start(16)
-        .margin_end(16)
-        .build();
-    body.append(&title_row);
-    body.append(&profile_card);
-    body.append(&footer);
-
-    let scroller = gtk::ScrolledWindow::builder()
-        .hscrollbar_policy(gtk::PolicyType::Never)
-        .propagate_natural_height(true)
-        .max_content_height(480)
-        .child(&body)
-        .build();
-
-    let apply_avatar = {
-        let avatar_pic = avatar_pic.clone();
-        let avatar_stack = avatar_stack.clone();
-        move |path: Option<&Path>| {
-            if let Some(Ok(tex)) = path.map(gdk::Texture::from_filename) {
-                avatar_pic.set_paintable(Some(&tex));
-                avatar_stack.set_visible_child_name("image");
-            } else {
-                avatar_stack.set_visible_child_name("fallback");
-            }
-        }
-    };
-
-    let populate: Rc<dyn Fn(&DeveloperProfile, Option<&Path>)> = {
-        let name_lbl = name_lbl.clone();
-        let meta_lbl = meta_lbl.clone();
-        let bio_lbl = bio_lbl.clone();
-        let hero_links = hero_links.clone();
-        let avatar_fallback = avatar_fallback.clone();
-        Rc::new(move |profile: &DeveloperProfile, avatar_path: Option<&Path>| {
-            avatar_fallback.set_text(Some(&profile.name));
-            apply_avatar(avatar_path);
-
-            name_lbl.set_label(&profile.name);
-            let mut parts = vec![format!("@{}", profile.login)];
-            if !profile.location.is_empty() {
-                parts.push(profile.location.clone());
-            }
-            if !profile.company.is_empty() {
-                parts.push(profile.company.clone());
-            }
-            meta_lbl.set_label(&parts.join("  ·  "));
-
-            bio_lbl.set_visible(!profile.bio.is_empty());
-            bio_lbl.set_label(&profile.bio);
-
-            while let Some(child) = hero_links.first_child() {
-                hero_links.remove(&child);
-            }
-            hero_links.append(&external_cta("GitHub Profile", true, &profile.html_url));
-            if let Some(site) = profile.website_url() {
-                let label = if profile.blog.trim().is_empty() { "Website".to_owned() } else { profile.blog.trim().to_owned() };
-                hero_links.append(&external_cta(&label, false, &site));
-            }
-            if let Some(tw) = profile.twitter_url() {
-                hero_links.append(&external_cta(&format!("@{}", profile.twitter_username.trim().trim_start_matches('@')), false, &tw));
-            }
-        })
-    };
-
-    let cached_profile = load_cached_developer();
-    let cached_avatar = developer_avatar_cache_path();
-    populate(&cached_profile, cached_avatar.is_file().then_some(cached_avatar.as_path()));
-
-    let syncing: Rc<RefCell<bool>> = Rc::default();
-    let start_sync: Rc<dyn Fn()> = {
-        let syncing = syncing.clone();
-        let sync_btn = sync_btn.clone();
-        let sync_spinner = sync_spinner.clone();
-        let sync_status = sync_status.clone();
-        let populate = populate.clone();
-        let dialog_w = dialog.downgrade();
         Rc::new(move || {
-            if *syncing.borrow() {
-                return;
-            }
-            *syncing.borrow_mut() = true;
-            sync_btn.set_sensitive(false);
-            sync_spinner.set_visible(true);
-            sync_status.set_label("Pulling latest profile from github.com…");
+            let current_state = state_cell.borrow().clone();
 
-            let syncing_done = syncing.clone();
-            let sync_btn_done = sync_btn.clone();
-            let sync_spinner_done = sync_spinner.clone();
-            let sync_status_done = sync_status.clone();
-            let populate_done = populate.clone();
-            let dialog_w = dialog_w.clone();
+            let on_refresh: Rc<dyn Fn()> = {
+                let state_cell = state_cell.clone();
+                let redraw = redraw.clone();
+                let dialog_weak = dialog.downgrade();
+                Rc::new(move || {
+                    *state_cell.borrow_mut() = DeveloperDialogState::Loading;
+                    if let Some(r) = redraw.borrow().as_ref() {
+                        r();
+                    }
 
-            glib::spawn_future_local(async move {
-                let res = gio::spawn_blocking(fetch_developer_from_github)
-                    .await
-                    .unwrap_or_else(|_| Err("GitHub sync task failed".to_owned()));
-                *syncing_done.borrow_mut() = false;
-                if dialog_w.upgrade().is_none() {
-                    return;
-                }
-                sync_btn_done.set_sensitive(true);
-                sync_spinner_done.set_visible(false);
-                match res {
-                    Ok((profile, avatar_path)) => {
-                        populate_done(&profile, avatar_path.as_deref());
-                        sync_status_done.set_label("Live from api.github.com/users/Lalitmukesh69");
-                    }
-                    Err(err) => {
-                        eprintln!("smartconnect-gui: GitHub profile fetch skipped ({err})");
-                        sync_status_done.set_label("Offline · showing saved GitHub profile");
-                    }
-                }
-            });
+                    let state_cell_done = state_cell.clone();
+                    let redraw_done = redraw.clone();
+                    let dialog_weak_done = dialog_weak.clone();
+
+                    glib::spawn_future_local(async move {
+                        let res = gio::spawn_blocking(fetch_developer_from_github).await;
+                        if dialog_weak_done.upgrade().is_none() {
+                            return;
+                        }
+                        match res {
+                            Ok(Ok((profile, avatar_path))) => {
+                                *state_cell_done.borrow_mut() = DeveloperDialogState::Loaded {
+                                    profile,
+                                    avatar_path,
+                                    updated_caption: "Live from GitHub · updated just now".to_owned(),
+                                };
+                            }
+                            Ok(Err(err)) => {
+                                let cached_profile = load_cached_developer();
+                                let cached_avatar = developer_avatar_cache_path();
+                                let cached_opt = if cached_avatar.is_file() {
+                                    Some((cached_profile, Some(cached_avatar), "Offline · showing cached profile".to_owned()))
+                                } else {
+                                    None
+                                };
+                                *state_cell_done.borrow_mut() = DeveloperDialogState::Error {
+                                    message: format!("Couldn't load the latest profile: {err}"),
+                                    cached: cached_opt,
+                                };
+                            }
+                            Err(_) => {
+                                *state_cell_done.borrow_mut() = DeveloperDialogState::Error {
+                                    message: "Background GitHub task failed".to_owned(),
+                                    cached: None,
+                                };
+                            }
+                        }
+                        if let Some(r) = redraw_done.borrow().as_ref() {
+                            r();
+                        }
+                    });
+                })
+            };
+
+            let on_retry = on_refresh.clone();
+
+            build_developer_dialog_for_state(Some(dialog.clone()), &current_state, on_refresh, on_retry);
         })
     };
 
-    {
-        let start_sync = start_sync.clone();
-        sync_btn.connect_clicked(move |_| start_sync());
-    }
-    let dlg = dialog.downgrade();
-    close_btn.connect_clicked(move |_| {
-        if let Some(d) = dlg.upgrade() {
-            d.close();
-        }
-    });
-    let dlg = dialog.downgrade();
-    done_btn.connect_clicked(move |_| {
-        if let Some(d) = dlg.upgrade() {
-            d.close();
-        }
-    });
+    *redraw.borrow_mut() = Some(redraw_fn.clone());
+    redraw_fn();
 
-    dialog.set_child(Some(&scroller));
     dialog.present(Some(parent));
-    start_sync();
+
+    // Fetch initial profile
+    let state_cell_done = state_cell.clone();
+    let redraw_done = redraw.clone();
+    let dialog_weak_done = dialog.downgrade();
+
+    glib::spawn_future_local(async move {
+        let res = gio::spawn_blocking(fetch_developer_from_github).await;
+        if dialog_weak_done.upgrade().is_none() {
+            return;
+        }
+        match res {
+            Ok(Ok((profile, avatar_path))) => {
+                *state_cell_done.borrow_mut() = DeveloperDialogState::Loaded {
+                    profile,
+                    avatar_path,
+                    updated_caption: "Live from GitHub · updated 2 min ago".to_owned(),
+                };
+            }
+            Ok(Err(err)) => {
+                let cached_profile = load_cached_developer();
+                let cached_avatar = developer_avatar_cache_path();
+                let cached_opt = if cached_avatar.is_file() {
+                    Some((cached_profile, Some(cached_avatar), "Offline · showing cached profile".to_owned()))
+                } else {
+                    None
+                };
+                *state_cell_done.borrow_mut() = DeveloperDialogState::Error {
+                    message: format!("Couldn't load the latest profile: {err}"),
+                    cached: cached_opt,
+                };
+            }
+            Err(_) => {
+                *state_cell_done.borrow_mut() = DeveloperDialogState::Error {
+                    message: "Background GitHub task failed".to_owned(),
+                    cached: None,
+                };
+            }
+        }
+        if let Some(r) = redraw_done.borrow().as_ref() {
+            r();
+        }
+    });
 }
 
 #[cfg(test)]

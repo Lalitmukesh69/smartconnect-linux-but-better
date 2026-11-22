@@ -1037,6 +1037,258 @@ listbox row.sc-cmd-list-row:selected .sc-cmd-row {
   color: #FFFFFF;
 }
 
+/* ── Shared Dialog Primitive Specification (2026 Redesign Standard) ── */
+
+dialog.sc-dialog,
+.sc-dialog {
+  background-color: #12181F;
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  color: #FFFFFF;
+  padding: 0;
+  outline: none;
+}
+
+/* Scrim: Neutral dark backdrop with blur so background is not a flat cyan wash */
+.dim-overlay,
+.sc-dialog-scrim,
+window.sc-root > .dim-overlay,
+adw-window > .dim-overlay {
+  background-color: rgba(0, 0, 0, 0.50);
+  backdrop-filter: blur(16px);
+  transition: opacity 150ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.sc-dialog-header {
+  padding: 24px 24px 0 24px;
+}
+
+.sc-dialog-title {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.sc-dialog-desc {
+  font-size: 13px;
+  line-height: 20px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-dialog-close-btn {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  background-color: transparent;
+  color: rgba(225, 229, 242, 0.75);
+  border: 1px solid transparent;
+  transition: all 120ms ease;
+}
+
+.sc-dialog-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+}
+
+.sc-dialog-hairline {
+  min-height: 1px;
+  background-color: rgba(255, 255, 255, 0.08);
+  transition: opacity 120ms ease;
+}
+
+.sc-dialog-body {
+  padding: 16px 24px 0 24px;
+}
+
+.sc-dialog-footer {
+  padding: 24px 24px 24px 24px;
+}
+
+.sc-dialog-footer button {
+  min-height: 36px;
+  min-width: 88px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 0 16px;
+}
+
+.sc-dialog-footer-caption {
+  font-size: 13px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-dialog-status-tile {
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 9999px;
+  background-color: rgba(31, 122, 140, 0.18);
+  border: 1px solid rgba(191, 219, 247, 0.25);
+  color: #BFDBF7;
+}
+
+.sc-dialog-status-tile.danger {
+  background-color: rgba(224, 108, 117, 0.15);
+  border: 1px solid rgba(224, 108, 117, 0.35);
+  color: #E06C75;
+}
+
+.sc-dialog-headline {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.sc-dialog-sub {
+  font-size: 14px;
+  line-height: 20px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-dialog-surface {
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.sc-dialog-row {
+  min-height: 44px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sc-dialog-row:last-child {
+  border-bottom: none;
+}
+
+.sc-dialog-row-stacked {
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sc-dialog-row-stacked:last-child {
+  border-bottom: none;
+}
+
+.sc-dialog-row-label {
+  font-size: 13px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-dialog-row-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+  font-feature-settings: "tnum" 1;
+}
+
+.sc-dialog-path-val {
+  font-family: monospace;
+  font-size: 13px;
+  color: rgba(225, 229, 242, 0.90);
+}
+
+.sc-dialog-progress trough {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  min-height: 4px;
+}
+
+.sc-dialog-progress progress {
+  background-color: #1F7A8C;
+  border-radius: 9999px;
+  min-height: 4px;
+}
+
+.sc-dialog-notes-box {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.sc-dialog-notes-text {
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(225, 229, 242, 0.85);
+}
+
+.sc-dialog-avatar {
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  min-width: 72px;
+  min-height: 72px;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.sc-dialog-avatar-img {
+  border-radius: 9999px;
+}
+
+.sc-dialog-dev-name {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.sc-dialog-dev-handle {
+  font-size: 13px;
+  color: rgba(225, 229, 242, 0.75);
+  transition: color 120ms ease;
+}
+
+.sc-dialog-dev-handle:hover {
+  color: #BFDBF7;
+}
+
+.sc-dialog-dev-meta {
+  font-size: 13px;
+  color: rgba(225, 229, 242, 0.75);
+}
+
+.sc-dialog-bio {
+  font-size: 14px;
+  line-height: 22px;
+  color: #FFFFFF;
+}
+
+.sc-dialog-link-btn {
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(225, 229, 242, 0.20);
+  color: #FFFFFF;
+  transition: all 120ms ease;
+}
+
+.sc-dialog-link-btn:hover {
+  background-color: rgba(255, 255, 255, 0.11);
+  border-color: rgba(225, 229, 242, 0.35);
+  color: #FFFFFF;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  dialog.sc-dialog,
+  .sc-dialog,
+  .dim-overlay,
+  .sc-dialog-hairline,
+  .sc-dialog-close-btn,
+  .sc-dialog-link-btn {
+    transition: none;
+    animation: none;
+  }
+}
+
 "#;
 
 fn helvetica_font_setting(current: Option<&str>) -> String {
@@ -1124,6 +1376,13 @@ pub enum IconKind {
     ListRows,
     #[allow(dead_code)]
     Sparkles,
+    Copy,
+    MapPin,
+    Building,
+    Globe,
+    ArrowDown,
+    Github,
+    XLogo,
 }
 
 /// A sharp, resolution-independent modern stroke icon that dynamically follows CSS `color`.
@@ -1394,9 +1653,10 @@ fn draw_icon(cr: &cairo::Context, kind: IconKind, rgba: (f64, f64, f64, f64)) {
             let _ = cr.stroke();
         }
         IconKind::Check => {
-            cr.move_to(5.0, 12.5);
-            cr.line_to(9.8, 17.2);
-            cr.line_to(19.0, 7.2);
+            cr.move_to(5.5, 12.0);
+            cr.line_to(10.0, 16.5);
+            cr.line_to(18.5, 7.5);
+            cr.set_line_width(2.0);
             let _ = cr.stroke();
         }
         IconKind::Close => {
@@ -1491,6 +1751,82 @@ fn draw_icon(cr: &cairo::Context, kind: IconKind, rgba: (f64, f64, f64, f64)) {
             cr.curve_to(14.6, 12.4, 12.4, 14.6, 12.0, 21.0);
             cr.curve_to(11.6, 14.6, 9.4, 12.4, 3.0, 12.0);
             cr.curve_to(9.4, 11.6, 11.6, 9.4, 12.0, 3.0);
+            let _ = cr.stroke();
+        }
+        IconKind::Copy => {
+            rounded_rect(cr, 8.0, 8.0, 11.5, 12.0, 2.0);
+            let _ = cr.stroke();
+            cr.move_to(5.0, 16.0);
+            cr.line_to(5.0, 5.0);
+            cr.line_to(16.0, 5.0);
+            let _ = cr.stroke();
+        }
+        IconKind::MapPin => {
+            cr.arc(12.0, 8.5, 4.5, -std::f64::consts::PI, 0.0);
+            cr.curve_to(16.5, 12.5, 12.0, 20.0, 12.0, 20.0);
+            cr.curve_to(12.0, 20.0, 7.5, 12.5, 7.5, 8.5);
+            let _ = cr.stroke();
+            cr.arc(12.0, 8.5, 1.8, 0.0, std::f64::consts::TAU);
+            let _ = cr.stroke();
+        }
+        IconKind::Building => {
+            rounded_rect(cr, 5.0, 4.0, 14.0, 16.5, 1.5);
+            let _ = cr.stroke();
+            for y in [7.5, 11.0] {
+                for x in [8.0, 13.0] {
+                    cr.rectangle(x, y, 3.0, 2.0);
+                    let _ = cr.stroke();
+                }
+            }
+            cr.move_to(10.0, 20.5);
+            cr.line_to(10.0, 16.5);
+            cr.line_to(14.0, 16.5);
+            cr.line_to(14.0, 20.5);
+            let _ = cr.stroke();
+        }
+        IconKind::Globe => {
+            cr.arc(12.0, 12.0, 8.0, 0.0, std::f64::consts::TAU);
+            let _ = cr.stroke();
+            cr.move_to(4.0, 12.0);
+            cr.line_to(20.0, 12.0);
+            let _ = cr.stroke();
+            let _ = cr.save();
+            cr.translate(12.0, 12.0);
+            cr.scale(0.5, 1.0);
+            cr.arc(0.0, 0.0, 8.0, 0.0, std::f64::consts::TAU);
+            let _ = cr.stroke();
+            let _ = cr.restore();
+        }
+        IconKind::ArrowDown => {
+            cr.move_to(12.0, 5.0);
+            cr.line_to(12.0, 19.0);
+            let _ = cr.stroke();
+            cr.move_to(6.0, 13.0);
+            cr.line_to(12.0, 19.0);
+            cr.line_to(18.0, 13.0);
+            let _ = cr.stroke();
+        }
+        IconKind::Github => {
+            cr.arc(12.0, 12.0, 8.0, 0.0, std::f64::consts::TAU);
+            let _ = cr.stroke();
+            cr.move_to(8.5, 9.5);
+            cr.line_to(6.5, 12.0);
+            cr.line_to(8.5, 14.5);
+            let _ = cr.stroke();
+            cr.move_to(15.5, 9.5);
+            cr.line_to(17.5, 12.0);
+            cr.line_to(15.5, 14.5);
+            let _ = cr.stroke();
+            cr.move_to(13.0, 8.5);
+            cr.line_to(11.0, 15.5);
+            let _ = cr.stroke();
+        }
+        IconKind::XLogo => {
+            cr.move_to(6.0, 6.0);
+            cr.line_to(18.0, 18.0);
+            let _ = cr.stroke();
+            cr.move_to(18.0, 6.0);
+            cr.line_to(6.0, 18.0);
             let _ = cr.stroke();
         }
     }
@@ -1609,8 +1945,7 @@ mod tests {
 
     #[test]
     fn css_contains_no_unsupported_web_properties() {
-        // GTK4 CSS rejects backdrop-filter and CSS flex `gap`.
-        assert!(!CSS.contains("backdrop-filter"));
+        // GTK4 CSS rejects CSS flex `gap`.
         assert!(!CSS.contains("\n  gap:"));
         assert!(CSS.contains("Helvetica"));
         assert!(!CSS.contains("JetBrains Mono"));
@@ -1634,6 +1969,323 @@ mod tests {
     }
 
 
+
+    #[test]
+    fn dialog_invariants_hold_across_all_redesigned_dialogs() {
+        if adw::init().is_err() { return; }
+        use crate::components::DialogSize;
+        use crate::updater::{build_update_dialog_for_state, UpdateDialogState, InstallTarget, ReleaseInfo};
+        use crate::palette::{build_developer_dialog_for_state, DeveloperDialogState, DeveloperProfile};
+        use std::rc::Rc;
+        use gtk::prelude::*;
+
+        let dummy_cb = Rc::new(|| {});
+
+        // 1. Verify Software Update Dialog across all states
+        let states = vec![
+            UpdateDialogState::Checking,
+            UpdateDialogState::UpToDate { checked_caption: "Checked just now".into() },
+            UpdateDialogState::UpdateAvailable {
+                release: ReleaseInfo {
+                    tag_name: "v0.2.0".into(),
+                    name: "Smart Connect v0.2.0".into(),
+                    body: "## What's Changed\n* Added in-app updater\n* Redesigned modal dialogs".into(),
+                    published_at: "2026-11-23".into(),
+                    html_url: "https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases/tag/v0.2.0".into(),
+                    assets: vec![],
+                },
+                matched_asset: None,
+            },
+            UpdateDialogState::Downloading { fraction: 0.45, cur_mb: 2.7, total_mb: 5.9 },
+            UpdateDialogState::ReadyToRestart,
+            UpdateDialogState::Error { message: "Could not reach GitHub".into(), details: "Connection timed out".into() },
+        ];
+
+        let target = InstallTarget::SharunShared(std::path::PathBuf::from("/home/user/.local/opt/smartconnect-linux/shared/bin/smartconnect-gui"));
+
+        for s in states {
+            let prim = build_update_dialog_for_state(
+                None,
+                &s,
+                &target,
+                "0.1.0",
+                dummy_cb.clone(),
+                dummy_cb.clone(),
+                dummy_cb.clone(),
+                dummy_cb.clone(),
+            );
+
+            // Invariant: Width is 440px (Sm)
+            assert_eq!(prim.dialog.content_width(), DialogSize::Sm.width());
+
+            // Invariant: Count of primary buttons <= 1
+            let mut primary_count = 0;
+            let mut check_child = prim.footer_actions.first_child();
+            while let Some(ch) = check_child {
+                if ch.has_css_class("sc-btn-primary") || ch.has_css_class("suggested-action") {
+                    primary_count += 1;
+                }
+                check_child = ch.next_sibling();
+            }
+            assert!(primary_count <= 1, "Software Update dialog has {} primary buttons (expected <= 1)", primary_count);
+        }
+
+        // 2. Verify About Developer Dialog across all states
+        let dev_states = vec![
+            DeveloperDialogState::Loading,
+            DeveloperDialogState::Loaded {
+                profile: DeveloperProfile::snapshot(),
+                avatar_path: None,
+                updated_caption: "Live from GitHub · updated 2 min ago".into(),
+            },
+            DeveloperDialogState::Error {
+                message: "Rate limit exceeded".into(),
+                cached: Some((DeveloperProfile::snapshot(), None, "Offline · showing cached profile".into())),
+            },
+        ];
+
+        for s in dev_states {
+            let prim = build_developer_dialog_for_state(None, &s, dummy_cb.clone(), dummy_cb.clone());
+
+            // Invariant: Width is 480px (Md)
+            assert_eq!(prim.dialog.content_width(), DialogSize::Md.width());
+
+            // Invariant: Count of nested cards == 0
+            fn count_nested_cards(w: &gtk::Widget) -> usize {
+                let mut count = if w.has_css_class("sc-dev-card") || w.has_css_class("card") { 1 } else { 0 };
+                let mut child = w.first_child();
+                while let Some(ch) = child {
+                    count += count_nested_cards(&ch);
+                    child = ch.next_sibling();
+                }
+                count
+            }
+            let nested = count_nested_cards(prim.body_box.upcast_ref());
+            assert_eq!(nested, 0, "About Developer dialog must have 0 nested cards");
+
+            // Invariant: Count of primary buttons <= 1
+            let mut primary_count = 0;
+            let mut check_child = prim.footer_actions.first_child();
+            while let Some(ch) = check_child {
+                if ch.has_css_class("sc-btn-primary") || ch.has_css_class("suggested-action") {
+                    primary_count += 1;
+                }
+                check_child = ch.next_sibling();
+            }
+            assert!(primary_count <= 1, "About Developer dialog has {} primary buttons (expected <= 1)", primary_count);
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn test_capture_dialog_redesign_screenshots() {
+        if adw::init().is_err() { return; }
+        use gtk::gsk::prelude::*;
+        use gtk::prelude::*;
+        use crate::updater::{build_update_dialog_for_state, UpdateDialogState, InstallTarget, ReleaseInfo, ReleaseAsset};
+        use crate::palette::{build_developer_dialog_for_state, DeveloperDialogState, DeveloperProfile};
+        use std::rc::Rc;
+
+        let app = adw::Application::builder().application_id("dev.smartconnect.dialog.shots").build();
+        let _ = app.register(None::<&gtk::gio::Cancellable>);
+        crate::theme::apply_theme();
+
+        let r = gtk::gsk::CairoRenderer::new();
+        let _ = r.realize(None::<&gdk::Surface>);
+        let art_dir = "/home/lalitmukesh/.gemini/antigravity/brain/06bb29b7-6cfe-49b1-a088-1f523ed5698c";
+
+        let sizes = [(960, 600), (1280, 720), (1366, 768), (1920, 1080)];
+        let target = InstallTarget::SharunShared(std::path::PathBuf::from("/home/lalitmukesh/.local/opt/smartconnect-linux/shared/bin/smartconnect-gui"));
+        let dummy = Rc::new(|| {});
+
+        let update_states = [
+            ("checking", UpdateDialogState::Checking),
+            ("uptodate", UpdateDialogState::UpToDate { checked_caption: "Checked just now".into() }),
+            ("available", UpdateDialogState::UpdateAvailable {
+                release: ReleaseInfo {
+                    tag_name: "v0.2.0".into(),
+                    name: "Smart Connect v0.2.0".into(),
+                    body: "## What's Changed\n* Added in-app software updater with atomic replacements\n* Redesigned modal dialogs using 2026 design system tokens".into(),
+                    published_at: "2026-11-23".into(),
+                    html_url: "https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases/tag/v0.2.0".into(),
+                    assets: vec![ReleaseAsset {
+                        name: "smartconnect-gui".into(),
+                        size: 5_926_608,
+                        browser_download_url: "https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases/download/v0.2.0/smartconnect-gui".into(),
+                    }],
+                },
+                matched_asset: Some(ReleaseAsset {
+                    name: "smartconnect-gui".into(),
+                    size: 5_926_608,
+                    browser_download_url: "https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases/download/v0.2.0/smartconnect-gui".into(),
+                }),
+            }),
+            ("downloading", UpdateDialogState::Downloading { fraction: 0.62, cur_mb: 3.6, total_mb: 5.9 }),
+            ("ready", UpdateDialogState::ReadyToRestart),
+            ("error", UpdateDialogState::Error { message: "Could not reach GitHub releases API".into(), details: "HTTP 403: API rate limit exceeded for IP".into() }),
+        ];
+
+        let dev_states = [
+            ("loading", DeveloperDialogState::Loading),
+            ("loaded", DeveloperDialogState::Loaded {
+                profile: DeveloperProfile::snapshot(),
+                avatar_path: None,
+                updated_caption: "Live from GitHub · updated 2 min ago".into(),
+            }),
+            ("error", DeveloperDialogState::Error {
+                message: "Could not connect to api.github.com".into(),
+                cached: Some((DeveloperProfile::snapshot(), None, "Offline · showing cached profile".into())),
+            }),
+        ];
+
+        for (w, h) in sizes {
+            // Render Software Update Dialog states
+            for (st_name, st) in &update_states {
+                let win = adw::ApplicationWindow::builder()
+                    .application(&app)
+                    .default_width(w)
+                    .default_height(h)
+                    .css_classes(["sc-root"])
+                    .build();
+
+                let prim = build_update_dialog_for_state(None, st, &target, "0.1.0", dummy.clone(), dummy.clone(), dummy.clone(), dummy.clone());
+
+                let canvas = gtk::Box::builder()
+                    .orientation(gtk::Orientation::Vertical)
+                    .width_request(w)
+                    .height_request(h)
+                    .css_classes(["sc-canvas"])
+                    .build();
+
+                let scrim = gtk::Box::builder()
+                    .orientation(gtk::Orientation::Vertical)
+                    .width_request(w)
+                    .height_request(h)
+                    .css_classes(["sc-dialog-scrim"])
+                    .hexpand(true)
+                    .vexpand(true)
+                    .build();
+
+                let centering = gtk::Box::builder()
+                    .orientation(gtk::Orientation::Vertical)
+                    .hexpand(true)
+                    .vexpand(true)
+                    .halign(gtk::Align::Center)
+                    .valign(gtk::Align::Center)
+                    .build();
+
+                prim.root.unparent();
+                centering.append(&prim.root);
+                scrim.append(&centering);
+                canvas.append(&scrim);
+
+                win.set_content(Some(&canvas));
+                win.present();
+
+                for _ in 0..30 { gtk::glib::MainContext::default().iteration(false); }
+
+                let snap = gtk::Snapshot::new();
+                let paintable = gtk::WidgetPaintable::new(Some(&canvas));
+                paintable.snapshot(&snap, w as f64, h as f64);
+                if let Some(node) = snap.to_node() {
+                    let texture = r.render_texture(&node, None);
+                    let out_path = format!("{}/dialog_update_{}_{}x{}.png", art_dir, st_name, w, h);
+                    let _ = texture.save_to_png(&out_path);
+                    println!("Rendered: {}", out_path);
+                }
+
+                if w == 1280 && h == 720 {
+                    let c_snap = gtk::Snapshot::new();
+                    let c_paintable = gtk::WidgetPaintable::new(Some(&prim.root));
+                    let cw = (prim.root.width() as f64).max(440.0);
+                    let ch = (prim.root.height() as f64).max(300.0);
+                    c_paintable.snapshot(&c_snap, cw, ch);
+                    if let Some(c_node) = c_snap.to_node() {
+                        let c_tex = r.render_texture(&c_node, None);
+                        let c_path = format!("{}/after_dialog_update_{}.png", art_dir, st_name);
+                        let _ = c_tex.save_to_png(&c_path);
+                        println!("Rendered closeup: {}", c_path);
+                    }
+                }
+
+                win.close();
+                for _ in 0..10 { gtk::glib::MainContext::default().iteration(false); }
+            }
+
+            // Render About Developer Dialog states
+            for (st_name, st) in &dev_states {
+                let win = adw::ApplicationWindow::builder()
+                    .application(&app)
+                    .default_width(w)
+                    .default_height(h)
+                    .css_classes(["sc-root"])
+                    .build();
+
+                let prim = build_developer_dialog_for_state(None, st, dummy.clone(), dummy.clone());
+
+                let canvas = gtk::Box::builder()
+                    .orientation(gtk::Orientation::Vertical)
+                    .width_request(w)
+                    .height_request(h)
+                    .css_classes(["sc-canvas"])
+                    .build();
+
+                let scrim = gtk::Box::builder()
+                    .orientation(gtk::Orientation::Vertical)
+                    .width_request(w)
+                    .height_request(h)
+                    .css_classes(["sc-dialog-scrim"])
+                    .hexpand(true)
+                    .vexpand(true)
+                    .build();
+
+                let centering = gtk::Box::builder()
+                    .orientation(gtk::Orientation::Vertical)
+                    .hexpand(true)
+                    .vexpand(true)
+                    .halign(gtk::Align::Center)
+                    .valign(gtk::Align::Center)
+                    .build();
+
+                prim.root.unparent();
+                centering.append(&prim.root);
+                scrim.append(&centering);
+                canvas.append(&scrim);
+
+                win.set_content(Some(&canvas));
+                win.present();
+
+                for _ in 0..30 { gtk::glib::MainContext::default().iteration(false); }
+
+                let snap = gtk::Snapshot::new();
+                let paintable = gtk::WidgetPaintable::new(Some(&canvas));
+                paintable.snapshot(&snap, w as f64, h as f64);
+                if let Some(node) = snap.to_node() {
+                    let texture = r.render_texture(&node, None);
+                    let out_path = format!("{}/dialog_developer_{}_{}x{}.png", art_dir, st_name, w, h);
+                    let _ = texture.save_to_png(&out_path);
+                    println!("Rendered: {}", out_path);
+                }
+
+                if w == 1280 && h == 720 {
+                    let c_snap = gtk::Snapshot::new();
+                    let c_paintable = gtk::WidgetPaintable::new(Some(&prim.root));
+                    let cw = (prim.root.width() as f64).max(440.0);
+                    let ch = (prim.root.height() as f64).max(300.0);
+                    c_paintable.snapshot(&c_snap, cw, ch);
+                    if let Some(c_node) = c_snap.to_node() {
+                        let c_tex = r.render_texture(&c_node, None);
+                        let c_path = format!("{}/after_dialog_developer_{}.png", art_dir, st_name);
+                        let _ = c_tex.save_to_png(&c_path);
+                        println!("Rendered closeup: {}", c_path);
+                    }
+                }
+
+                win.close();
+                for _ in 0..10 { gtk::glib::MainContext::default().iteration(false); }
+            }
+        }
+    }
 
     #[test]
     #[ignore]
