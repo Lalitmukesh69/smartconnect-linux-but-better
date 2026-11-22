@@ -398,22 +398,31 @@ fn wallpaper_thumb(w: i32, h: i32) -> (gtk::Widget, gtk::Picture, gtk::Stack) {
         .css_classes(["sc-icon-box"])
         .build();
     placeholder.append(placeholder_icon.widget());
-    placeholder_icon.widget().set_hexpand(true);
-    placeholder_icon.widget().set_vexpand(true);
     let stack = gtk::Stack::new();
     stack.add_named(&placeholder, Some("placeholder"));
     stack.add_named(&picture, Some("picture"));
+    stack.set_width_request(w);
+    stack.set_height_request(h);
+    stack.set_halign(gtk::Align::Start);
+    stack.set_valign(gtk::Align::Center);
+    stack.set_hexpand(false);
+    stack.set_vexpand(false);
     let tall = adw::Clamp::builder()
         .orientation(gtk::Orientation::Vertical)
         .maximum_size(h)
         .tightening_threshold(h)
+        .valign(gtk::Align::Center)
+        .vexpand(false)
         .child(&stack)
         .build();
     let thumb = adw::Clamp::builder()
         .orientation(gtk::Orientation::Horizontal)
         .maximum_size(w)
         .tightening_threshold(w)
+        .halign(gtk::Align::Start)
         .valign(gtk::Align::Center)
+        .hexpand(false)
+        .vexpand(false)
         .child(&tall)
         .build();
     (thumb.upcast(), picture, stack)
@@ -1018,9 +1027,39 @@ impl DownPage {
 
 impl PhonePage {
     fn build() -> (Self, gtk::Widget) {
-        // ── 1. DeviceHeader (56×56 avatar, name 28/36 600, inline rename, status line, ghost Telemetry button) ──
-        let (thumb_box, wallpaper, thumb_stack) = wallpaper_thumb(56, 56);
-        thumb_box.add_css_class("sc-avatar-frame");
+        // ── 1. DeviceHeader (Phone screen mockup layout, name 28/36 600, inline rename, status line, ghost Telemetry button) ──
+        let (thumb_box, wallpaper, thumb_stack) = wallpaper_thumb(76, 156);
+        thumb_box.add_css_class("sc-phone-frame");
+        let speaker = gtk::Box::builder()
+            .width_request(22)
+            .height_request(4)
+            .halign(gtk::Align::Center)
+            .valign(gtk::Align::Start)
+            .margin_top(6)
+            .css_classes(["sc-phone-speaker"])
+            .build();
+        let home_bar = gtk::Box::builder()
+            .width_request(28)
+            .height_request(3)
+            .halign(gtk::Align::Center)
+            .valign(gtk::Align::End)
+            .margin_bottom(6)
+            .css_classes(["sc-phone-home-bar"])
+            .build();
+        let phone_mockup = gtk::Overlay::builder()
+            .child(&thumb_box)
+            .width_request(76)
+            .height_request(156)
+            .halign(gtk::Align::Start)
+            .valign(gtk::Align::Center)
+            .hexpand(false)
+            .vexpand(false)
+            .build();
+        phone_mockup.add_overlay(&speaker);
+        phone_mockup.add_overlay(&home_bar);
+
+        let last = lastdevice::load();
+        show_wallpaper(&wallpaper, &thumb_stack, last.wallpaper_path());
 
         let status_dot = status_dot(8, false);
         let status_pill = gtk::Label::builder().label("Endpoint Standby").build();
@@ -1092,8 +1131,13 @@ impl PhonePage {
         id_col.append(&name_stack);
         id_col.append(&status_row);
 
-        let left_cluster = gtk::Box::builder().spacing(space::S4).hexpand(true).valign(gtk::Align::Center).build();
-        left_cluster.append(&thumb_box);
+        let left_cluster = gtk::Box::builder()
+            .spacing(space::S4)
+            .hexpand(true)
+            .halign(gtk::Align::Fill)
+            .valign(gtk::Align::Center)
+            .build();
+        left_cluster.append(&phone_mockup);
         left_cluster.append(&id_col);
 
         // Ghost "Telemetry" secondary button on right side only
