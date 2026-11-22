@@ -699,12 +699,14 @@ button.sc-option-card:disabled {
   border-right: none;
 }
 
-.sc-indicator-fill {
+.sc-indicator-fill,
+.sc-seg-on {
   background-color: #1F7A8C;
   border-radius: 9999px;
 }
 
-.sc-indicator-empty {
+.sc-indicator-empty,
+.sc-seg-off {
   background-color: rgba(225, 229, 242, 0.20);
   border-radius: 9999px;
 }

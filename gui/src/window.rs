@@ -296,6 +296,7 @@ struct PhonePage {
     unread_label: gtk::Label,
     /// 4-column Bento telemetry wrap inside the hero card.
     stats_wrap: gtk::Box,
+    offline_caption: gtk::Label,
     bat_icon: ModernIcon,
     bat_val: gtk::Label,
     bat_segments: [gtk::Box; 5],
@@ -1185,7 +1186,6 @@ impl PhonePage {
         hero_top.append(&telemetry);
 
         // ── 2. Overview Section: ONE Surface with 4-Column Stat Strip ─────────
-        let bat_val = gtk::Label::builder().label("—").xalign(0.0).css_classes(["sc-stat-value"]).build();
         let bat_segments: [gtk::Box; 5] = std::array::from_fn(|_| {
             gtk::Box::builder()
                 .width_request(14)
@@ -1201,9 +1201,8 @@ impl PhonePage {
         bat_slot.append(&bat_bar);
         let bat_sub = gtk::Label::builder().label("Offline").xalign(0.0).css_classes(["sc-meta-text"]).visible(false).build();
         let bat_icon = ModernIcon::new(IconKind::Battery { pct: None, charging: false }, 16);
-        let (bat_col, _, _) = stat_widget("Battery", "—", Some(&bat_slot));
+        let (bat_col, bat_val, _) = stat_widget("Battery", "—", Some(&bat_slot));
 
-        let wifi_val = gtk::Label::builder().label("—").xalign(0.0).css_classes(["sc-stat-value"]).build();
         let wifi_bars = [
             gtk::Box::builder().width_request(6).height_request(4).valign(gtk::Align::End).css_classes(["sc-indicator-empty"]).build(),
             gtk::Box::builder().width_request(6).height_request(4).valign(gtk::Align::End).css_classes(["sc-indicator-empty"]).build(),
@@ -1216,9 +1215,8 @@ impl PhonePage {
         }
         let wifi_sub = gtk::Label::builder().label("Offline").xalign(0.0).css_classes(["sc-meta-text"]).visible(false).build();
         let wifi_icon = ModernIcon::new(IconKind::WifiOff, 16);
-        let (wifi_col, _, _) = stat_widget("Wi-Fi link", "—", Some(&wifi_meter));
+        let (wifi_col, wifi_val, _) = stat_widget("Wi-Fi link", "—", Some(&wifi_meter));
 
-        let cell_val = gtk::Label::builder().label("—").xalign(0.0).css_classes(["sc-stat-value"]).build();
         let cell_bars = [
             gtk::Box::builder().width_request(6).height_request(4).valign(gtk::Align::End).css_classes(["sc-indicator-empty"]).build(),
             gtk::Box::builder().width_request(6).height_request(4).valign(gtk::Align::End).css_classes(["sc-indicator-empty"]).build(),
@@ -1231,13 +1229,12 @@ impl PhonePage {
         }
         let cell_sub = gtk::Label::builder().label("Mobile signal").xalign(0.0).css_classes(["sc-meta-text"]).visible(false).build();
         let cell_icon = ModernIcon::new(IconKind::Cellular { bars: 0 }, 16);
-        let (cell_col, _, _) = stat_widget("Cellular", "—", Some(&cell_meter));
+        let (cell_col, cell_val, _) = stat_widget("Cellular", "—", Some(&cell_meter));
 
-        let bt_val = gtk::Label::builder().label("—").xalign(0.0).css_classes(["sc-stat-value"]).build();
         let bt_spacer = gtk::Box::builder().height_request(4).halign(gtk::Align::Start).build();
         let bt_sub = gtk::Label::builder().label("Radio off").xalign(0.0).css_classes(["sc-meta-text"]).visible(false).build();
         let bt_icon = ModernIcon::new(IconKind::Bluetooth { on: false }, 16);
-        let (bt_col, _, _) = stat_widget("Bluetooth", "—", Some(&bt_spacer));
+        let (bt_col, bt_val, _) = stat_widget("Bluetooth", "—", Some(&bt_spacer));
 
         let stats_strip = gtk::Box::builder()
             .orientation(gtk::Orientation::Horizontal)
@@ -1257,7 +1254,7 @@ impl PhonePage {
             .css_classes(["sc-row-helper", "caption"])
             .xalign(0.0)
             .margin_top(space::S2)
-            .visible(true)
+            .visible(false)
             .build();
 
         let overview_box = gtk::Box::builder()
@@ -1395,6 +1392,7 @@ impl PhonePage {
             unread_card,
             unread_label,
             stats_wrap: stats_strip,
+            offline_caption,
             bat_icon,
             bat_val,
             bat_segments,
@@ -3131,13 +3129,14 @@ impl Ui {
 
         // Live values while connected, last cached values while away.
         let values = if state == PhoneState::Connected {
-            let mut v = LastDevice::default();
+            let mut v = last.clone();
             v.absorb(&s);
             Some(v)
         } else {
             Some(last.clone()).filter(|l| state == PhoneState::Disconnected && l.known())
         };
         p.stats_wrap.set_visible(values.is_some());
+        p.offline_caption.set_visible(state != PhoneState::Connected && values.is_some());
         if let Some(v) = &values {
             self.fill_monochrome_telemetry(v, state == PhoneState::Connected);
         }
@@ -3345,6 +3344,8 @@ impl Ui {
                 p.bat_val.set_label(&format!("{b}%"));
                 let lit = ((b_clamped as f64) / 20.0).ceil() as usize;
                 for (i, seg) in p.bat_segments.iter().enumerate() {
+                    set_class(seg, "sc-indicator-fill", i < lit);
+                    set_class(seg, "sc-indicator-empty", i >= lit);
                     set_class(seg, "sc-seg-on", i < lit);
                     set_class(seg, "sc-seg-off", i >= lit);
                 }
@@ -3360,6 +3361,8 @@ impl Ui {
                 p.bat_icon.set_kind(IconKind::Battery { pct: None, charging: false });
                 p.bat_val.set_label("—");
                 for seg in &p.bat_segments {
+                    set_class(seg, "sc-indicator-fill", false);
+                    set_class(seg, "sc-indicator-empty", true);
                     set_class(seg, "sc-seg-on", false);
                     set_class(seg, "sc-seg-off", true);
                 }
@@ -3374,6 +3377,8 @@ impl Ui {
         p.wifi_icon.queue_draw();
         let lit_wifi = if v.wifi { signal_bars_count(v.wifi_signal) } else { 0 };
         for (i, bar) in p.wifi_bars.iter().enumerate() {
+            set_class(bar, "sc-indicator-fill", i < lit_wifi);
+            set_class(bar, "sc-indicator-empty", i >= lit_wifi);
             set_class(bar, "sc-seg-on", i < lit_wifi);
             set_class(bar, "sc-seg-off", i >= lit_wifi);
         }
@@ -3400,6 +3405,8 @@ impl Ui {
         p.cell_icon.queue_draw();
         p.cell_val.set_label(cell_word);
         for (i, bar) in p.cell_bars.iter().enumerate() {
+            set_class(bar, "sc-indicator-fill", i < lit_cell);
+            set_class(bar, "sc-indicator-empty", i >= lit_cell);
             set_class(bar, "sc-seg-on", i < lit_cell);
             set_class(bar, "sc-seg-off", i >= lit_cell);
         }
