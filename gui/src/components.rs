@@ -593,4 +593,205 @@ pub fn icon_tile(child: &impl IsA<gtk::Widget>) -> gtk::Box {
     tile
 }
 
+// ── 14. Dialog Primitive (Shared Component Specification) ───────────────────
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DialogSize {
+    Sm, // 440px (Software Update)
+    Md, // 480px (About Developer)
+    Lg, // 560px
+}
+
+impl DialogSize {
+    pub fn width(self) -> i32 {
+        match self {
+            Self::Sm => DIALOG_WIDTH_SM,
+            Self::Md => DIALOG_WIDTH_MD,
+            Self::Lg => DIALOG_WIDTH_LG,
+        }
+    }
+}
+
+pub struct DialogPrimitive {
+    pub dialog: adw::Dialog,
+    pub root: gtk::Box,
+    pub title_label: gtk::Label,
+    pub desc_label: gtk::Label,
+    pub close_button: gtk::Button,
+    pub header_box: gtk::Box,
+    pub header_hairline: gtk::Box,
+    pub body_scroller: gtk::ScrolledWindow,
+    pub body_box: gtk::Box,
+    pub footer_hairline: gtk::Box,
+    pub footer_box: gtk::Box,
+    pub footer_left_caption: gtk::Box,
+    pub footer_actions: gtk::Box,
+    pub live_region: gtk::Label,
+}
+
+impl DialogPrimitive {
+    pub fn new(size: DialogSize, title: &str, description: Option<&str>) -> Self {
+        let width = size.width();
+        let dialog = adw::Dialog::builder()
+            .content_width(width)
+            .can_close(true)
+            .css_classes(["sc-dialog"])
+            .build();
+        Self::with_dialog(dialog, size, title, description)
+    }
+
+    pub fn with_dialog(dialog: adw::Dialog, size: DialogSize, title: &str, description: Option<&str>) -> Self {
+        let width = size.width();
+        dialog.set_content_width(width);
+        dialog.set_can_close(true);
+        dialog.add_css_class("sc-dialog");
+
+        let title_label = gtk::Label::builder()
+            .label(title)
+            .xalign(0.0)
+            .css_classes(["sc-dialog-title"])
+            .build();
+
+        let desc_label = gtk::Label::builder()
+            .xalign(0.0)
+            .wrap(true)
+            .css_classes(["sc-dialog-desc"])
+            .visible(description.is_some())
+            .build();
+        if let Some(desc) = description {
+            desc_label.set_label(desc);
+        }
+
+        let title_stack = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(SPACE_1)
+            .hexpand(true)
+            .build();
+        title_stack.append(&title_label);
+        title_stack.append(&desc_label);
+
+        let close_ic = ModernIcon::new(IconKind::Close, 14);
+        let close_button = gtk::Button::builder()
+            .child(close_ic.widget())
+            .css_classes(["sc-dialog-close-btn"])
+            .tooltip_text("Close (Esc)")
+            .valign(gtk::Align::Center)
+            .build();
+
+        let header_box = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .spacing(SPACE_3)
+            .valign(gtk::Align::Center)
+            .css_classes(["sc-dialog-header"])
+            .build();
+        header_box.append(&title_stack);
+        header_box.append(&close_button);
+
+        let header_hairline = gtk::Box::builder()
+            .css_classes(["sc-dialog-hairline"])
+            .opacity(0.0)
+            .margin_top(SPACE_4)
+            .build();
+
+        let body_box = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(SPACE_4)
+            .css_classes(["sc-dialog-body"])
+            .build();
+
+        let body_scroller = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .propagate_natural_height(true)
+            .max_content_height(480)
+            .min_content_height(100)
+            .child(&body_box)
+            .build();
+
+        let footer_hairline = gtk::Box::builder()
+            .css_classes(["sc-dialog-hairline"])
+            .opacity(0.0)
+            .build();
+
+        let footer_left_caption = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .spacing(SPACE_2)
+            .valign(gtk::Align::Center)
+            .hexpand(true)
+            .css_classes(["sc-dialog-footer-caption"])
+            .build();
+
+        let footer_actions = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .spacing(SPACE_2)
+            .halign(gtk::Align::End)
+            .valign(gtk::Align::Center)
+            .build();
+
+        let footer_box = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .spacing(SPACE_3)
+            .valign(gtk::Align::Center)
+            .css_classes(["sc-dialog-footer"])
+            .build();
+        footer_box.append(&footer_left_caption);
+        footer_box.append(&footer_actions);
+
+        let live_region = gtk::Label::builder()
+            .visible(false)
+            .accessible_role(gtk::AccessibleRole::Status)
+            .build();
+
+        let h_hair = header_hairline.clone();
+        let f_hair = footer_hairline.clone();
+        body_scroller.vadjustment().connect_value_changed(move |adj| {
+            let val = adj.value();
+            h_hair.set_opacity(if val > 1.0 { 1.0 } else { 0.0 });
+            let at_bottom = val >= adj.upper() - adj.page_size() - 2.0;
+            f_hair.set_opacity(if at_bottom { 0.0 } else { 1.0 });
+        });
+
+        let root = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .width_request(width)
+            .css_classes(["sc-dialog"])
+            .build();
+        root.append(&header_box);
+        root.append(&header_hairline);
+        root.append(&body_scroller);
+        root.append(&footer_hairline);
+        root.append(&footer_box);
+        root.append(&live_region);
+
+        let d_weak = dialog.downgrade();
+        close_button.connect_clicked(move |_| {
+            if let Some(d) = d_weak.upgrade() {
+                d.close();
+            }
+        });
+
+        dialog.set_child(Some(&root));
+
+        Self {
+            dialog,
+            root,
+            title_label,
+            desc_label,
+            close_button,
+            header_box,
+            header_hairline,
+            body_scroller,
+            body_box,
+            footer_hairline,
+            footer_box,
+            footer_left_caption,
+            footer_actions,
+            live_region,
+        }
+    }
+
+    pub fn announce(&self, text: &str) {
+        self.live_region.set_label(text);
+    }
+}
+
 

@@ -38,6 +38,8 @@ pub const COLOR_ACCENT_ACTIVE_HEX: &str = "#196A7C";
 pub const COLOR_SURFACE_1_HEX: &str = "#0C3342";
 pub const COLOR_SURFACE_2_HEX: &str = "#143A48";
 pub const COLOR_SURFACE_3_HEX: &str = "#1E4250";
+/// surface-overlay = neutral dark surface (#12181F)
+pub const COLOR_SURFACE_OVERLAY_HEX: &str = "#12181F";
 
 // RGBA float representations (0.0 .. 1.0) for Cairo and custom drawing routines
 pub const RGBA_BG: (f64, f64, f64, f64) = (2.0 / 255.0, 43.0 / 255.0, 58.0 / 255.0, 1.0);
@@ -50,11 +52,22 @@ pub const RGBA_DANGER: (f64, f64, f64, f64) = (224.0 / 255.0, 108.0 / 255.0, 117
 pub const RGBA_SURFACE_1: (f64, f64, f64, f64) = (1.0, 1.0, 1.0, 0.04);
 pub const RGBA_SURFACE_2: (f64, f64, f64, f64) = (1.0, 1.0, 1.0, 0.07);
 pub const RGBA_SURFACE_3: (f64, f64, f64, f64) = (1.0, 1.0, 1.0, 0.11);
+pub const RGBA_SURFACE_OVERLAY: (f64, f64, f64, f64) = (18.0 / 255.0, 24.0 / 255.0, 31.0 / 255.0, 1.0);
 pub const RGBA_BORDER: (f64, f64, f64, f64) = (1.0, 1.0, 1.0, 0.08);
+pub const RGBA_BORDER_OVERLAY: (f64, f64, f64, f64) = (1.0, 1.0, 1.0, 0.12);
 pub const RGBA_BORDER_CONTROL: (f64, f64, f64, f64) = (225.0 / 255.0, 229.0 / 255.0, 242.0 / 255.0, 0.50);
 pub const RGBA_TEXT_MUTED: (f64, f64, f64, f64) = (225.0 / 255.0, 229.0 / 255.0, 242.0 / 255.0, 0.75);
 pub const RGBA_TEXT_SUBTLE: (f64, f64, f64, f64) = (225.0 / 255.0, 229.0 / 255.0, 242.0 / 255.0, 0.55);
 pub const RGBA_ACCENT_TINT: (f64, f64, f64, f64) = (31.0 / 255.0, 122.0 / 255.0, 140.0 / 255.0, 0.18);
+pub const RGBA_SCRIM: (f64, f64, f64, f64) = (0.0, 0.0, 0.0, 0.50);
+
+// ── Dialog Sizing Tokens ────────────────────────────────────────────────────
+
+pub const DIALOG_WIDTH_SM: i32 = 440;
+pub const DIALOG_WIDTH_MD: i32 = 480;
+pub const DIALOG_WIDTH_LG: i32 = 560;
+pub const DIALOG_PAD: i32 = 24;
+pub const RADIUS_DIALOG: i32 = 16;
 
 pub fn rgba_accent() -> RGBA {
     RGBA::new(31.0 / 255.0, 122.0 / 255.0, 140.0 / 255.0, 1.0)
@@ -142,12 +155,14 @@ pub const CSS_TOKENS: &str = r#"
   --surface-1: rgba(255, 255, 255, 0.04);
   --surface-2: rgba(255, 255, 255, 0.07);
   --surface-3: rgba(255, 255, 255, 0.11);
+  --surface-overlay: #113846;
   --surface-hover: rgba(255, 255, 255, 0.07);
   --surface-active: rgba(255, 255, 255, 0.11);
 
   /* Derived Border Tokens */
   --border: rgba(255, 255, 255, 0.08);
   --border-control: rgba(225, 229, 242, 0.50);
+  --border-overlay: rgba(255, 255, 255, 0.12);
   --border-subtle: rgba(255, 255, 255, 0.06);
 
   /* Derived Text Tokens */
@@ -159,6 +174,9 @@ pub const CSS_TOKENS: &str = r#"
   --accent-hover: #1B7082;
   --accent-active: #196A7C;
 
+  /* Scrim Token */
+  --scrim-bg: rgba(2, 43, 58, 0.72);
+
   /* Sizing Tokens */
   --header-height: 56px;
   --sidebar-width: 240px;
@@ -168,6 +186,7 @@ pub const CSS_TOKENS: &str = r#"
   /* Base Radii */
   --radius-control: 8px;
   --radius-surface: 12px;
+  --radius-dialog: 16px;
   --radius-pill: 9999px;
 
   /* Standard GTK/Libadwaita System Mapping */
@@ -180,9 +199,9 @@ pub const CSS_TOKENS: &str = r#"
   --headerbar-border-color: transparent;
   --card-bg-color: rgba(255, 255, 255, 0.04);
   --card-fg-color: #FFFFFF;
-  --dialog-bg-color: #0C3342;
+  --dialog-bg-color: #113846;
   --dialog-fg-color: #FFFFFF;
-  --popover-bg-color: #0C3342;
+  --popover-bg-color: #113846;
   --popover-fg-color: #FFFFFF;
   --accent-bg-color: #1F7A8C;
   --accent-fg-color: #FFFFFF;
