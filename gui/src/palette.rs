@@ -71,8 +71,8 @@ pub fn present_command_palette(
     on_run: impl Fn(&str) + 'static,
 ) {
     let dialog = adw::Dialog::builder()
-        .content_width(580)
-        .content_height(430)
+        .content_width(540)
+        .content_height(360)
         .can_close(true)
         .css_classes(["sc-dialog"])
         .build();
@@ -83,6 +83,7 @@ pub fn present_command_palette(
         .hexpand(true)
         .placeholder_text("Type a command, switch views, or launch a phone app…")
         .has_frame(false)
+        .css_classes(["sc-palette-search-entry"])
         .build();
     let esc_btn = gtk::Button::builder()
         .label("ESC")
@@ -91,11 +92,9 @@ pub fn present_command_palette(
         .tooltip_text("Close command palette (Esc)")
         .build();
     let header_bar = gtk::Box::builder()
-        .spacing(10)
-        .margin_top(12)
-        .margin_bottom(12)
-        .margin_start(16)
-        .margin_end(16)
+        .spacing(8)
+        .valign(gtk::Align::Center)
+        .css_classes(["sc-search-pill-container"])
         .build();
     header_bar.append(search_icon.widget());
     header_bar.append(&entry);
@@ -105,10 +104,10 @@ pub fn present_command_palette(
         .selection_mode(gtk::SelectionMode::Single)
         .css_classes(["sc-cmd-list"])
         .activate_on_single_click(true)
-        .margin_top(6)
-        .margin_bottom(6)
-        .margin_start(8)
-        .margin_end(8)
+        .margin_top(2)
+        .margin_bottom(8)
+        .margin_start(10)
+        .margin_end(10)
         .build();
     let scroller = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
@@ -126,7 +125,6 @@ pub fn present_command_palette(
 
     let body = gtk::Box::builder().orientation(gtk::Orientation::Vertical).build();
     body.append(&header_bar);
-    body.append(&gtk::Separator::new(gtk::Orientation::Horizontal));
     body.append(&scroller);
     body.append(&empty_label);
     dialog.set_child(Some(&body));
@@ -153,17 +151,19 @@ pub fn present_command_palette(
                     .label(&item.title)
                     .xalign(0.0)
                     .ellipsize(gtk::pango::EllipsizeMode::End)
+                    .css_classes(["sc-cmd-title"])
                     .build();
                 let cat = gtk::Label::builder()
                     .label(&item.category)
                     .xalign(0.0)
                     .ellipsize(gtk::pango::EllipsizeMode::End)
-                    .css_classes(["caption", "sc-muted", "sc-mono"])
+                    .css_classes(["caption", "sc-muted"])
                     .build();
                 let left = gtk::Box::builder()
                     .orientation(gtk::Orientation::Vertical)
                     .spacing(2)
                     .hexpand(true)
+                    .valign(gtk::Align::Center)
                     .build();
                 left.append(&title);
                 left.append(&cat);
@@ -171,12 +171,13 @@ pub fn present_command_palette(
                 let row_box = gtk::Box::builder()
                     .spacing(12)
                     .css_classes(["sc-cmd-row"])
+                    .valign(gtk::Align::Center)
                     .build();
                 row_box.append(&left);
                 if !item.shortcut.is_empty() {
                     row_box.append(&gtk::Label::builder().label(&item.shortcut).css_classes(["sc-kbd"]).valign(gtk::Align::Center).build());
                 }
-                let row = gtk::ListBoxRow::builder().child(&row_box).build();
+                let row = gtk::ListBoxRow::builder().child(&row_box).css_classes(["sc-cmd-list-row"]).build();
                 list.append(&row);
             }
             *shown_ids.borrow_mut() = ids;
@@ -668,21 +669,24 @@ fn open_url(widget: &impl IsA<gtk::Widget>, url: &str) {
     gtk::UriLauncher::new(url).launch(win.as_ref(), gio::Cancellable::NONE, |_| {});
 }
 
-fn external_cta(label: &str, primary: bool, url: &str) -> gtk::Button {
-    let ic = ModernIcon::new(IconKind::ExternalLink, 13);
-    let inner = gtk::Box::builder().spacing(7).halign(gtk::Align::Center).valign(gtk::Align::Center).build();
-    inner.append(&gtk::Label::new(Some(label)));
+fn external_cta(label: &str, _primary: bool, url: &str) -> gtk::Button {
+    let ic = ModernIcon::new(IconKind::ExternalLink, 11);
+    let inner = gtk::Box::builder().spacing(6).halign(gtk::Align::Center).valign(gtk::Align::Center).build();
+    let lbl = gtk::Label::builder().label(label).css_classes(["sc-dev-pill-label"]).build();
+    inner.append(&lbl);
     inner.append(ic.widget());
     let btn = gtk::Button::builder()
         .child(&inner)
-        .css_classes([if primary { "sc-btn-primary" } else { "sc-btn-secondary" }])
+        .css_classes(["sc-dev-pill"])
         .tooltip_text(url)
+        .valign(gtk::Align::Center)
         .build();
     let u = url.to_owned();
     btn.connect_clicked(move |b| open_url(b, &u));
     btn
 }
 
+#[allow(dead_code)]
 fn stat_bento(title: &str) -> (gtk::Box, gtk::Label) {
     let value = gtk::Label::builder().label("0").xalign(0.0).css_classes(["sc-metric"]).build();
     let tile = gtk::Box::builder()
@@ -699,13 +703,13 @@ fn stat_bento(title: &str) -> (gtk::Box, gtk::Label) {
 /// Presents the Apple Pro Dark Monochrome "About Developer" modal populated from GitHub (`Lalitmukesh69`).
 pub fn present_developer_dialog(parent: &impl IsA<gtk::Widget>) {
     let dialog = adw::Dialog::builder()
-        .content_width(550)
+        .content_width(460)
         .can_close(true)
         .css_classes(["sc-dialog"])
         .build();
 
-    let title_ic = ModernIcon::new(IconKind::User, 17);
-    let title_lbl = gtk::Label::builder().label("About Developer").xalign(0.0).css_classes(["heading"]).build();
+    let title_ic = ModernIcon::new(IconKind::User, 15);
+    let title_lbl = gtk::Label::builder().label("About Developer").xalign(0.0).css_classes(["sc-dialog-title"]).build();
     let gh_tag = gtk::Label::builder().label(format!("@{GITHUB_LOGIN}")).css_classes(["sc-tag"]).valign(gtk::Align::Center).build();
 
     let sync_spinner = adw::Spinner::builder().visible(false).valign(gtk::Align::Center).build();
@@ -719,134 +723,112 @@ pub fn present_developer_dialog(parent: &impl IsA<gtk::Widget>) {
     let close_ic = ModernIcon::new(IconKind::Close, 14);
     let close_btn = gtk::Button::builder()
         .child(close_ic.widget())
-        .css_classes(["sc-btn-ghost"])
+        .css_classes(["sc-btn-icon"])
         .tooltip_text("Close")
         .valign(gtk::Align::Center)
         .build();
 
-    let header_left = gtk::Box::builder().spacing(10).hexpand(true).valign(gtk::Align::Center).build();
+    let header_left = gtk::Box::builder().spacing(8).hexpand(true).valign(gtk::Align::Center).build();
     header_left.append(title_ic.widget());
     header_left.append(&title_lbl);
     header_left.append(&gh_tag);
 
-    let title_row = gtk::Box::builder().spacing(8).valign(gtk::Align::Center).build();
+    let title_row = gtk::Box::builder().spacing(6).valign(gtk::Align::Center).build();
     title_row.append(&header_left);
     title_row.append(&sync_spinner);
     title_row.append(&sync_btn);
     title_row.append(&close_btn);
 
-    // Hero card
-    let avatar_fallback = adw::Avatar::builder().size(74).text("Lalit mukesh").show_initials(true).build();
+    // Profile Card
+    let avatar_fallback = adw::Avatar::builder().size(72).text("Lalit mukesh").show_initials(true).build();
     let avatar_pic = gtk::Picture::builder()
         .content_fit(gtk::ContentFit::Cover)
-        .width_request(74)
-        .height_request(74)
-        .css_classes(["sc-avatar"])
+        .width_request(72)
+        .height_request(72)
+        .css_classes(["sc-dev-avatar-img"])
         .overflow(gtk::Overflow::Hidden)
         .build();
     let avatar_stack = gtk::Stack::new();
     avatar_stack.add_named(&avatar_fallback, Some("fallback"));
     avatar_stack.add_named(&avatar_pic, Some("image"));
     let avatar_frame = gtk::Box::builder()
-        .width_request(76)
-        .height_request(76)
+        .width_request(72)
+        .height_request(72)
         .halign(gtk::Align::Center)
-        .valign(gtk::Align::Start)
-        .css_classes(["sc-avatar-frame"])
+        .valign(gtk::Align::Center)
+        .css_classes(["sc-dev-avatar"])
         .overflow(gtk::Overflow::Hidden)
         .build();
     avatar_frame.append(&avatar_stack);
 
-    let name_lbl = gtk::Label::builder().xalign(0.0).css_classes(["sc-view-title"]).wrap(true).build();
-    let meta_lbl = gtk::Label::builder().xalign(0.0).css_classes(["sc-mono", "caption", "sc-muted"]).wrap(true).build();
+    let name_lbl = gtk::Label::builder()
+        .label("Lalit Mukesh")
+        .xalign(0.5)
+        .css_classes(["sc-dev-name"])
+        .build();
+    let meta_lbl = gtk::Label::builder()
+        .label("@Lalitmukesh69  ·  Berlin  ·  IRM")
+        .xalign(0.5)
+        .css_classes(["sc-dev-meta"])
+        .build();
     let bio_lbl = gtk::Label::builder()
-        .xalign(0.0)
-        .css_classes(["sc-secondary"])
+        .xalign(0.5)
+        .justify(gtk::Justification::Center)
+        .css_classes(["sc-dev-bio"])
         .wrap(true)
         .wrap_mode(gtk::pango::WrapMode::WordChar)
+        .max_width_chars(44)
         .build();
 
-    let hero_links = gtk::Box::builder().spacing(8).margin_top(6).build();
+    let hero_links = gtk::Box::builder()
+        .spacing(8)
+        .halign(gtk::Align::Center)
+        .valign(gtk::Align::Center)
+        .margin_top(4)
+        .build();
 
-    let hero_col = gtk::Box::builder()
+    let profile_card = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
         .spacing(6)
-        .hexpand(true)
+        .halign(gtk::Align::Fill)
+        .valign(gtk::Align::Center)
+        .css_classes(["sc-dev-card"])
         .build();
-    hero_col.append(&name_lbl);
-    hero_col.append(&meta_lbl);
-    hero_col.append(&bio_lbl);
-    hero_col.append(&hero_links);
-
-    let hero_row = gtk::Box::builder()
-        .spacing(18)
-        .margin_top(18)
-        .margin_bottom(18)
-        .margin_start(18)
-        .margin_end(18)
-        .build();
-    hero_row.append(&avatar_frame);
-    hero_row.append(&hero_col);
-
-    let hero_card = gtk::Box::builder().orientation(gtk::Orientation::Vertical).css_classes(["sc-bento"]).build();
-    hero_card.append(&hero_row);
-
-    // 3-Column GitHub Stats Bento Grid
-    let (repos_tile, repos_val) = stat_bento("REPOSITORIES");
-    let (followers_tile, followers_val) = stat_bento("FOLLOWERS");
-    let (following_tile, following_val) = stat_bento("FOLLOWING");
-    let stats_row = gtk::Box::builder().spacing(10).homogeneous(true).build();
-    stats_row.append(&repos_tile);
-    stats_row.append(&followers_tile);
-    stats_row.append(&following_tile);
-
-    // Repositories Bento Card
-    let repos_hdr = gtk::Box::builder().spacing(8).margin_start(4).margin_end(4).build();
-    let repos_hdr_l = overline("Featured Repositories");
-    repos_hdr_l.set_hexpand(true);
-    repos_hdr.append(&repos_hdr_l);
-    repos_hdr.append(&gtk::Label::builder().label("github.com").css_classes(["sc-mono", "caption", "sc-muted"]).build());
-
-    let repos_list = gtk::Box::builder()
-        .orientation(gtk::Orientation::Vertical)
-        .css_classes(["sc-bento"])
-        .overflow(gtk::Overflow::Hidden)
-        .build();
-    let repos_section = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(8).build();
-    repos_section.append(&repos_hdr);
-    repos_section.append(&repos_list);
+    profile_card.append(&avatar_frame);
+    profile_card.append(&name_lbl);
+    profile_card.append(&meta_lbl);
+    profile_card.append(&bio_lbl);
+    profile_card.append(&hero_links);
 
     // Footer status + Done
     let sync_status = gtk::Label::builder()
-        .label("Pulling profile from GitHub…")
+        .label("Live from api.github.com/users/Lalitmukesh69")
         .xalign(0.0)
         .hexpand(true)
         .ellipsize(gtk::pango::EllipsizeMode::End)
-        .css_classes(["caption", "sc-muted", "sc-mono"])
+        .css_classes(["caption", "sc-muted"])
         .build();
-    let done_btn = gtk::Button::builder().label("Close").css_classes(["sc-btn-primary"]).build();
+    let done_btn = gtk::Button::builder().label("Close").css_classes(["sc-btn-secondary"]).build();
     let footer = gtk::Box::builder().spacing(12).valign(gtk::Align::Center).build();
     footer.append(&sync_status);
     footer.append(&done_btn);
 
     let body = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
-        .spacing(16)
-        .margin_top(20)
-        .margin_bottom(20)
-        .margin_start(20)
-        .margin_end(20)
+        .spacing(14)
+        .margin_top(16)
+        .margin_bottom(16)
+        .margin_start(16)
+        .margin_end(16)
         .build();
     body.append(&title_row);
-    body.append(&hero_card);
-    body.append(&stats_row);
-    body.append(&repos_section);
+    body.append(&profile_card);
     body.append(&footer);
 
     let scroller = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
         .propagate_natural_height(true)
-        .max_content_height(660)
+        .max_content_height(480)
         .child(&body)
         .build();
 
@@ -868,10 +850,6 @@ pub fn present_developer_dialog(parent: &impl IsA<gtk::Widget>) {
         let meta_lbl = meta_lbl.clone();
         let bio_lbl = bio_lbl.clone();
         let hero_links = hero_links.clone();
-        let repos_val = repos_val.clone();
-        let followers_val = followers_val.clone();
-        let following_val = following_val.clone();
-        let repos_list = repos_list.clone();
         let avatar_fallback = avatar_fallback.clone();
         Rc::new(move |profile: &DeveloperProfile, avatar_path: Option<&Path>| {
             avatar_fallback.set_text(Some(&profile.name));
@@ -900,62 +878,6 @@ pub fn present_developer_dialog(parent: &impl IsA<gtk::Widget>) {
             }
             if let Some(tw) = profile.twitter_url() {
                 hero_links.append(&external_cta(&format!("@{}", profile.twitter_username.trim().trim_start_matches('@')), false, &tw));
-            }
-
-            repos_val.set_label(&profile.public_repos.to_string());
-            followers_val.set_label(&profile.followers.to_string());
-            following_val.set_label(&profile.following.to_string());
-
-            while let Some(child) = repos_list.first_child() {
-                repos_list.remove(&child);
-            }
-            for (idx, repo) in profile.repos.iter().enumerate() {
-                if idx > 0 {
-                    repos_list.append(&gtk::Separator::new(gtk::Orientation::Horizontal));
-                }
-                let r_name = gtk::Label::builder()
-                    .label(&repo.name)
-                    .xalign(0.0)
-                    .hexpand(true)
-                    .ellipsize(gtk::pango::EllipsizeMode::End)
-                    .css_classes(["heading"])
-                    .build();
-                let r_badges = gtk::Box::builder().spacing(6).valign(gtk::Align::Center).build();
-                if let Some(lang) = &repo.language {
-                    r_badges.append(&gtk::Label::builder().label(lang).css_classes(["sc-tag"]).build());
-                }
-                if repo.stargazers_count > 0 {
-                    r_badges.append(&gtk::Label::builder().label(&format!("★ {}", repo.stargazers_count)).css_classes(["sc-tag"]).build());
-                }
-                let ext = ModernIcon::new(IconKind::ExternalLink, 13);
-                ext.add_css_class("sc-muted");
-                r_badges.append(ext.widget());
-
-                let top_line = gtk::Box::builder().spacing(8).build();
-                top_line.append(&r_name);
-                top_line.append(&r_badges);
-
-                let row_col = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(3).build();
-                row_col.append(&top_line);
-                if let Some(desc) = &repo.description {
-                    row_col.append(
-                        &gtk::Label::builder()
-                            .label(desc)
-                            .xalign(0.0)
-                            .wrap(true)
-                            .wrap_mode(gtk::pango::WrapMode::WordChar)
-                            .css_classes(["caption", "sc-secondary"])
-                            .build(),
-                    );
-                }
-                let btn = gtk::Button::builder()
-                    .child(&row_col)
-                    .css_classes(["sc-repo-row"])
-                    .tooltip_text(&repo.html_url)
-                    .build();
-                let repo_url = repo.html_url.clone();
-                btn.connect_clicked(move |b| open_url(b, &repo_url));
-                repos_list.append(&btn);
             }
         })
     };
