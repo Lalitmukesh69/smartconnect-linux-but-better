@@ -22,9 +22,32 @@ pub struct Prefs {
     pub files: FilesPrefs,
     pub apps: AppsPrefs,
     pub window: WindowPrefs,
+    pub updates: UpdatePrefs,
     /// Optional PC-side display nickname for the paired phone.
     #[serde(rename = "deviceAlias", skip_serializing_if = "Option::is_none")]
     pub device_alias: Option<String>,
+}
+
+/// Software update preferences (GitHub Releases).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub struct UpdatePrefs {
+    /// Whether to check for software updates automatically in the background on launch.
+    pub auto_check: bool,
+    /// Unix timestamp of the last update check.
+    pub last_checked: Option<u64>,
+    /// Optional release version user chose to skip.
+    pub ignored_version: Option<String>,
+}
+
+impl Default for UpdatePrefs {
+    fn default() -> Self {
+        Self {
+            auto_check: true,
+            last_checked: None,
+            ignored_version: None,
+        }
+    }
 }
 
 /// Remembered window geometry, closing behavior and last active tab.
@@ -434,5 +457,20 @@ mod tests {
         assert_eq!(valid.width, 1040);
         assert_eq!(valid.height, 800);
         assert_eq!(valid.last_tab, "apps");
+    }
+
+    #[test]
+    fn update_prefs_defaults_and_round_trips() {
+        let p: Prefs = serde_json::from_str("{}").unwrap();
+        assert!(p.updates.auto_check);
+        assert_eq!(p.updates.last_checked, None);
+
+        let mut custom = Prefs::default();
+        custom.updates.auto_check = false;
+        custom.updates.last_checked = Some(1732320000);
+        custom.updates.ignored_version = Some("v0.1.0".into());
+        let json_str = serde_json::to_string(&custom).unwrap();
+        let decoded: Prefs = serde_json::from_str(&json_str).unwrap();
+        assert_eq!(decoded.updates, custom.updates);
     }
 }

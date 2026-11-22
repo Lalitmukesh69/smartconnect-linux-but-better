@@ -480,6 +480,7 @@ fn build_app_menu() -> gio::Menu {
 
     let app_sec = gio::Menu::new();
     app_sec.append(Some("Endpoint Telemetry"), Some("win.telemetry"));
+    app_sec.append(Some("Check for Updates…"), Some("win.check-updates"));
     app_sec.append(Some("Preferences"), Some("win.preferences"));
     app_sec.append(Some("Keyboard Shortcuts"), Some("win.shortcuts"));
     app_sec.append(Some("About Developer"), Some("win.developer"));
@@ -1858,6 +1859,15 @@ impl Ui {
         });
         self.window.add_action(&dev_act);
 
+        let updates_act = gio::SimpleAction::new("check-updates", None);
+        let weak = Rc::downgrade(self);
+        updates_act.connect_activate(move |_, _| {
+            if let Some(ui) = weak.upgrade() {
+                ui.open_updates_dialog();
+            }
+        });
+        self.window.add_action(&updates_act);
+
         let focus_search_act = gio::SimpleAction::new("focus-search", None);
         let weak = Rc::downgrade(self);
         focus_search_act.connect_activate(move |_, _| {
@@ -2298,6 +2308,7 @@ impl Ui {
         }
 
         entries.push(CommandEntry::new("action:prefs", "Open Preferences", "Settings", "Ctrl+,", ""));
+        entries.push(CommandEntry::new("action:updates", "Check for Updates…", "Application", "GitHub", "software update release version changelog"));
         entries.push(CommandEntry::new("action:developer", "About Developer — Lalit mukesh (@Lalitmukesh69)", "Developer", "GitHub", "github bio berlin"));
         entries.push(CommandEntry::new("action:shortcuts", "Keyboard Shortcuts", "Help", "Ctrl+?", ""));
 
@@ -2327,6 +2338,7 @@ impl Ui {
                     "action:telemetry" => ui.open_telemetry_dialog(),
                     "action:pair" => ui.open_pair_dialog(),
                     "action:prefs" => ui.open_preferences(),
+                    "action:updates" => ui.open_updates_dialog(),
                     "action:developer" => ui.open_developer_dialog(),
                     "action:shortcuts" => ui.open_shortcuts(),
                     _ => {}
@@ -2416,6 +2428,10 @@ impl Ui {
         palette::present_developer_dialog(&self.window);
     }
 
+    fn open_updates_dialog(&self) {
+        crate::updater::present_update_dialog(&self.window, false);
+    }
+
     pub fn start(self: &Rc<Self>) {
         let (daemon, started) = Daemon::ensure_running();
         *self.daemon_ctl.borrow_mut() = daemon;
@@ -2440,6 +2456,24 @@ impl Ui {
             }
             glib::ControlFlow::Continue
         });
+
+        // Non-intrusive background update check on startup
+        if prefs::load().updates.auto_check {
+            let weak_update = Rc::downgrade(self);
+            glib::timeout_add_local_once(Duration::from_secs(5), move || {
+                let Some(ui) = weak_update.upgrade() else { return };
+                let weak_ui = Rc::downgrade(&ui);
+                glib::spawn_future_local(async move {
+                    if let Ok(release) = gio::spawn_blocking(crate::updater::fetch_latest_release).await.unwrap_or(Err(String::new())) {
+                        if crate::updater::is_newer_version(env!("CARGO_PKG_VERSION"), &release.tag_name, &release.name) {
+                            if let Some(ui) = weak_ui.upgrade() {
+                                ui.toast(&format!("Smart Connect update available: {}", release.tag_name));
+                            }
+                        }
+                    }
+                });
+            });
+        }
     }
 
     fn start_service(self: &Rc<Self>) {
@@ -2596,6 +2630,47 @@ impl Ui {
             }
         });
         general.add(&keep_running);
+
+        let auto_update = adw::SwitchRow::builder()
+            .title("Automatically check for updates")
+            .subtitle("Query GitHub Releases for new versions on startup")
+            .build();
+        auto_update.set_active(prefs::load().updates.auto_check);
+        let weak = Rc::downgrade(self);
+        auto_update.connect_active_notify(move |row| {
+            let Some(ui) = weak.upgrade() else { return };
+            let on = row.is_active();
+            let mut p = prefs::load();
+            if p.updates.auto_check == on {
+                return;
+            }
+            p.updates.auto_check = on;
+            let _ = prefs::save_gui(&p);
+            ui.toast(if on {
+                "Automatic update checks enabled"
+            } else {
+                "Automatic update checks disabled"
+            });
+        });
+        general.add(&auto_update);
+
+        let update_row = adw::ActionRow::builder()
+            .title("Software Update")
+            .subtitle(concat!("Smart Connect v", env!("CARGO_PKG_VERSION"), " · GitHub"))
+            .build();
+        let check_btn = gtk::Button::builder()
+            .label("Check Now")
+            .css_classes(["sc-btn-secondary"])
+            .valign(gtk::Align::Center)
+            .build();
+        let weak = Rc::downgrade(self);
+        check_btn.connect_clicked(move |_| {
+            if let Some(ui) = weak.upgrade() {
+                ui.open_updates_dialog();
+            }
+        });
+        update_row.add_suffix(&check_btn);
+        general.add(&update_row);
 
         let diagnostics = adw::PreferencesGroup::builder().title("Service &amp; Diagnostics").build();
 

@@ -17,6 +17,7 @@ mod share;
 mod theme;
 pub mod tokens;
 mod tray;
+pub mod updater;
 mod window;
 
 pub use components::*;
