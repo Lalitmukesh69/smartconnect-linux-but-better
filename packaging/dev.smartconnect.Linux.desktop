@@ -1,13 +1,13 @@
 [Desktop Entry]
 Type=Application
-Name=Smart Connect
+Name=Smart Connect for Linux
 GenericName=Phone Companion
 Comment=Connect, mirror and reply to notifications from your Motorola phone
 Exec=smartconnect-gui
 Icon=dev.smartconnect.Linux
 Terminal=false
 Categories=Network;GTK;
-Keywords=phone;motorola;mirror;notifications;
+Keywords=phone;motorola;mirror;notifications;smartconnect;
 StartupNotify=true
 StartupWMClass=dev.smartconnect.Linux
 DBusActivatable=false
