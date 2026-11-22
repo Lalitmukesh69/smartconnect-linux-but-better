@@ -804,6 +804,237 @@ window.sc-root headerbar.sc-header windowcontrols button {
   border-radius: 6px;
 }
 
+/* ── 2026 Refinements: Phone Frame, Round Search, Modal Spacing, Apps Grid ── */
+
+.sc-phone-frame {
+  min-width: 76px;
+  min-height: 156px;
+  border-radius: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  background-color: #000000;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.sc-phone-frame .wallpaper {
+  border-radius: 16px;
+  min-width: 72px;
+  min-height: 152px;
+}
+
+.sc-phone-speaker {
+  background-color: rgba(0, 0, 0, 0.65);
+  border-radius: 9999px;
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+}
+
+.sc-phone-home-bar {
+  background-color: rgba(255, 255, 255, 0.50);
+  border-radius: 9999px;
+}
+
+button.sc-btn-control {
+  min-height: 38px;
+  border-radius: 9999px;
+  padding: 0 16px;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(225, 229, 242, 0.80);
+  transition: all 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+button.sc-btn-control:hover {
+  background-color: rgba(255, 255, 255, 0.10);
+  border-color: rgba(191, 219, 247, 0.45);
+  color: #FFFFFF;
+}
+
+button.sc-btn-control:active {
+  background-color: rgba(255, 255, 255, 0.14);
+  border-color: #1F7A8C;
+}
+
+button.sc-btn-control .sc-btn-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(225, 229, 242, 0.85);
+}
+
+button.sc-btn-control:hover .sc-btn-label {
+  color: #FFFFFF;
+}
+
+/* ── About Developer Modal ── */
+
+.sc-dev-card {
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px 20px 20px 20px;
+}
+
+.sc-dev-avatar {
+  border-radius: 9999px;
+  border: 2px solid rgba(191, 219, 247, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.sc-dev-avatar-img {
+  border-radius: 9999px;
+}
+
+.sc-dev-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-top: 4px;
+}
+
+.sc-dev-meta {
+  font-size: 12px;
+  color: rgba(225, 229, 242, 0.70);
+}
+
+.sc-dev-bio {
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(225, 229, 242, 0.85);
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.sc-dev-pill {
+  min-height: 32px;
+  border-radius: 9999px;
+  padding: 0 14px;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(225, 229, 242, 0.18);
+  color: #FFFFFF;
+  transition: all 140ms ease;
+}
+
+.sc-dev-pill:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: #BFDBF7;
+  color: #FFFFFF;
+}
+
+.sc-dev-pill-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #FFFFFF;
+}
+
+.sc-dialog-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.sc-search-pill-container {
+  min-height: 40px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 0 12px;
+  margin: 8px 12px 6px 12px;
+  transition: all 180ms ease;
+}
+
+.sc-search-pill-container:focus-within {
+  border-color: #BFDBF7;
+  background-color: rgba(255, 255, 255, 0.10);
+}
+
+.sc-palette-search-entry {
+  color: #FFFFFF;
+  font-size: 14px;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  border: none;
+}
+
+.sc-cmd-row {
+  min-height: 52px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  margin-bottom: 4px;
+  transition: background-color 140ms ease;
+}
+
+.sc-cmd-row:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+listbox row.sc-cmd-list-row {
+  border-radius: 10px;
+  margin-bottom: 4px;
+  padding: 0;
+  background: transparent;
+}
+
+listbox row.sc-cmd-list-row:selected .sc-cmd-row {
+  background-color: rgba(31, 122, 140, 0.22);
+  border: 1px solid rgba(31, 122, 140, 0.45);
+}
+
+.sc-cmd-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+}
+
+.sc-apps-grid {
+  background-color: transparent;
+  padding: 4px;
+}
+
+.sc-app-tile {
+  min-width: 112px;
+  min-height: 118px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 150ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.sc-app-tile:hover {
+  background-color: rgba(255, 255, 255, 0.09);
+  border-color: rgba(191, 219, 247, 0.30);
+}
+
+.sc-app-tile:active {
+  background-color: rgba(31, 122, 140, 0.20);
+  border-color: #1F7A8C;
+}
+
+.sc-app-tile-icon-box {
+  min-width: 52px;
+  min-height: 52px;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sc-app-tile-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #FFFFFF;
+}
+
+.sc-brand-logo {
+  border-radius: 6px;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+.sc-brand-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
 "#;
 
 fn helvetica_font_setting(current: Option<&str>) -> String {
@@ -906,8 +1137,12 @@ impl ModernIcon {
         let area = gtk::DrawingArea::builder()
             .content_width(size)
             .content_height(size)
+            .width_request(size)
+            .height_request(size)
             .halign(gtk::Align::Center)
             .valign(gtk::Align::Center)
+            .hexpand(false)
+            .vexpand(false)
             .css_classes(["sc-vec-icon"])
             .build();
         let state_ref = state.clone();
@@ -1259,7 +1494,40 @@ fn draw_icon(cr: &cairo::Context, kind: IconKind, rgba: (f64, f64, f64, f64)) {
     }
 }
 
+const APP_LOGO_PNG: &[u8] = include_bytes!("../../lOGO/logo-48.png");
+
+/// Brand logo widget rendered using the official logo asset from `lOGO`, constrained to compact size.
+pub fn brand_logo_widget(size: i32) -> gtk::Widget {
+    let bytes = gtk::glib::Bytes::from_static(APP_LOGO_PNG);
+    if let Ok(texture) = gdk::Texture::from_bytes(&bytes) {
+        let img = gtk::Image::from_paintable(Some(&texture));
+        img.set_pixel_size(size);
+        img.set_width_request(size);
+        img.set_height_request(size);
+        img.set_valign(gtk::Align::Center);
+        img.set_halign(gtk::Align::Center);
+        img.add_css_class("sc-brand-logo");
+
+        let clamp_h = adw::Clamp::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .maximum_size(size)
+            .tightening_threshold(size)
+            .child(&img)
+            .build();
+        let clamp_v = adw::Clamp::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .maximum_size(size)
+            .tightening_threshold(size)
+            .child(&clamp_h)
+            .build();
+        clamp_v.upcast()
+    } else {
+        brand_mark().upcast()
+    }
+}
+
 /// 20×20 crisp Apple Pro monochrome stacked-layer brand badge.
+#[allow(dead_code)]
 pub fn brand_mark() -> gtk::DrawingArea {
     let area = gtk::DrawingArea::builder()
         .content_width(20)
@@ -1383,7 +1651,7 @@ mod tests {
         let art_dir = "/home/lalitmukesh/.gemini/antigravity/brain/06bb29b7-6cfe-49b1-a088-1f523ed5698c";
 
         let sizes = [(960, 600), (1280, 720), (1366, 768), (1920, 1080)];
-        let tabs = ["phone", "apps", "display", "files", "notifications", "kitchen_sink"];
+        let tabs = ["phone", "apps", "display", "files", "notifications"];
 
         for (w, h) in sizes {
             ui.window().set_default_size(w, h);
