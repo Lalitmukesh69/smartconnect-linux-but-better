@@ -130,6 +130,17 @@ fn view_title(name: &str) -> &'static str {
     }
 }
 
+fn format_connect_error(err: &str) -> String {
+    let err = err.trim();
+    if err.contains("isn't reachable over Wi-Fi") || err.contains("Bluetooth didn't reach it") {
+        "Couldn't connect: phone unreachable.\nOpen Smart Connect on phone.".to_string()
+    } else if let Some(stripped) = err.strip_prefix("Couldn't connect: ") {
+        format!("Couldn't connect:\n{stripped}")
+    } else {
+        err.to_string()
+    }
+}
+
 pub struct Ui {
     window: adw::ApplicationWindow,
     toasts: adw::ToastOverlay,
@@ -804,7 +815,11 @@ impl SidebarNav {
         let foot_cta_error = gtk::Label::builder()
             .label("Connection failed")
             .css_classes(["sc-danger-text", "caption"])
+            .wrap(true)
+            .wrap_mode(gtk::pango::WrapMode::WordChar)
+            .justify(gtk::Justification::Center)
             .xalign(0.5)
+            .max_width_chars(26)
             .visible(false)
             .build();
 
@@ -3421,12 +3436,13 @@ impl Ui {
             match &result {
                 Ok(r) if !r.ok => {
                     let why = if r.message.is_empty() { "no reason given" } else { r.message.as_str() };
-                    ui.sidebar.foot_cta_error.set_label(&format!("Couldn't {cmd}: {why}"));
+                    let full_err = format!("Couldn't {cmd}: {why}");
+                    ui.sidebar.foot_cta_error.set_label(&format_connect_error(&full_err));
                     ui.sidebar.foot_cta_error.set_visible(true);
-                    ui.toast(&format!("Couldn't {cmd}: {why}"));
+                    ui.toast(&full_err);
                 }
                 Err(e) => {
-                    ui.sidebar.foot_cta_error.set_label(e);
+                    ui.sidebar.foot_cta_error.set_label(&format_connect_error(e));
                     ui.sidebar.foot_cta_error.set_visible(true);
                     ui.toast(e);
                 }
