@@ -3053,6 +3053,24 @@ impl Ui {
             st.last = next;
             st.was_connected = true;
             save
+        } else if s.paired {
+            let mut next = st.last.clone();
+            next.absorb(s);
+            if s.wallpaper.is_some() && s.wallpaper != st.copied_wallpaper {
+                if let Some(copy) = s.wallpaper_path().and_then(|p| lastdevice::copy_wallpaper(Path::new(p))) {
+                    next.wallpaper = Some(copy);
+                }
+                st.copied_wallpaper = s.wallpaper.clone();
+            }
+            let save = !next.same_fields(&st.last);
+            st.last = next;
+            if st.was_connected {
+                st.last.last_connected = Some(now);
+                st.was_connected = false;
+                true
+            } else {
+                save
+            }
         } else if st.was_connected {
             st.last.last_connected = Some(now);
             st.was_connected = false;
@@ -3127,13 +3145,13 @@ impl Ui {
         };
         p.subtitle.set_label(&line);
 
-        // Live values while connected, last cached values while away.
-        let values = if state == PhoneState::Connected {
-            let mut v = last.clone();
-            v.absorb(&s);
+        // Live values while connected or paired, last cached values while away.
+        let mut v = last.clone();
+        v.absorb(&s);
+        let values = if state != PhoneState::Unpaired && v.known() {
             Some(v)
         } else {
-            Some(last.clone()).filter(|l| state == PhoneState::Disconnected && l.known())
+            None
         };
         p.stats_wrap.set_visible(values.is_some());
         p.offline_caption.set_visible(state != PhoneState::Connected && values.is_some());

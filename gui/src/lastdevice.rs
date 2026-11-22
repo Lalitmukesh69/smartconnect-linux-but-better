@@ -39,7 +39,7 @@ pub struct LastDevice {
 impl LastDevice {
     /// Whether anything about a phone is known at all.
     pub fn known(&self) -> bool {
-        self.name.is_some() || self.last_connected.is_some()
+        self.name.is_some() || self.model.is_some() || self.battery.is_some() || self.last_connected.is_some()
     }
 
     /// Takes over what a connected status reports (keeps a known name/model if the status lacks one).
