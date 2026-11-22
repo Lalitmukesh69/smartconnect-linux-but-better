@@ -336,15 +336,15 @@ impl AppsPage {
         );
         empty_search.set_visible(false);
 
-        // All apps inside ONE Surface with hairline-separated rows
+        // All apps inside a responsive modern Grid
         let flow = gtk::FlowBox::builder()
             .selection_mode(gtk::SelectionMode::None)
             .homogeneous(true)
-            .min_children_per_line(1)
-            .max_children_per_line(1)
-            .row_spacing(0)
-            .column_spacing(0)
-            .css_classes(["sc-surface"])
+            .min_children_per_line(3)
+            .max_children_per_line(8)
+            .row_spacing(12)
+            .column_spacing(12)
+            .css_classes(["sc-apps-grid"])
             .hexpand(true)
             .build();
 
@@ -668,53 +668,60 @@ impl AppsPage {
     }
 
     fn app_row(self: &Rc<Self>, app: &App) -> (gtk::Widget, IconSlot) {
-        let icon = IconSlot::new(40);
+        let icon = IconSlot::new(48);
         icon.set(&app.query());
+        icon.widget().set_halign(gtk::Align::Center);
+        icon.widget().set_valign(gtk::Align::Center);
+
+        let icon_box = gtk::Box::builder()
+            .width_request(52)
+            .height_request(52)
+            .halign(gtk::Align::Center)
+            .valign(gtk::Align::Center)
+            .css_classes(["sc-app-tile-icon-box"])
+            .build();
+        icon_box.append(icon.widget());
 
         let title_lbl = gtk::Label::builder()
             .label(&app.name)
-            .xalign(0.0)
-            .css_classes(["sc-row-title"])
+            .xalign(0.5)
+            .justify(gtk::Justification::Center)
+            .wrap(true)
+            .wrap_mode(gtk::pango::WrapMode::WordChar)
+            .lines(2)
             .ellipsize(gtk::pango::EllipsizeMode::End)
+            .css_classes(["sc-app-tile-name"])
             .build();
 
-        let sub_lbl = gtk::Label::builder()
-            .label(if app.work { format!("{} · Work profile", app.pkg) } else { app.pkg.clone() })
-            .xalign(0.0)
-            .css_classes(["sc-row-helper"])
-            .ellipsize(gtk::pango::EllipsizeMode::End)
-            .build();
-
-        let text_col = gtk::Box::builder()
+        let inner_col = gtk::Box::builder()
             .orientation(gtk::Orientation::Vertical)
-            .spacing(2)
-            .hexpand(true)
+            .spacing(8)
+            .halign(gtk::Align::Center)
             .valign(gtk::Align::Center)
             .build();
-        text_col.append(&title_lbl);
-        text_col.append(&sub_lbl);
+        inner_col.append(&icon_box);
+        inner_col.append(&title_lbl);
 
-        let launch_btn = row_action_button("Launch", false);
-
-        let row = gtk::Box::builder()
-            .orientation(gtk::Orientation::Horizontal)
-            .spacing(crate::tokens::SPACE_3)
-            .css_classes(["sc-row", "sc-row-interactive"])
+        let tile_btn = gtk::Button::builder()
+            .child(&inner_col)
+            .css_classes(["sc-app-tile"])
+            .tooltip_text(if app.work {
+                format!("{} (Work profile)\n{}", app.name, app.pkg)
+            } else {
+                format!("{}\n{}", app.name, app.pkg)
+            })
             .build();
-        row.append(icon.widget());
-        row.append(&text_col);
-        row.append(&launch_btn);
 
         let weak = Rc::downgrade(self);
         let app_clone = app.clone();
-        let btn = launch_btn.downgrade();
-        launch_btn.connect_clicked(move |_| {
+        let btn = tile_btn.downgrade();
+        tile_btn.connect_clicked(move |_| {
             if let (Some(p), Some(b)) = (weak.upgrade(), btn.upgrade()) {
                 p.launch(&app_clone, &b);
             }
         });
 
-        (row.upcast(), icon)
+        (tile_btn.upcast(), icon)
     }
 
     fn recent_row(self: &Rc<Self>, app: &App) -> gtk::Widget {
