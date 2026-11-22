@@ -24,7 +24,7 @@ use crate::mirror::{Exit, Mirror};
 use crate::palette::{self, CommandEntry};
 use crate::prefs;
 use crate::theme::{
-    brand_mark, format_display_path, overline, set_dot_online, status_dot, IconKind, ModernIcon,
+    format_display_path, overline, set_dot_online, status_dot, IconKind, ModernIcon,
 };
 use crate::tray;
 
@@ -61,7 +61,7 @@ pub mod space {
     pub const ICON_TILE_SIZE: i32 = 40;
 }
 
-const TABS: [&str; 6] = ["phone", "apps", "display", "files", "notifications", "kitchen_sink"];
+const TABS: [&str; 5] = ["phone", "apps", "display", "files", "notifications"];
 
 const SIGNAL_WORDS: [&str; 6] = ["None", "Very weak", "Weak", "Fair", "Good", "Excellent"];
 
@@ -459,7 +459,6 @@ fn build_app_menu() -> gio::Menu {
 
     let app_sec = gio::Menu::new();
     app_sec.append(Some("Endpoint Telemetry"), Some("win.telemetry"));
-    app_sec.append(Some("Component Showcase"), Some("win.kitchen-sink"));
     app_sec.append(Some("Preferences"), Some("win.preferences"));
     app_sec.append(Some("Keyboard Shortcuts"), Some("win.shortcuts"));
     app_sec.append(Some("About Developer"), Some("win.developer"));
@@ -683,15 +682,28 @@ impl SidebarNav {
     }
 
     fn build() -> Self {
-        // Top 56px app mark + Smart Connect title (No Ctrl+K here)
+        // Top 56px app mark + Smart Connect for Linux title (Same horizontal line)
+        let brand_logo = crate::theme::brand_logo_widget(20);
+        brand_logo.set_valign(gtk::Align::Center);
+        brand_logo.set_halign(gtk::Align::Center);
+
         let brand_title = gtk::Label::builder()
-            .label("Smart Connect")
+            .label("Smart Connect for Linux")
             .xalign(0.0)
-            .css_classes(["heading"])
+            .valign(gtk::Align::Center)
+            .css_classes(["heading", "sc-brand-title"])
+            .ellipsize(gtk::pango::EllipsizeMode::End)
+            .single_line_mode(true)
             .build();
-        brand_title.set_margin_start(space::S2);
-        let brand_box = gtk::Box::builder().spacing(space::S3).hexpand(true).valign(gtk::Align::Center).build();
-        brand_box.append(&brand_mark());
+
+        let brand_box = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .spacing(space::S2)
+            .hexpand(true)
+            .valign(gtk::Align::Center)
+            .margin_start(space::S1)
+            .build();
+        brand_box.append(&brand_logo);
         brand_box.append(&brand_title);
 
         let brand_handle = gtk::WindowHandle::builder().child(&brand_box).hexpand(true).build();
@@ -742,13 +754,6 @@ impl SidebarNav {
             "Notifications · Ctrl+5",
             Some(notif_badge.clone()),
         );
-        let (btn_kitchen, ic_kitchen) = Self::nav_button(
-            IconKind::Sparkles,
-            "Kitchen Sink",
-            "^6",
-            "Kitchen Sink · Ctrl+6",
-            None,
-        );
 
         let nav_box = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(space::S1).build();
         nav_box.append(&btn_phone);
@@ -758,7 +763,6 @@ impl SidebarNav {
         nav_box.append(&btn_display);
         nav_box.append(&btn_files);
         nav_box.append(&btn_notifs);
-        nav_box.append(&btn_kitchen);
 
         let nav_scroll = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Never)
@@ -833,9 +837,8 @@ impl SidebarNav {
                 ("display", btn_display),
                 ("files", btn_files),
                 ("notifications", btn_notifs),
-                ("kitchen_sink", btn_kitchen),
             ],
-            nav_icons: vec![ic_phone, ic_apps, ic_display, ic_files, ic_notifs, ic_kitchen],
+            nav_icons: vec![ic_phone, ic_apps, ic_display, ic_files, ic_notifs],
             apps_badge,
             notif_badge,
             foot_bat_icon: ModernIcon::new(IconKind::Battery { pct: None, charging: false }, 14),
@@ -1492,8 +1495,6 @@ impl Ui {
         views.add_named(&display_w, Some("display"));
         views.add_named(&files_w, Some("files"));
         views.add_named(&notifs_w, Some("notifications"));
-        let kitchen_sink_w = crate::components::build_kitchen_sink_page();
-        views.add_named(&kitchen_sink_w, Some("kitchen_sink"));
         views.set_visible_child_name(&win_prefs.last_tab);
 
         let (down_page, down) = DownPage::build();
@@ -1559,7 +1560,7 @@ impl Ui {
 
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title("Smart Connect")
+            .title("Smart Connect for Linux")
             .icon_name(crate::APP_ID)
             .default_width(win_prefs.width)
             .default_height(win_prefs.height)
@@ -1855,7 +1856,6 @@ impl Ui {
         app.set_accels_for_action("win.tab::display", &["<Alt>3", "<Primary>3"]);
         app.set_accels_for_action("win.tab::files", &["<Alt>4", "<Primary>4"]);
         app.set_accels_for_action("win.tab::notifications", &["<Alt>5", "<Primary>5"]);
-        app.set_accels_for_action("win.tab::kitchen_sink", &["<Alt>6", "<Primary>6"]);
 
         let telemetry_act = gio::SimpleAction::new("telemetry", None);
         let weak_tel = Rc::downgrade(self);
@@ -1865,15 +1865,6 @@ impl Ui {
             }
         });
         self.window.add_action(&telemetry_act);
-
-        let kitchen_act = gio::SimpleAction::new("kitchen-sink", None);
-        let weak_kitch = Rc::downgrade(self);
-        kitchen_act.connect_activate(move |_, _| {
-            if let Some(ui) = weak_kitch.upgrade() {
-                ui.switch_tab("kitchen_sink");
-            }
-        });
-        self.window.add_action(&kitchen_act);
     }
 
     #[cfg(test)]
@@ -2240,8 +2231,7 @@ impl Ui {
         }
 
         entries.push(CommandEntry::new("action:prefs", "Open Preferences", "Settings", "Ctrl+,", ""));
-        entries.push(CommandEntry::new("tab:kitchen_sink", "Component Showcase & Design Tokens", "Developer", "Ctrl+6", "tokens kitchen sink ui"));
-        entries.push(CommandEntry::new("action:developer", "About Developer — Lalit mukesh (@Lalitmukesh69)", "Developer", "GitHub", "github bio berlin repos"));
+        entries.push(CommandEntry::new("action:developer", "About Developer — Lalit mukesh (@Lalitmukesh69)", "Developer", "GitHub", "github bio berlin"));
         entries.push(CommandEntry::new("action:shortcuts", "Keyboard Shortcuts", "Help", "Ctrl+?", ""));
 
         if daemon_up {
@@ -2510,7 +2500,7 @@ impl Ui {
         });
         general.add(&keep_running);
 
-        let diagnostics = adw::PreferencesGroup::builder().title("Service & Diagnostics").build();
+        let diagnostics = adw::PreferencesGroup::builder().title("Service &amp; Diagnostics").build();
 
         let (service_sub, stopped) = {
             let st = self.state.borrow();
@@ -2613,7 +2603,7 @@ impl Ui {
         config_row.add_suffix(&open_cfg_btn);
         diagnostics.add(&config_row);
 
-        let help = adw::PreferencesGroup::builder().title("Help & About").build();
+        let help = adw::PreferencesGroup::builder().title("Help &amp; About").build();
         let dialog = adw::PreferencesDialog::builder().title("Preferences").build();
 
         let shortcuts_row = adw::ActionRow::builder()
