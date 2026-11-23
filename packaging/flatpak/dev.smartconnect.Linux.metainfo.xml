@@ -46,6 +46,15 @@
     <binary>smartconnectd</binary>
   </provides>
   <releases>
+    <release version="0.2.0" date="2026-11-23">
+      <description>
+        <p>
+          Smart Connect for Linux v0.2.0 introduces native in-app software updates with atomic executable
+          replacement, 2026 Apple Pro dark monochrome UI design tokens, centered Command Palette (Ctrl+K),
+          rich system tray telemetry, standby state telemetry caching, and responsive app grid views.
+        </p>
+      </description>
+    </release>
     <release version="0.1.0" date="2026-11-21">
       <description>
         <p>

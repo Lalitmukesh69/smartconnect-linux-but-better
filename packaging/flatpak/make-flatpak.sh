@@ -18,7 +18,7 @@ DIST_DIR="$ROOT/dist"
 REPO_DIR="$DIST_DIR/flatpak-repo"
 BUILD_DIR="$DIST_DIR/flatpak-build"
 APP_ID="dev.smartconnect.Linux"
-VERSION="0.1.0"
+VERSION="0.2.0"
 BUNDLE_NAME="Smart_Connect-${VERSION}-x86_64.flatpak"
 
 mkdir -p "$DIST_DIR"
