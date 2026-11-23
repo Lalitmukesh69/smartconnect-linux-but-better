@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#ffffff">
+    <title>Install Smart Connect for Linux ({{VERSION}}) — Official Guide</title>
+    <meta name="description"
+        content="Step-by-step guide to install Smart Connect for Linux and pair your Motorola phone. Commands for Fedora, Ubuntu, Debian, and Arch Linux.">
+    <meta name="keywords"
+        content="Smart Connect for Linux, Motorola Smart Connect, Ready For Linux, Motorola Ready For, Motorola Linux, Android screen mirror Linux, Linux wireless display, Motorola phone Linux, GTK4, Rust">
+    <meta name="author" content="Lalit Mukesh">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <link rel="canonical" href="{{HOMEPAGE_URL}}">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Lalitmukesh69/smartconnect-linux-but-better/main/packaging/dev.smartconnect.Linux.png">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/Lalitmukesh69/smartconnect-linux-but-better/main/packaging/dev.smartconnect.Linux.png">
+
+    <!-- Open Graph / Facebook / Discord -->
+    <meta property="og:locale" content="en_US">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Install Smart Connect for Linux ({{VERSION}})">
+    <meta property="og:description"
+        content="Step-by-step guide to install Smart Connect for Linux and pair your Motorola phone. Commands for Fedora, Ubuntu, Debian, and Arch Linux.">
+    <meta property="og:url" content="{{HOMEPAGE_URL}}">
+    <meta property="og:site_name" content="Smart Connect for Linux">
+    <meta property="og:image" content="https://raw.githubusercontent.com/Lalitmukesh69/smartconnect-linux-but-better/main/packaging/dev.smartconnect.Linux.png">
+    <meta property="og:image:alt" content="Smart Connect for Linux Logo">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Install Smart Connect for Linux ({{VERSION}})">
+    <meta name="twitter:description"
+        content="Step-by-step guide to install Smart Connect for Linux and pair your Motorola phone. Commands for Fedora, Ubuntu, Debian, and Arch Linux.">
+    <meta name="twitter:image" content="https://raw.githubusercontent.com/Lalitmukesh69/smartconnect-linux-but-better/main/packaging/dev.smartconnect.Linux.png">
+
+    <!-- Structured Data (JSON-LD) for Search Engine Rich Snippets -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "WebSite",
+                "@id": "{{HOMEPAGE_URL}}#website",
+                "url": "{{HOMEPAGE_URL}}",
+                "name": "Smart Connect for Linux",
+                "description": "Step-by-step guide to install Smart Connect for Linux and pair your Motorola phone.",
+                "publisher": {
+                    "@type": "Person",
+                    "name": "Lalit Mukesh"
+                }
+            },
+            {
+                "@type": "SoftwareApplication",
+                "@id": "{{HOMEPAGE_URL}}#software",
+                "name": "Smart Connect for Linux",
+                "operatingSystem": "Linux (Fedora, Ubuntu, Debian, Arch Linux)",
+                "applicationCategory": "UtilitiesApplication",
+                "softwareVersion": "{{VERSION_NUM}}",
+                "description": "Native GTK4 and Rust implementation of Motorola Smart Connect for Linux desktops.",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "USD"
+                }
+            },
+            {
+                "@type": "HowTo",
+                "@id": "{{HOMEPAGE_URL}}#howto",
+                "name": "How to Install Smart Connect for Linux",
+                "description": "Step-by-step installation instructions for Fedora, Ubuntu, Debian, and Arch Linux.",
+                "step": [
+                    {
+                        "@type": "HowToStep",
+                        "position": 1,
+                        "name": "Install Prerequisites",
+                        "text": "Install build tools, Rust toolchain, GTK4, GStreamer, Avahi, and Bluetooth."
+                    },
+                    {
+                        "@type": "HowToStep",
+                        "position": 2,
+                        "name": "Install from GitHub",
+                        "text": "Clone the repository and run the packaging/install.sh installer script."
+                    },
+                    {
+                        "@type": "HowToStep",
+                        "position": 3,
+                        "name": "Open the Firewall",
+                        "text": "Open TCP port 52020 and mDNS in firewalld or ufw."
+                    },
+                    {
+                        "@type": "HowToStep",
+                        "position": 4,
+                        "name": "Verify and Launch",
+                        "text": "Verify systemd smartconnectd status and launch smartconnect-gui."
+                    },
+                    {
+                        "@type": "HowToStep",
+                        "position": 5,
+                        "name": "Pair Your Phone",
+                        "text": "Scan the desktop QR code using the stock Motorola Smart Connect app."
+                    }
+                ]
+            }
+        ]
+    }
+    </script>
+    <style>
+        :root {
+            color-scheme: light;
+            --px: max(16px, env(safe-area-inset-left), env(safe-area-inset-right));
+            --bg: #fff;
+            --alt: #f5f5f7;
+            --fg: #1d1d1f;
+            --mut: #6e6e73;
+            --line: #d2d2d7;
+            --acc: #0066cc;
+            --soft: #eef5fd;
+            --warn: #fff8e6;
+            --warnl: #d9b94a;
+            --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box
+        }
+
+        html {
+            scroll-padding-top: 120px;
+            -webkit-text-size-adjust: 100%
+        }
+
+        @media(min-width:960px) {
+            html {
+                scroll-padding-top: 84px
+            }
+        }
+
+        @media(prefers-reduced-motion:no-preference) {
+            html {
+                scroll-behavior: smooth
+            }
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font: 1rem/1.5 var(--sans);
+            letter-spacing: -.011em;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility
+        }
+
+        a {
+            color: var(--acc)
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--acc);
+            outline-offset: 2px
+        }
+
+        .sr {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0)
+        }
+
+        .skip {
+            position: absolute;
+            left: 12px;
+            top: -60px;
+            background: var(--fg);
+            color: var(--bg);
+            padding: 8px 14px;
+            border-radius: 8px;
+            z-index: 100
+        }
+
+        .skip:focus {
+            top: 8px
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 60;
+            height: 56px;
+            background: color-mix(in srgb, var(--bg) 85%, transparent);
+            backdrop-filter: blur(16px) saturate(160%);
+            -webkit-backdrop-filter: blur(16px) saturate(160%);
+            border-bottom: 1px solid var(--line)
+        }
+
+        .bar-in {
+            max-width: 1120px;
+            height: 100%;
+            margin: auto;
+            padding: 0 var(--px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px
+        }
+
+        .brand {
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 600;
+            color: var(--fg);
+            text-decoration: none;
+            letter-spacing: -.02em
+        }
+
+        .brand span {
+            font-weight: 400;
+            color: var(--mut);
+            margin-left: 8px;
+            font-size: .9375rem
+        }
+
+        .gh {
+            color: var(--fg);
+            text-decoration: none;
+            font-size: .9375rem;
+            font-weight: 500;
+            padding: 8px 14px;
+            border: 1px solid var(--line);
+            border-radius: 8px
+        }
+
+        .gh:hover {
+            background: var(--alt)
+        }
+
+        .wrap {
+            max-width: 1120px;
+            margin: auto;
+            padding: 0 var(--px) 80px
+        }
+
+        .toc {
+            position: sticky;
+            top: 56px;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            margin: 0 calc(var(--px)*-1);
+            padding: 0 var(--px);
+            background: var(--bg);
+            border-bottom: 1px solid var(--line);
+            overflow-x: auto;
+            scrollbar-width: none
+        }
+
+        .toc::-webkit-scrollbar {
+            display: none
+        }
+
+        .toc a {
+            white-space: nowrap;
+            padding: 13px 10px;
+            color: var(--mut);
+            text-decoration: none;
+            font-size: .9375rem;
+            border-bottom: 2px solid transparent
+        }
+
+        .toc a.on {
+            color: var(--fg);
+            font-weight: 600;
+            border-bottom-color: var(--acc)
+        }
+
+        .toc a.done::after {
+            content: " \2713";
+            color: var(--acc)
+        }
+
+        .prog {
+            white-space: nowrap;
+            font-size: .875rem;
+            font-weight: 600;
+            color: var(--mut);
+            padding-right: 10px
+        }
+
+        .meter {
+            display: none
+        }
+
+        @media(min-width:960px) {
+            .wrap {
+                display: grid;
+                grid-template-columns: 210px minmax(0, 1fr);
+                gap: 64px
+            }
+
+            .toc {
+                display: block;
+                top: 84px;
+                align-self: start;
+                margin: 32px 0 0;
+                padding: 0;
+                border: 0;
+                overflow: visible;
+                background: none
+            }
+
+            .toc a {
+                display: block;
+                padding: 7px 12px;
+                border-bottom: 0;
+                border-left: 2px solid var(--line)
+            }
+
+            .toc a.on {
+                border-left-color: var(--acc)
+            }
+
+            .prog {
+                display: block;
+                padding: 0 0 10px
+            }
+
+            .meter {
+                display: block;
+                height: 4px;
+                border-radius: 4px;
+                background: var(--alt);
+                margin-bottom: 16px;
+                overflow: hidden
+            }
+
+            .meter i {
+                display: block;
+                height: 100%;
+                width: 0;
+                background: var(--acc);
+                transition: width .2s
+            }
+        }
+
+        main {
+            max-width: 700px;
+            min-width: 0
+        }
+
+        section {
+            padding-top: 56px
+        }
+
+        h1 {
+            margin: 48px 0 16px;
+            font-size: clamp(2rem, 4.5vw, 2.75rem);
+            line-height: 1.1;
+            font-weight: 700;
+            letter-spacing: -.03em;
+            text-wrap: balance
+        }
+
+        h2 {
+            margin: 0 0 12px;
+            font-size: 1.625rem;
+            line-height: 1.2;
+            font-weight: 600;
+            letter-spacing: -.022em
+        }
+
+        h3 {
+            margin: 28px 0 8px;
+            font-size: 1.0625rem;
+            font-weight: 600;
+            letter-spacing: -.014em
+        }
+
+        p {
+            margin: 0 0 12px;
+            text-wrap: pretty
+        }
+
+        .lead {
+            font-size: 1.1875rem;
+            line-height: 1.45;
+            color: var(--mut);
+            max-width: 60ch
+        }
+
+        .mut {
+            color: var(--mut)
+        }
+
+        ul,
+        ol {
+            margin: 0 0 12px;
+            padding-left: 1.25rem
+        }
+
+        li {
+            margin-bottom: 6px
+        }
+
+        :not(pre)>code {
+            font: .875em var(--mono);
+            background: var(--alt);
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            padding: 1px 5px
+        }
+
+        .note {
+            margin: 16px 0;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: var(--soft);
+            border-left: 3px solid var(--acc)
+        }
+
+        .note p:last-child {
+            margin: 0
+        }
+
+        .note.warn {
+            background: var(--warn);
+            border-left-color: var(--warnl)
+        }
+
+        .seg {
+            border: 0;
+            margin: 28px 0 0;
+            padding: 0
+        }
+
+        .seg legend {
+            font-weight: 600;
+            padding: 0
+        }
+
+        .seg p {
+            margin: 2px 0 10px;
+            color: var(--mut);
+            font-size: .9375rem
+        }
+
+        .opts {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            padding: 3px;
+            background: var(--alt);
+            border: 1px solid var(--line);
+            border-radius: 10px
+        }
+
+        .opts label {
+            position: relative;
+            padding: 9px 16px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: .9375rem;
+            font-weight: 500;
+            color: var(--mut)
+        }
+
+        .opts input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none
+        }
+
+        .opts label:has(input:checked) {
+            background: var(--bg);
+            color: var(--fg);
+            box-shadow: 0 0 0 1px var(--line)
+        }
+
+        .opts label:has(input:focus-visible) {
+            outline: 2px solid var(--acc);
+            outline-offset: 2px
+        }
+
+        html[data-distro] [data-for] {
+            display: none
+        }
+
+        html[data-distro=fedora] [data-for~=fedora],
+        html[data-distro=ubuntu] [data-for~=ubuntu],
+        html[data-distro=arch] [data-for~=arch] {
+            display: block
+        }
+
+        .code {
+            margin: 12px 0;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--alt);
+            overflow: hidden
+        }
+
+        .code .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 6px 8px 6px 14px;
+            border-bottom: 1px solid var(--line);
+            font-size: .8125rem;
+            color: var(--mut)
+        }
+
+        .copy {
+            font: 500 .8125rem var(--sans);
+            color: var(--fg);
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            padding: 6px 12px;
+            min-height: 32px;
+            cursor: pointer
+        }
+
+        .copy:hover {
+            border-color: var(--mut)
+        }
+
+        pre {
+            margin: 0;
+            padding: 14px;
+            overflow-x: auto
+        }
+
+        pre code {
+            font: .875rem/1.6 var(--mono);
+            white-space: pre
+        }
+
+        pre.wrap code {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere
+        }
+
+        .done {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 24px;
+            min-height: 44px;
+            cursor: pointer;
+            font-weight: 500
+        }
+
+        .done input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--acc)
+        }
+
+        details {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            margin-top: 12px
+        }
+
+        summary {
+            padding: 13px 16px;
+            min-height: 44px;
+            cursor: pointer;
+            font-weight: 600
+        }
+
+        details>div {
+            padding: 0 16px 16px
+        }
+
+        details .code:first-child {
+            margin-top: 0
+        }
+
+        dl {
+            margin: 0
+        }
+
+        dt {
+            font-weight: 600;
+            margin-top: 16px
+        }
+
+        dd {
+            margin: 2px 0 0;
+            color: var(--mut)
+        }
+
+        kbd {
+            font: .8125rem var(--mono);
+            padding: 1px 6px;
+            border: 1px solid var(--line);
+            border-bottom-width: 2px;
+            border-radius: 5px;
+            background: var(--alt)
+        }
+
+        footer {
+            margin-top: 64px;
+            padding-top: 20px;
+            border-top: 1px solid var(--line);
+            color: var(--mut);
+            font-size: .875rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 24px;
+            justify-content: space-between
+        }
+
+        .quick {
+            padding: 24px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: var(--alt)
+        }
+
+        .quick .code {
+            background: var(--bg)
+        }
+
+        .quick .code .top {
+            background: var(--alt)
+        }
+
+        .quick ol {
+            margin-bottom: 16px
+        }
+
+        .ptabs {
+            display: flex;
+            gap: 2px;
+            padding: 3px;
+            margin: 0 0 4px;
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 10px
+        }
+
+        .ptabs button {
+            flex: 1;
+            min-height: 44px;
+            padding: 8px 6px;
+            font: 500 .9375rem/1.2 var(--sans);
+            color: var(--mut);
+            background: none;
+            border: 0;
+            border-radius: 7px;
+            cursor: pointer
+        }
+
+        .ptabs button[aria-selected=true] {
+            background: var(--soft);
+            color: var(--acc);
+            font-weight: 600;
+            box-shadow: 0 0 0 1px var(--line)
+        }
+
+        .copy.primary {
+            background: var(--acc);
+            border-color: var(--acc);
+            color: #fff
+        }
+
+        .copy.primary:hover {
+            filter: brightness(.92)
+        }
+
+        .code .top span {
+            min-width: 0;
+            overflow-wrap: anywhere
+        }
+
+        pre.wrap {
+            max-height: 13rem;
+            overflow-y: auto
+        }
+
+        .phone-only {
+            display: none
+        }
+
+        button,
+        label,
+        summary,
+        a {
+            touch-action: manipulation
+        }
+
+        @media(max-width:959px) {
+            h1 {
+                margin-top: 32px
+            }
+
+            section {
+                padding-top: 44px
+            }
+        }
+
+        @media(max-width:600px) {
+            .opts {
+                display: flex;
+                width: 100%
+            }
+
+            .opts label {
+                flex: 1;
+                text-align: center;
+                padding: 13px 6px
+            }
+
+            h2 {
+                font-size: 1.5rem
+            }
+
+            pre {
+                padding: 12px
+            }
+
+            .quick {
+                padding: 16px;
+                border-radius: 12px
+            }
+
+            .phone-only {
+                display: block
+            }
+        }
+
+        @media(max-width:420px) {
+            .brand span {
+                display: none
+            }
+        }
+
+        @media(pointer:coarse) {
+            .copy {
+                min-height: 44px;
+                padding: 0 16px
+            }
+
+            .toc a {
+                padding: 15px 12px
+            }
+
+            .code .top {
+                padding: 6px 6px 6px 14px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a class="skip" href="#main">Skip to guide</a>
+    <p class="sr" id="live" role="status"></p>
+
+    <header>
+        <div class="bar-in">
+            <a class="brand" href="#overview">Smart Connect for Linux<span>{{VERSION}}</span></a>
+            <a class="gh" href="{{REPO_URL}}" target="_blank"
+                rel="noopener noreferrer">GitHub</a>
+        </div>
+    </header>
+
+    <div class="wrap">
+        <nav class="toc" aria-label="On this page">
+            <span class="prog" aria-live="polite"><span data-prog>0 of 5 steps done</span></span>
+            <span class="meter" aria-hidden="true"><i id="bar"></i></span>
+            <a href="#overview">Overview</a>
+            <a href="#ai">Install with AI</a>
+            <a href="#step-1" data-s="1">1. Prerequisites</a>
+            <a href="#step-2" data-s="2">2. Install</a>
+            <a href="#step-3" data-s="3">3. Firewall</a>
+            <a href="#step-4" data-s="4">4. Verify and launch</a>
+            <a href="#step-5" data-s="5">5. Pair your phone</a>
+            <a href="#features">What you can do</a>
+            <a href="#troubleshooting">Troubleshooting</a>
+            <a href="#uninstall">Uninstall</a>
+        </nav>
+
+        <main id="main">
+            <section id="overview" style="padding-top:0">
+                <h1>Install Smart Connect for Linux</h1>
+                <p class="lead">Pair your Motorola phone with your Linux desktop for notifications, clipboard sync, app
+                    streaming, wireless display, and shared mouse control. Setup takes about 10 minutes.</p>
+                <p class="note phone-only">Reading this on your phone? Open this page on your Linux PC so you can copy
+                    commands straight into the terminal.</p>
+                <h3>Before you start</h3>
+                <ul>
+                    <li>A PC running Fedora, Ubuntu, Debian, or Arch Linux, with <code>sudo</code> access.</li>
+                    <li>Your Motorola phone with the stock Smart Connect app. Nothing on the phone needs to be changed.
+                    </li>
+                    <li>The PC and the phone on the same Wi-Fi network.</li>
+                </ul>
+                <fieldset class="seg">
+                    <legend>Your Linux distribution</legend>
+                    <p>The commands and the AI prompt change to match your choice.</p>
+                    <div class="opts">
+                        <label><input type="radio" name="distro" value="fedora">Fedora</label>
+                        <label><input type="radio" name="distro" value="ubuntu">Ubuntu / Debian</label>
+                        <label><input type="radio" name="distro" value="arch">Arch Linux</label>
+                    </div>
+                </fieldset>
+            </section>
+
+            <section id="ai">
+                <div class="quick">
+                    <h2>Quickest way: let an AI agent do it</h2>
+                    <p>If you use Claude Code, Antigravity, or another AI coding agent that can run terminal commands,
+                        it can install Smart Connect, fix problems, or remove it for you. You only pair your phone
+                        yourself.</p>
+                    <ol>
+                        <li>On your Linux PC, open your AI agent in a terminal.</li>
+                        <li>Choose your distribution above, pick a prompt below, and copy it.</li>
+                        <li>Paste it into the agent and approve the commands it asks to run.</li>
+                        <li>After an install, go to <a href="#step-5">step 5</a> to pair your phone.</li>
+                    </ol>
+                    <div class="ptabs" role="tablist" aria-label="AI prompt type">
+                        <button type="button" role="tab" id="t-install" aria-selected="true"
+                            aria-controls="p-install">Install prompt</button>
+                        <button type="button" role="tab" id="t-fix" aria-selected="false" tabindex="-1"
+                            aria-controls="p-fix">Troubleshoot prompt</button>
+                        <button type="button" role="tab" id="t-remove" aria-selected="false" tabindex="-1"
+                            aria-controls="p-remove">Uninstall prompt</button>
+                    </div>
+                    <div role="tabpanel" id="p-install" aria-labelledby="t-install">
+                        <div class="code">
+                            <div class="top"><span id="ai-label">Prompt</span><button class="copy primary"
+                                    type="button">Copy prompt</button></div>
+                            <pre class="wrap"
+                                tabindex="0"><code id="ai-text">This prompt needs JavaScript. Use the steps below instead.</code></pre>
+                        </div>
+                    </div>
+                    <div role="tabpanel" id="p-fix" aria-labelledby="t-fix" hidden>
+                        <div class="code">
+                            <div class="top"><span>Prompt · Diagnose &amp; fix Smart Connect</span><button
+                                    class="copy primary" type="button">Copy prompt</button></div>
+                            <pre class="wrap" tabindex="0"><code>Diagnose and fix my "Smart Connect for Linux" installation using these checks and fixes:
+
+1. Verify the background service status:
+systemctl --user status smartconnectd
+- If port 52020 is already in use or the daemon is stuck, restart it with:
+systemctl --user restart smartconnectd
+(Do not run smartconnectd manually while the systemd user service is active.)
+
+2. Check mDNS and firewall rules for port 52020/tcp and mDNS:
+- On firewalld, reload rules with:
+sudo firewall-cmd --reload
+- Verify avahi-daemon is running and remind me to confirm my PC and Motorola phone are on the exact same Wi-Fi SSID.
+
+3. Check clipboard sync dependency:
+wl-copy --version
+- Confirm wl-clipboard is installed and working.
+
+4. Refresh the desktop launcher database if the app icon is missing:
+update-desktop-database ~/.local/share/applications
+
+Report what you found and what you fixed.</code></pre>
+                        </div>
+                    </div>
+                    <div role="tabpanel" id="p-remove" aria-labelledby="t-remove" hidden>
+                        <div class="code">
+                            <div class="top"><span>Prompt · Clean slate / uninstall</span><button class="copy primary"
+                                    type="button">Copy prompt</button></div>
+                            <pre class="wrap"
+                                tabindex="0"><code>Cleanly uninstall "Smart Connect for Linux" from this machine so we have a clean slate. Run these exact commands:
+
+systemctl --user stop smartconnectd.service 2&gt;/dev/null || true
+systemctl --user disable smartconnectd.service 2&gt;/dev/null || true
+killall -9 smartconnectd smartconnect-gui 2&gt;/dev/null || true
+rm -f ~/.local/bin/smartconnect*
+rm -f ~/.local/share/applications/dev.smartconnect.Linux.desktop
+rm -f ~/.local/share/applications/dev.smartconnect.Display.desktop
+rm -f ~/.config/systemd/user/smartconnectd.service
+systemctl --user daemon-reload
+update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true
+
+Before deleting saved pairing credentials, ask me if I also want to remove them. If I say yes, run:
+rm -rf ~/.local/share/smartconnect-linux ~/.config/smartconnect-linux ~/.cache/smartconnect
+and remind me to remove this PC from the Motorola Smart Connect app on my phone under Settings &gt; Connected Computers.</code></pre>
+                        </div>
+                    </div>
+                    <p class="mut" style="margin:0">Prefer to do it yourself? Start at <a href="#step-1">step 1</a>.</p>
+                </div>
+            </section>
+
+            <section id="step-1">
+                <h2>1. Install prerequisites</h2>
+                <p>This installs the build tools (including Rust), the GTK4 and GStreamer libraries, and the tools for
+                    network discovery, Bluetooth, and clipboard sync.</p>
+                <div class="code" data-for="fedora">
+                    <div class="top"><span>Terminal · Fedora</span><button class="copy" type="button">Copy</button>
+                    </div>
+                    <pre tabindex="0"><code data-cmd="prereq">sudo dnf install -y \
+  git gcc pkgconf-pkg-config rust cargo dbus-devel wayland-devel \
+  avahi avahi-tools bluez wl-clipboard NetworkManager fuse3 \
+  gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel \
+  gstreamer1-plugins-good gstreamer1-plugins-bad-free libnice-gstreamer1 \
+  gtk4-devel libadwaita-devel</code></pre>
+                </div>
+                <div class="code" data-for="ubuntu">
+                    <div class="top"><span>Terminal · Ubuntu / Debian</span><button class="copy"
+                            type="button">Copy</button></div>
+                    <pre tabindex="0"><code data-cmd="prereq">sudo apt update && sudo apt install -y \
+  git build-essential pkg-config cargo rustc libdbus-1-dev libwayland-dev \
+  avahi-daemon avahi-utils bluez wl-clipboard network-manager fuse3 \
+  libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev \
+  gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
+  gstreamer1.0-gl gstreamer1.0-nice gstreamer1.0-libav \
+  libgtk-4-dev libadwaita-1-dev</code></pre>
+                </div>
+                <div class="code" data-for="arch">
+                    <div class="top"><span>Terminal · Arch Linux</span><button class="copy" type="button">Copy</button>
+                    </div>
+                    <pre tabindex="0"><code data-cmd="prereq">sudo pacman -S --needed \
+  git base-devel pkgconf rust avahi bluez dbus wl-clipboard fuse3 \
+  gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad libnice gst-libav \
+  gtk4 libadwaita</code></pre>
+                </div>
+                <h3>Start network discovery and Bluetooth</h3>
+                <p>Avahi lets your phone find this PC on Wi-Fi without typing an IP address.</p>
+                <div class="code">
+                    <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                    <pre
+                        tabindex="0"><code data-cmd="svc">sudo systemctl enable --now avahi-daemon bluetooth</code></pre>
+                </div>
+                <label class="done"><input type="checkbox" data-done="1">I've finished this step</label>
+            </section>
+
+            <section id="step-2">
+                <h2>2. Install from GitHub</h2>
+                <p>The installer builds everything, copies it to <code>~/.local/bin</code>, adds an app launcher, and
+                    starts the background service. The first build compiles Rust code and can take a few minutes.</p>
+                <div class="code">
+                    <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                    <pre tabindex="0"><code data-cmd="install">git clone {{REPO_URL}}.git
+cd smartconnect-linux-but-better
+./packaging/install.sh --enable</code></pre>
+                </div>
+                <details>
+                    <summary>What you should see</summary>
+                    <div>
+                        <div class="code">
+                            <div class="top"><span>Expected output</span></div>
+                            <pre tabindex="0"><code>==&gt; Checking the desktop side (hints only)
+[ok] wl-copy
+[ok] avahi-publish
+[ok] avahi-browse
+[ok] gst-inspect-1.0
+[ok] fusermount3
+[ok] avahi-daemon running
+==&gt; Building the workspace (release)
+    Finished `release` profile [optimized] target(s)
+==&gt; Installing binaries to /home/&lt;user&gt;/.local/bin
+==&gt; Installing the systemd user unit to /home/&lt;user&gt;/.config/systemd/user
+==&gt; Installing the GTK app launcher to /home/&lt;user&gt;/.local/share/applications
+==&gt; Starting the systemd user service smartconnectd</code></pre>
+                        </div>
+                    </div>
+                </details>
+                <details>
+                    <summary>Advanced: download only the prebuilt app window</summary>
+                    <div>
+                        <div class="note warn">
+                            <p><strong>This is not a full install.</strong> <code>smartconnect-gui</code> is only the
+                                app window. Pairing, discovery, and streaming run in the <code>smartconnectd</code>
+                                service, which the installer above sets up. Use this option only if you already have the
+                                service.</p>
+                        </div>
+                        <div class="code">
+                            <div class="top"><span>Terminal · download, verify, make executable</span><button
+                                    class="copy" type="button">Copy</button></div>
+                            <pre tabindex="0"><code>curl -fsSL -o ~/.local/bin/smartconnect-gui \
+  {{REPO_URL}}/releases/download/{{VERSION}}/smartconnect-gui
+echo "{{SHA256}}  $HOME/.local/bin/smartconnect-gui" | sha256sum -c -
+chmod +x ~/.local/bin/smartconnect-gui</code></pre>
+                        </div>
+                        <p class="mut">The second command should print <code>OK</code>. If it doesn't, delete the file
+                            and download it again.</p>
+                    </div>
+                </details>
+                <label class="done"><input type="checkbox" data-done="2">I've finished this step</label>
+            </section>
+
+            <section id="step-3">
+                <h2>3. Open the firewall</h2>
+                <p>Smart Connect uses TCP port <code>52020</code> (an encrypted TLS WebSocket) for pairing and
+                    streaming, and mDNS for discovery. Without these rules your phone can't connect. Fedora uses
+                    firewalld; Ubuntu and Debian use ufw. On Arch, use whichever you have installed.</p>
+                <div class="code" data-for="fedora arch" data-name="firewalld">
+                    <div class="top"><span>Terminal · firewalld</span><button class="copy" type="button">Copy</button>
+                    </div>
+                    <pre tabindex="0"><code data-cmd="fw">sudo firewall-cmd --permanent --add-port=52020/tcp
+sudo firewall-cmd --permanent --add-service=mdns
+sudo firewall-cmd --reload</code></pre>
+                </div>
+                <div class="code" data-for="ubuntu arch" data-name="ufw">
+                    <div class="top"><span>Terminal · ufw</span><button class="copy" type="button">Copy</button></div>
+                    <pre tabindex="0"><code data-cmd="fw">sudo ufw allow 52020/tcp comment 'Smart Connect WebSocket'
+sudo ufw allow 5353/udp comment 'mDNS discovery'
+sudo ufw reload</code></pre>
+                </div>
+                <p class="mut">firewalld applies these rules to the default zone. If your Wi-Fi uses another zone, run
+                    <code>firewall-cmd --get-active-zones</code> and add <code>--zone=&lt;name&gt;</code> to each
+                    command.</p>
+                <label class="done"><input type="checkbox" data-done="3">I've finished this step</label>
+            </section>
+
+            <section id="step-4">
+                <h2>4. Verify and launch</h2>
+                <p>Check that the background service is running. Look for <code>Active: active (running)</code>, then
+                    press <kbd>q</kbd> to leave the status screen.</p>
+                <div class="code">
+                    <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                    <pre tabindex="0"><code>systemctl --user status smartconnectd</code></pre>
+                </div>
+                <p>Then open <strong>Smart Connect</strong> from your app launcher, or start it from the terminal:</p>
+                <div class="code">
+                    <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                    <pre tabindex="0"><code>smartconnect-gui &amp;</code></pre>
+                </div>
+                <p class="mut">Not running, or the command isn't found? See <a
+                        href="#troubleshooting">Troubleshooting</a>.</p>
+                <label class="done"><input type="checkbox" data-done="4">I've finished this step</label>
+            </section>
+
+            <section id="step-5">
+                <h2>5. Pair your phone</h2>
+                <p>Make sure the PC and phone are on the same Wi-Fi network, then:</p>
+                <ol>
+                    <li>On the PC, click <strong>Pair new phone…</strong>. A QR code appears.</li>
+                    <li>On the phone, open the stock <strong>Smart Connect</strong> app, tap <strong>+</strong> (or
+                        <strong>Add device</strong>), choose <strong>Scan QR code</strong>, and point the camera at the
+                        PC screen.</li>
+                    <li>Wait a moment. The dialog closes and the main window shows your phone's name, battery level,
+                        signal, and Wi-Fi status.</li>
+                </ol>
+                <label class="done"><input type="checkbox" data-done="5">I've finished this step</label>
+            </section>
+
+            <section id="features">
+                <h2>What you can do</h2>
+                <dl>
+                    <dt>Clipboard sync</dt>
+                    <dd>Copy on one device and paste on the other. Needs <code>wl-clipboard</code>.</dd>
+                    <dt>Notifications</dt>
+                    <dd>Phone notifications appear as desktop notifications.</dd>
+                    <dt>App streaming and wireless display</dt>
+                    <dd>Show your phone screen or individual phone apps on the PC.</dd>
+                    <dt>Shared mouse and keyboard</dt>
+                    <dd>Move the cursor between your PC and phone.</dd>
+                    <dt>Webcam</dt>
+                    <dd>Use your phone's camera as a webcam on Linux.</dd>
+                    <dt>Command palette</dt>
+                    <dd>Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to search and open features.</dd>
+                    <dt>Updates</dt>
+                    <dd>Open the <strong>…</strong> menu and choose <strong>Check for Updates…</strong> to install new
+                        versions without the terminal.</dd>
+                </dl>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>Troubleshooting</h2>
+                <details>
+                    <summary>My phone can't find the PC</summary>
+                    <div>
+                        <p>Confirm both devices are on the same Wi-Fi network. Guest networks and some routers block
+                            devices from seeing each other (often called client or AP isolation), so use the main
+                            network. Then restart discovery and reload the firewall:</p>
+                        <div class="code">
+                            <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                            <pre tabindex="0"><code>sudo systemctl restart avahi-daemon
+sudo firewall-cmd --reload</code></pre>
+                        </div>
+                        <p class="mut">On Ubuntu or Debian, run <code>sudo ufw reload</code> instead of the second
+                            command.</p>
+                    </div>
+                </details>
+                <details>
+                    <summary>Port 52020 is already in use</summary>
+                    <div>
+                        <p>Restart the service instead of starting <code>smartconnectd</code> yourself.</p>
+                        <div class="code">
+                            <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                            <pre tabindex="0"><code>systemctl --user restart smartconnectd</code></pre>
+                        </div>
+                    </div>
+                </details>
+                <details>
+                    <summary>The service isn't running</summary>
+                    <div>
+                        <p>Read the service log to see why it stopped.</p>
+                        <div class="code">
+                            <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                            <pre tabindex="0"><code>journalctl --user -u smartconnectd -e</code></pre>
+                        </div>
+                    </div>
+                </details>
+                <details>
+                    <summary>The build fails with a Rust version error</summary>
+                    <div>
+                        <p>Your distribution's Rust may be too old. Install the current toolchain with <a
+                                href="https://rustup.rs" target="_blank" rel="noopener noreferrer">rustup</a>, open a
+                            new terminal, and run the installer again.</p>
+                    </div>
+                </details>
+                <details>
+                    <summary><code>smartconnect-gui</code>: command not found</summary>
+                    <div>
+                        <p>Add <code>~/.local/bin</code> to your PATH, then open a new terminal.</p>
+                        <div class="code">
+                            <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                            <pre
+                                tabindex="0"><code>echo 'export PATH="$HOME/.local/bin:$PATH"' &gt;&gt; ~/.bashrc</code></pre>
+                        </div>
+                        <p class="mut">Using zsh? Replace <code>~/.bashrc</code> with <code>~/.zshrc</code>.</p>
+                    </div>
+                </details>
+                <details>
+                    <summary>The app icon is missing from the launcher</summary>
+                    <div>
+                        <div class="code">
+                            <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                            <pre tabindex="0"><code>update-desktop-database ~/.local/share/applications</code></pre>
+                        </div>
+                    </div>
+                </details>
+                <details>
+                    <summary>Clipboard sync isn't working</summary>
+                    <div>
+                        <p>Check that <code>wl-clipboard</code> is installed. If the command isn't found, install the
+                            package from step 1.</p>
+                        <div class="code">
+                            <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                            <pre tabindex="0"><code>wl-copy --version</code></pre>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <section id="uninstall">
+                <h2>Uninstall or start fresh</h2>
+                <p>Run this from the repository folder you cloned in step 2:</p>
+                <div class="code">
+                    <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                    <pre tabindex="0"><code>./packaging/uninstall.sh</code></pre>
+                </div>
+                <details>
+                    <summary>Remove it manually</summary>
+                    <div>
+                        <p>This stops the service and deletes the program files and launchers.</p>
+                        <div class="code">
+                            <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                            <pre tabindex="0"><code>systemctl --user stop smartconnectd.service 2&gt;/dev/null || true
+systemctl --user disable smartconnectd.service 2&gt;/dev/null || true
+killall -9 smartconnectd smartconnect-gui 2&gt;/dev/null || true
+rm -f ~/.local/bin/smartconnect*
+rm -f ~/.local/share/applications/dev.smartconnect.Linux.desktop
+rm -f ~/.local/share/applications/dev.smartconnect.Display.desktop
+rm -f ~/.config/systemd/user/smartconnectd.service
+systemctl --user daemon-reload
+update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</code></pre>
+                        </div>
+                        <div class="note warn">
+                            <p><strong>Optional: forget this PC's pairing.</strong> This deletes the saved pairing keys,
+                                settings, and cache, so you'll need to pair again. Also remove the PC in the phone app
+                                under <strong>Settings &gt; Connected Computers</strong>.</p>
+                        </div>
+                        <div class="code">
+                            <div class="top"><span>Terminal</span><button class="copy" type="button">Copy</button></div>
+                            <pre
+                                tabindex="0"><code>rm -rf ~/.local/share/smartconnect-linux ~/.config/smartconnect-linux ~/.cache/smartconnect</code></pre>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <footer>
+                <span>Smart Connect for Linux · Released under MIT / Apache-2.0</span>
+                <span>Not affiliated with Motorola Mobility LLC.</span>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+            var root = document.documentElement, live = document.getElementById('live');
+            function get(k) { try { return localStorage.getItem(k) } catch (e) { return null } }
+            function put(k, v) { try { localStorage.setItem(k, v) } catch (e) { } }
+
+            /* Distribution choice */
+            var radios = [].slice.call(document.querySelectorAll('input[name=distro]'));
+            var names = { fedora: 'Fedora', ubuntu: 'Ubuntu / Debian', arch: 'Arch Linux' };
+            function cmds(d, c) { return [].slice.call(document.querySelectorAll('.code[data-for~="' + d + '"] code[data-cmd="' + c + '"]')) }
+            function one(c) { return document.querySelector('code[data-cmd="' + c + '"]').textContent }
+            function buildPrompt(d) {
+                var q = function (n) { return document.querySelector('.code[data-name="' + n + '"] code').textContent };
+                var fwd = q('firewalld'), ufw = q('ufw');
+                var head = { fedora: 'Open TCP port 52020 (TLS WebSocket) and mDNS in firewalld:', ubuntu: 'Open TCP port 52020 (TLS WebSocket) and UDP port 5353 (mDNS) in ufw:', arch: 'Open TCP port 52020 (TLS WebSocket) and mDNS in the active firewall (if firewalld or ufw is enabled):' }[d];
+                var fw = { fedora: 'firewall-cmd --get-active-zones\n' + fwd, ubuntu: ufw, arch: '- For firewalld:\nfirewall-cmd --get-active-zones\n' + fwd + '\n- For ufw:\n' + ufw }[d];
+                return ['Install and set up "Smart Connect for Linux" ({{VERSION}}) on this Linux machine by running the exact commands below in order. Confirm before running sudo commands if needed, and stop to report any error.', '',
+                    '1. Install prerequisites and Rust toolchain (' + names[d] + '):', cmds(d, 'prereq')[0].textContent, '',
+                    '2. Enable mDNS discovery and Bluetooth:', one('svc'), '',
+                    '3. Clone and run the automated source installer:', one('install'), '',
+                    '4. ' + head, fw, '',
+                    '5. Verify the systemd user service is active (running) and launch the GUI:', 'systemctl --user status smartconnectd', 'smartconnect-gui &', '',
+                    'Once smartconnect-gui is open and smartconnectd is active (running), tell me I am ready to click "Pair new phone…" and scan the QR code from the Motorola Smart Connect app on my phone.'].join('\n');
+            }
+            function setDistro(d) {
+                if (!names[d]) d = 'ubuntu';
+                root.dataset.distro = d;
+                radios.forEach(function (r) { r.checked = r.value === d });
+                document.getElementById('ai-text').textContent = buildPrompt(d);
+                document.getElementById('ai-label').textContent = 'Prompt · Full install (' + names[d] + ')';
+                put('sc_distro', d);
+            }
+            radios.forEach(function (r) { r.addEventListener('change', function () { setDistro(r.value) }) });
+            setDistro(get('sc_distro') || 'ubuntu');
+
+            /* Prompt tabs */
+            var ptabs = [].slice.call(document.querySelectorAll('.ptabs [role=tab]'));
+            function selTab(t) { ptabs.forEach(function (x) { var on = x === t; x.setAttribute('aria-selected', on ? 'true' : 'false'); x.tabIndex = on ? 0 : -1; document.getElementById(x.getAttribute('aria-controls')).hidden = !on }) }
+            ptabs.forEach(function (t, i) {
+                t.addEventListener('click', function () { selTab(t) });
+                t.addEventListener('keydown', function (e) {
+                    var k = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: ptabs.length - 1 }[e.key];
+                    if (k === undefined) return;
+                    e.preventDefault(); var n = ptabs[(k + ptabs.length) % ptabs.length]; n.focus(); selTab(n);
+                });
+            });
+
+            /* Copy buttons with resilient mobile fallback */
+            function flash(b, m) {
+                b.textContent = m;
+                live.textContent = m;
+                clearTimeout(b.t);
+                b.t = setTimeout(function () {
+                    b.textContent = b.dataset.l;
+                    live.textContent = '';
+                }, 2000);
+            }
+            function copyToClipboard(text, b, codeEl) {
+                function selectFallback() {
+                    try {
+                        var r = document.createRange();
+                        r.selectNodeContents(codeEl);
+                        var s = getSelection();
+                        s.removeAllRanges();
+                        s.addRange(r);
+                    } catch (e) { }
+                    flash(b, 'Press Ctrl+C');
+                }
+                function execCopy() {
+                    try {
+                        var ta = document.createElement('textarea');
+                        ta.value = text;
+                        ta.setAttribute('readonly', '');
+                        ta.style.position = 'fixed';
+                        ta.style.left = '-9999px';
+                        ta.style.top = '0';
+                        document.body.appendChild(ta);
+                        ta.focus();
+                        ta.select();
+                        ta.setSelectionRange(0, 99999);
+                        var ok = document.execCommand('copy');
+                        document.body.removeChild(ta);
+                        if (ok) {
+                            flash(b, 'Copied');
+                            return;
+                        }
+                    } catch (e) { }
+                    selectFallback();
+                }
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text).then(function () {
+                        flash(b, 'Copied');
+                    }).catch(function () {
+                        execCopy();
+                    });
+                } else {
+                    execCopy();
+                }
+            }
+            document.addEventListener('click', function (e) {
+                var b = e.target.closest('.copy');
+                if (!b) return;
+                if (!b.dataset.l) b.dataset.l = b.textContent;
+                var c = b.closest('.code').querySelector('code'),
+                    t = c.textContent.trim();
+                copyToClipboard(t, b, c);
+            });
+
+            /* Step progress */
+            var map = {}; try { map = JSON.parse(get('sc_done')) || {} } catch (e) { }
+            var boxes = [].slice.call(document.querySelectorAll('input[data-done]'));
+            function render() {
+                var n = 0;
+                boxes.forEach(function (b) {
+                    var id = b.dataset.done, on = !!map[id]; b.checked = on; if (on) n++;
+                    var a = document.querySelector('.toc [data-s="' + id + '"]'); if (a) a.classList.toggle('done', on)
+                });
+                document.querySelector('[data-prog]').textContent = n + ' of ' + boxes.length + ' steps done';
+                document.getElementById('bar').style.width = (n / boxes.length * 100) + '%';
+            }
+            boxes.forEach(function (b) { b.addEventListener('change', function () { map[b.dataset.done] = b.checked; put('sc_done', JSON.stringify(map)); render() }) });
+            render();
+
+            /* Highlight current section */
+            var secs = [].slice.call(document.querySelectorAll('main section[id]')),
+                links = [].slice.call(document.querySelectorAll('.toc a')), toc = document.querySelector('.toc'), tick = false;
+            function active() {
+                tick = false;
+                var cur = secs[0].id;
+                secs.forEach(function (s) { if (s.getBoundingClientRect().top <= 150) cur = s.id });
+                if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) cur = secs[secs.length - 1].id;
+                links.forEach(function (l) {
+                    var on = l.getAttribute('href') === '#' + cur;
+                    l.classList.toggle('on', on);
+                    if (on) { l.setAttribute('aria-current', 'true'); if (toc.scrollWidth > toc.clientWidth && getComputedStyle(toc).display === 'flex') toc.scrollLeft = l.offsetLeft - 60 } else l.removeAttribute('aria-current');
+                });
+            }
+            addEventListener('scroll', function () { if (!tick) { tick = true; requestAnimationFrame(active) } }, { passive: true });
+            addEventListener('resize', active);
+            active();
+        })();
+    </script>
+</body>
+
+</html>

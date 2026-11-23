@@ -2,133 +2,160 @@
 name: website-release-publisher
 description: >-
   Use this skill whenever publishing a new software version, updating the installation website,
-  maintaining the GitHub Pages documentation, or ensuring mobile phone responsiveness and seamless
-  one-click installation commands for Smart Connect for Linux.
+  maintaining the GitHub Pages documentation, running automated integrity verification, or ensuring
+  high-performance Apple-style documentation for Smart Connect for Linux.
 ---
 
-# Website Release Publisher & Documentation Runbook
+# Website Release Publisher & Documentation System
 
-This skill provides the operational playbook for Antigravity agents and developers to update, verify, and publish the high-performance, mobile-responsive installation website hosted on GitHub Pages (`https://lalitmukesh69.github.io/smartconnect-linux-but-better/`).
-
----
-
-## 🚀 When to Use This Skill
-
-Activate this skill whenever:
-1. Releasing a new version of Smart Connect for Linux (e.g., `v0.2.0` $\rightarrow$ `v0.3.0`).
-2. Updating prerequisites, packaging scripts, or installation commands across distributions (Fedora, Ubuntu/Debian, Arch Linux).
-3. Adding new features, troubleshooting steps, or AI agent installation prompts.
-4. Ensuring optimal phone/mobile responsiveness, touch interactivity, and zero-freeze scrolling.
+This skill defines the end-to-end operational system and automated tooling for maintaining, updating, and publishing the official **Smart Connect for Linux** installation website hosted on GitHub Pages:
+`https://lalitmukesh69.github.io/smartconnect-linux-but-better/`
 
 ---
 
-## 📋 The Release Website Update Playbook
+## 🏗️ Architecture & Design System
 
-### Step 1: Version & Metadata Synchronization
-Update the version strings and download URLs in `Website/index.html`:
-- **Title tag & description**: `<title>Install Smart Connect for Linux (vX.Y.Z) — Documentation</title>`
-- **Header badge**: `<span class="version-badge">vX.Y.Z</span>`
-- **Doc eyebrow**: `<span class="doc-eyebrow">Installation Guide · vX.Y.Z</span>`
-- **Release download CTA**: Check the button pointing to `https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases/latest`
-- **AI Agent prompts**: Update the version string in `AGENT_PROMPTS` within the `<script>` tag.
+The documentation site uses a high-performance, single-file minimalist Apple aesthetic:
 
-Always keep `Website/Install Smart Connect for Linux.html` identical to `Website/index.html`:
+### 1. Palette & Typography Tokens
+- **Backgrounds**: `--bg: #ffffff`, `--alt: #f5f5f7` (subtle inset cards, code headers).
+- **Text**: `--fg: #1d1d1f` (near-black high contrast), `--mut: #6e6e73` (secondary/subtitles).
+- **Accents**: `--acc: #0066cc` (Apple link & active blue), `--soft: #eef5fd` (selected states).
+- **Warnings**: `--warn: #fff8e6`, `--warnl: #d9b94a` (callout notices).
+- **Typography**: `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif`.
+- **Monospace**: `"SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace`.
+
+### 2. Core Interactive Systems
+1. **Dynamic Distribution Switcher (`data-distro`)**:
+   - Distro radio options: `fedora`, `ubuntu`, `arch`.
+   - CSS-driven visibility:
+     ```css
+     html[data-distro] [data-for] { display: none; }
+     html[data-distro=fedora] [data-for~=fedora],
+     html[data-distro=ubuntu] [data-for~=ubuntu],
+     html[data-distro=arch] [data-for~=arch] { display: block; }
+     ```
+   - Persists selection to `localStorage` under key `sc_distro`.
+
+2. **Step Progress Checklist**:
+   - Steps 1 through 5 contain `<input type="checkbox" data-done="N">`.
+   - The desktop/mobile TOC displays `0 of 5 steps done` with a dynamic progress bar `#bar`.
+   - Persists state in `localStorage` under key `sc_done`.
+
+3. **Dynamic Zero-Hallucination AI Prompt Generator**:
+   - `buildPrompt(distro)` scrapes the exact commands directly from the active DOM code blocks (`prereq`, `svc`, `install`, `firewalld`/`ufw`).
+   - Generates perfectly tailored prompts for Claude Code, Antigravity, and terminal agents.
+   - Includes accessible ARIA tabs: *Install prompt*, *Troubleshoot prompt*, and *Clean slate / uninstall*.
+
+4. **Resilient Touchscreen Copy Fallback**:
+   - Evaluates `navigator.clipboard.writeText(text)` inside secure contexts.
+   - Automatically falls back to an offscreen `textarea` with `document.execCommand('copy')` for Android/iOS mobile browsers and webviews where clipboard permissions might be blocked.
+
+5. **Search Engine & Social Discovery (SEO)**:
+   - Includes Open Graph (`og:title`, `og:image`, `og:url`), Twitter summary cards, and canonical links.
+   - Employs Schema.org JSON-LD Structured Data: `WebSite`, `SoftwareApplication`, and `HowTo` schemas for Google Search rich cards.
+
+---
+
+## ⚡ The Release Automation System
+
+The repository includes pre-built Python automation scripts inside this skill:
+- **`scripts/update_website_version.py`**: Updates version strings, SHA-256 binary checksums, and synchronizes files.
+- **`scripts/verify_website.py`**: Executes automated integrity checks across HTML, JS, JSON-LD, anchor links, and SEO tags.
+- **`resources/website-template.html`**: Master template with variable substitution tokens (`{{VERSION}}`, `{{SHA256}}`, etc.).
+
+---
+
+## 🚀 Step-by-Step Version Release Procedure
+
+Follow this runbook every time a new version is released:
+
+### Step 1: Update the Website Version & Checksum
+Run the automated version updater:
 ```bash
-cp "Website/index.html" "Website/Install Smart Connect for Linux.html"
+python3 .agents/skills/website-release-publisher/scripts/update_website_version.py \
+  --version v0.X.Y \
+  --sha256 <64_character_sha256_hash>
+```
+
+This single command automatically updates:
+1. `<title>` and Open Graph / Twitter card titles.
+2. The sticky header brand badge (`<span>v0.X.Y</span>`).
+3. Software version in Schema.org JSON-LD.
+4. AI agent install prompt generator.
+5. Standalone GUI curl download URL and SHA-256 verification line.
+6. Synchronizes `Website/index.html` $\leftrightarrow$ `Website/Install Smart Connect for Linux.html`.
+7. Executes `verify_website.py`.
+
+### Step 2: Run Verification Checks
+Ensure all integrity assertions pass:
+```bash
+python3 .agents/skills/website-release-publisher/scripts/verify_website.py
+```
+
+Checks enforced:
+- [x] `index.html` and `Install Smart Connect for Linux.html` are 100% byte-identical.
+- [x] Zero duplicate DOM IDs.
+- [x] All internal anchor links (`href="#..."`) match existing DOM targets.
+- [x] JavaScript syntax passes `node -c`.
+- [x] Schema.org JSON-LD structured data is valid JSON.
+- [x] Distro commands (`fedora`, `ubuntu`, `arch`) and firewall bindings exist.
+- [x] Required SEO meta tags are present.
+
+### Step 3: Synchronize GitHub Repository Metadata
+Verify that the GitHub repository homepage and SEO topics are up to date:
+```bash
+gh repo edit \
+  --homepage "https://lalitmukesh69.github.io/smartconnect-linux-but-better/" \
+  --add-topic "smart-connect" \
+  --add-topic "motorola" \
+  --add-topic "motorola-ready-for" \
+  --add-topic "linux" \
+  --add-topic "gtk4" \
+  --add-topic "rust" \
+  --add-topic "wayland" \
+  --add-topic "screen-mirroring" \
+  --add-topic "android-mirroring" \
+  --add-topic "virtual-display" \
+  --add-topic "gstreamer"
+```
+
+### Step 4: Commit, Deploy & Watch
+Commit the synchronized website files and monitor GitHub Actions:
+```bash
+git add Website/ README.md
+git commit -m "docs(website): publish documentation for v0.X.Y"
+git push origin main
+```
+
+Monitor the deployment run until completion:
+```bash
+gh run watch $(gh run list --workflow="Deploy Website to GitHub Pages" --limit 1 --json databaseId -q '.[0].databaseId') --exit-status
+```
+
+Verify live HTTP response:
+```bash
+curl -ILs "https://lalitmukesh69.github.io/smartconnect-linux-but-better/" | head -n 10
 ```
 
 ---
 
-### Step 2: Maintain Easy Installation Snippets
-Users install Smart Connect through three primary pathways provided on the site:
-1. **⚡ Instant 1-Line Setup (Terminal)**:
-   - Synchronized across Fedora, Ubuntu/Debian, and Arch Linux in `QUICK_COMMANDS`:
-     ```javascript
-     var QUICK_COMMANDS = {
-       fedora: { label: 'Fedora · Terminal Install Command', code: '...' },
-       ubuntu: { label: 'Ubuntu / Debian · Terminal Install Command', code: '...' },
-       arch: { label: 'Arch Linux · Terminal Install Command', code: '...' }
-     };
+## 🛠️ Adding New Content or Distributions
+
+When adding new sections or distributions to the website:
+
+1. **Adding a Distribution**:
+   - Add a radio button under `<fieldset class="seg">`:
+     ```html
+     <label><input type="radio" name="distro" value="opensuse">openSUSE</label>
      ```
-2. **🤖 AI Agent Prompts**:
-   - Ready-to-copy prompts tailored for Claude Code, Antigravity, and terminal coding agents in `AGENT_PROMPTS`.
-3. **📦 Manual Step-by-Step Guide**:
-   - Explicit steps (Prerequisites $\rightarrow$ Automated Installer $\rightarrow$ Firewall port `52020` $\rightarrow$ Verification $\rightarrow$ Pairing).
+   - Add a code block with `data-for="opensuse"` and `data-cmd="prereq"`.
+   - Update CSS: `html[data-distro=opensuse] [data-for~=opensuse] { display: block }`.
+   - Update `names` and `buildPrompt` in the `<script>` block.
 
----
-
-### Step 3: Strict Mobile Responsiveness Standards
-Every change to `Website/index.html` must follow these non-negotiable mobile guidelines:
-
-1. **No Scroll Hijacking or Freezing**:
-   - **Never** call `e.preventDefault()` on hash anchor navigation (`a[href^="#"]`).
-   - Use native browser scrolling powered by CSS:
-     ```css
-     html { scroll-behavior: smooth; scroll-padding-top: 108px; }
-     :target, .doc-section, .doc-intro, section[id] { scroll-margin-top: 108px; }
+2. **File Synchronization Rule**:
+   - Never edit only one HTML file.
+   - Always run the synchronizer:
+     ```bash
+     python3 .agents/skills/website-release-publisher/scripts/update_website_version.py --sync-only
      ```
-2. **Horizontal Overflow Protection**:
-   - Root elements must contain horizontal overflow:
-     ```css
-     html, body { max-width: 100vw; overflow-x: hidden; touch-action: manipulation; }
-     ```
-   - Code blocks (`pre`), prompt blocks, and `table` elements must support horizontal touch scrolling without trapping vertical swipes:
-     ```css
-     .code-block pre, .prompt-block pre, .quick-terminal-code, table {
-         max-width: 100%;
-         overflow-x: auto;
-         -webkit-overflow-scrolling: touch;
-         touch-action: pan-x pan-y;
-         overscroll-behavior-x: contain;
-     }
-     ```
-3. **Comfortable Touch Targets**:
-   - All interactive elements (buttons, distro tabs, copy buttons, checkboxes, mobile menu links) must have a touch target height of at least $\ge 40\text{px}$ (ideally $\ge 44\text{px}$).
-4. **Mobile Navigation Drawer**:
-   - Test that the hamburger button `#mobile-menu-toggle` opens the `#mobile-nav-drawer` overlay and that tapping any link closes the drawer automatically.
-
----
-
-### Step 4: Automated Verification Checklist
-Run this quick Python script to verify DOM integrity and link validity before committing:
-```bash
-python3 - << 'EOF'
-import re
-
-with open("Website/index.html", "r", encoding="utf-8") as f:
-    html = f.read()
-
-ids = re.findall(r'id="([^"]+)"', html)
-duplicates = set([x for x in ids if ids.count(x) > 1])
-hrefs = re.findall(r'href="#([^"]+)"', html)
-missing = [h for h in hrefs if h not in set(ids)]
-
-print("Validation results:")
-print(f"  • Total DOM IDs: {len(ids)}")
-print(f"  • Duplicate IDs: {len(duplicates)} {duplicates if duplicates else '✓ (None)'}")
-print(f"  • Broken Internal Links: {len(missing)} {missing if missing else '✓ (None)'}")
-assert len(duplicates) == 0 and len(missing) == 0, "Validation failed!"
-EOF
-```
-
----
-
-### Step 5: Commit, Deploy & Verify
-The repository has an automated GitHub Actions deployment workflow at `.github/workflows/deploy-pages.yml` that triggers on any push to `main` affecting `Website/**`.
-
-1. Commit and push changes:
-   ```bash
-   git add Website/
-   git commit -m "docs(website): update release documentation for vX.Y.Z"
-   git push origin main
-   ```
-
-2. Monitor the GitHub Actions deployment:
-   ```bash
-   gh run watch $(gh run list --workflow="Deploy Website to GitHub Pages" --limit 1 --json databaseId -q '.[0].databaseId') --exit-status
-   ```
-
-3. Verify HTTP 200 response on the live domain:
-   ```bash
-   curl -ILs "https://lalitmukesh69.github.io/smartconnect-linux-but-better/" | head -n 5
-   ```
