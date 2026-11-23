@@ -54,7 +54,7 @@
 
         html {
             scroll-behavior: smooth;
-            scroll-padding-top: 84px;
+            scroll-padding-top: 108px;
             font-family: var(--font-sans);
             font-size: 16px;
             background-color: var(--bg);
@@ -63,6 +63,8 @@
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
             font-optical-sizing: auto;
+            max-width: 100vw;
+            overflow-x: hidden;
         }
 
         body {
@@ -71,6 +73,14 @@
             line-height: 1.65;
             color: var(--text-primary);
             background-color: var(--bg);
+            max-width: 100vw;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            touch-action: manipulation;
+        }
+
+        :target, .doc-section, .doc-intro, section[id] {
+            scroll-margin-top: 108px;
         }
 
         /* Skip link */
@@ -1235,6 +1245,462 @@
                 transition-duration: 0.01ms !important;
             }
         }
+
+        /* Mobile Touch & Scroll Optimizations */
+        .code-block, .prompt-block, .quick-terminal-box {
+            max-width: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .code-block pre, .prompt-block pre, .quick-terminal-code {
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x pan-y;
+            overscroll-behavior-x: contain;
+        }
+
+        table {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x pan-y;
+        }
+
+        .tab-btn, .quick-distro-chip, .copy-btn, .toc-chip {
+            min-height: 40px;
+            touch-action: manipulation;
+        }
+
+        .done-pill {
+            min-height: 40px;
+            padding: 8px 14px;
+            touch-action: manipulation;
+        }
+
+        .done-pill input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        /* Mobile Hamburger Toggle */
+        .mobile-menu-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0;
+            transition: background 0.15s ease;
+            touch-action: manipulation;
+        }
+
+        .mobile-menu-btn:hover,
+        .mobile-menu-btn:active {
+            background: var(--surface-muted);
+        }
+
+        @media (min-width: 768px) {
+            .mobile-menu-btn {
+                display: none !important;
+            }
+        }
+
+        /* Mobile Slide-down Drawer */
+        .mobile-nav-drawer {
+            position: fixed;
+            top: var(--nav-height);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 150;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+        }
+
+        .mobile-nav-drawer[hidden] {
+            display: none !important;
+        }
+
+        .mobile-nav-drawer-inner {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border-strong);
+            padding: 16px 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+            font-weight: 500;
+            min-height: 46px;
+            transition: background 0.15s ease, color 0.15s ease;
+            touch-action: manipulation;
+        }
+
+        .mobile-nav-link:hover,
+        .mobile-nav-link:active {
+            background: var(--surface-muted);
+            color: var(--accent);
+        }
+
+        .mobile-nav-footer {
+            margin-top: 12px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Quick Install Hero Card */
+        .quick-install-card {
+            margin-top: 28px;
+            padding: 22px;
+            border-radius: var(--radius-lg);
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            position: relative;
+            scroll-margin-top: 108px;
+        }
+
+        @media (min-width: 768px) {
+            .quick-install-card {
+                padding: 28px 32px;
+            }
+        }
+
+        .quick-install-header {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        @media (min-width: 680px) {
+            .quick-install-header {
+                flex-direction: row;
+                align-items: flex-start;
+                justify-content: space-between;
+            }
+        }
+
+        .quick-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #0369a1;
+            background: #e0f2fe;
+            border: 1px solid #bae6fd;
+            padding: 3px 10px;
+            border-radius: 999px;
+            margin-bottom: 8px;
+        }
+
+        .quick-install-title-group h2 {
+            font-size: clamp(1.3rem, 2.5vw, 1.6rem);
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .quick-install-title-group p {
+            margin: 6px 0 0;
+            font-size: 0.9375rem;
+            color: var(--text-secondary);
+        }
+
+        .quick-distro-chips {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 4px;
+            border-radius: var(--radius-sm);
+            background: var(--surface-muted);
+            border: 1px solid var(--border);
+            align-self: flex-start;
+        }
+
+        .quick-distro-chip {
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            padding: 8px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            min-height: 40px;
+            transition: all 0.15s ease;
+            touch-action: manipulation;
+        }
+
+        .quick-distro-chip:hover {
+            color: var(--text-primary);
+        }
+
+        .quick-distro-chip.is-active {
+            background: var(--surface);
+            color: var(--text-primary);
+            border-color: var(--border-strong);
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .quick-terminal-box {
+            border-radius: var(--radius-md);
+            background: #18181b;
+            border: 1px solid #27272a;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .quick-terminal-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 14px;
+            background: #202024;
+            border-bottom: 1px solid #2e2e33;
+        }
+
+        .terminal-dots {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .terminal-dots i {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #52525b;
+        }
+
+        .terminal-dots i:nth-child(1) { background: #ef4444; }
+        .terminal-dots i:nth-child(2) { background: #f59e0b; }
+        .terminal-dots i:nth-child(3) { background: #10b981; }
+
+        .terminal-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: #a1a1aa;
+            font-weight: 500;
+        }
+
+        .quick-copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            color: #f4f4f5;
+            font-family: var(--font-sans);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            min-height: 38px;
+            transition: all 0.15s ease;
+            touch-action: manipulation;
+        }
+
+        .quick-copy-btn:hover {
+            background: #3f3f46;
+            color: #ffffff;
+        }
+
+        .quick-copy-btn.is-copied {
+            background: #14532d;
+            border-color: #22c55e;
+            color: #86efac;
+        }
+
+        .quick-terminal-code {
+            margin: 0;
+            padding: 16px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x pan-y;
+            overscroll-behavior-x: contain;
+            background: #18181b;
+        }
+
+        .quick-terminal-code code {
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: #4ade80;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .quick-actions-row {
+            margin-top: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            min-height: 44px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            touch-action: manipulation;
+        }
+
+        .action-btn.is-primary {
+            background: var(--accent);
+            color: #ffffff;
+            border: 1px solid var(--accent);
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.25);
+        }
+
+        .action-btn.is-primary:hover {
+            background: #0052a3;
+        }
+
+        .action-btn.is-secondary {
+            background: var(--surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border-strong);
+        }
+
+        .action-btn.is-secondary:hover {
+            background: var(--surface-muted);
+        }
+
+        @media (max-width: 767px) {
+            .doc-layout {
+                padding: 18px 12px 64px;
+                gap: 28px;
+            }
+
+            .doc-intro {
+                padding-bottom: 20px;
+            }
+
+            .doc-lead {
+                font-size: 0.96875rem;
+            }
+
+            .doc-meta-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .req-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .distro-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .tabs-bar {
+                display: flex;
+                width: 100%;
+            }
+
+            .tab-btn {
+                flex: 1 1 auto;
+                text-align: center;
+                min-height: 44px;
+                padding: 8px 6px;
+            }
+
+            .quick-distro-chips {
+                display: flex;
+                width: 100%;
+            }
+
+            .quick-distro-chip {
+                flex: 1 1 auto;
+                text-align: center;
+            }
+
+            .quick-actions-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .action-btn {
+                width: 100%;
+            }
+
+            .agent-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .agent-badges {
+                justify-content: flex-start;
+            }
+
+            .code-top {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .copy-btn {
+                min-height: 38px;
+                padding: 6px 12px;
+            }
+
+            .done-pill {
+                min-height: 42px;
+                padding: 8px 14px;
+            }
+
+            .done-pill input {
+                width: 20px;
+                height: 20px;
+            }
+        }
     </style>
 </head>
 
@@ -1256,10 +1722,11 @@
                 <span class="version-badge">v0.2.0</span>
             </a>
 
-            <nav class="header-actions" aria-label="Documentation links">
+                        <nav class="header-actions" aria-label="Documentation links">
                 <ul class="header-links">
-                    <li><a href="#ai-agent">AI Agent Prompts</a></li>
-                    <li><a href="#step-1">Manual Install</a></li>
+                    <li><a href="#quick-install">Quick Install</a></li>
+                    <li><a href="#ai-agent">AI Prompts</a></li>
+                    <li><a href="#step-1">Manual Guide</a></li>
                     <li><a href="#features">Features</a></li>
                     <li><a href="#troubleshooting">Troubleshooting</a></li>
                 </ul>
@@ -1274,6 +1741,17 @@
                     </svg>
                     <span>GitHub</span>
                 </a>
+                <button type="button" class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                    <svg class="icon-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                    <svg class="icon-close" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
             </nav>
         </div>
         <div class="scroll-track" aria-hidden="true">
@@ -1281,11 +1759,34 @@
         </div>
     </header>
 
+    <!-- Mobile Slide-down Drawer -->
+    <div class="mobile-nav-drawer" id="mobile-nav-drawer" hidden>
+        <div class="mobile-nav-drawer-inner">
+            <a class="mobile-nav-link" href="#quick-install">⚡ Quick Install &amp; Downloads</a>
+            <a class="mobile-nav-link" href="#overview">📋 Overview &amp; Requirements</a>
+            <a class="mobile-nav-link" href="#ai-agent">🤖 AI Agent Prompts</a>
+            <a class="mobile-nav-link" href="#step-1">1. Prerequisites</a>
+            <a class="mobile-nav-link" href="#step-2">2. Install Services</a>
+            <a class="mobile-nav-link" href="#step-3">3. Firewall Configuration</a>
+            <a class="mobile-nav-link" href="#step-4">4. Verification &amp; GUI</a>
+            <a class="mobile-nav-link" href="#step-5">5. Pair Phone with QR</a>
+            <a class="mobile-nav-link" href="#features">✨ Features &amp; Capabilities</a>
+            <a class="mobile-nav-link" href="#troubleshooting">🛠️ Troubleshooting</a>
+            <a class="mobile-nav-link" href="#uninstall">🗑️ Start Fresh / Uninstall</a>
+            <div class="mobile-nav-footer">
+                <a class="github-btn" style="width: 100%; justify-content: center; height: 44px;" href="https://github.com/Lalitmukesh69/smartconnect-linux-but-better" target="_blank" rel="noopener noreferrer">
+                    <span>View Repository on GitHub</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Mobile Horizontal Step Bar -->
     <div class="mobile-toc" aria-label="Installation steps">
         <div class="mobile-toc-inner">
             <span class="mobile-progress" data-progress-text aria-live="polite">0 of 5 complete</span>
-            <a class="toc-chip is-active" href="#overview" data-nav-chip="overview">Overview</a>
+            <a class="toc-chip is-active" href="#quick-install" data-nav-chip="quick-install">⚡ Quick Install</a>
+            <a class="toc-chip" href="#overview" data-nav-chip="overview">Overview</a>
             <a class="toc-chip" href="#ai-agent" data-nav-chip="ai-agent">AI Prompts</a>
             <a class="toc-chip" href="#step-1" data-nav-chip="step-1">1. Prerequisites</a>
             <a class="toc-chip" href="#step-2" data-nav-chip="step-2">2. Install</a>
@@ -1316,7 +1817,10 @@
                 <div class="sidebar-group">
                     <div class="sidebar-heading">Getting started</div>
                     <ul class="sidebar-list">
-                        <li class="sidebar-item is-active" data-nav-section="overview">
+                        <li class="sidebar-item is-active" data-nav-section="quick-install">
+                            <a class="sidebar-link" href="#quick-install">⚡ Quick Install &amp; Downloads</a>
+                        </li>
+                        <li class="sidebar-item" data-nav-section="overview">
                             <a class="sidebar-link" href="#overview">Overview &amp; requirements</a>
                         </li>
                         <li class="sidebar-item" data-nav-section="ai-agent">
@@ -1486,6 +1990,68 @@
                         <button type="button" class="tab-btn" data-global-distro="arch"
                             aria-pressed="false">Arch</button>
                     </div>
+                </div>
+            </section>
+
+            <!-- Quick Install Hero Card -->
+            <section class="quick-install-card" id="quick-install" data-section="quick-install" aria-labelledby="quick-install-title">
+                <div class="quick-install-header">
+                    <div class="quick-install-title-group">
+                        <span class="quick-badge">⚡ Instant 1-Line Setup</span>
+                        <h2 id="quick-install-title">Install Smart Connect for Linux</h2>
+                        <p>Paste this single command into your Linux terminal to install prerequisites, clone, build, and launch.</p>
+                    </div>
+                    <div class="quick-distro-chips" role="group" aria-label="Select your Linux distro for instant command">
+                        <button type="button" class="quick-distro-chip is-active" data-quick-distro="fedora">Fedora</button>
+                        <button type="button" class="quick-distro-chip" data-quick-distro="ubuntu">Ubuntu / Debian</button>
+                        <button type="button" class="quick-distro-chip" data-quick-distro="arch">Arch Linux</button>
+                    </div>
+                </div>
+
+                <div class="quick-terminal-box">
+                    <div class="quick-terminal-bar">
+                        <div class="terminal-dots" aria-hidden="true">
+                            <i></i><i></i><i></i>
+                        </div>
+                        <span class="terminal-label" id="quick-cmd-label">Fedora · Terminal Install Command</span>
+                        <button type="button" class="quick-copy-btn" id="quick-copy-btn" aria-label="Copy install command">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <span>Copy Command</span>
+                        </button>
+                    </div>
+                    <pre class="quick-terminal-code"><code id="quick-cmd-code">sudo dnf install -y git gcc pkgconf-pkg-config dbus-devel wayland-devel avahi avahi-tools bluez wl-clipboard NetworkManager fuse3 gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-good gstreamer1-plugins-bad-free libnice-gstreamer1 gtk4-devel libadwaita-devel &amp;&amp; git clone https://github.com/Lalitmukesh69/smartconnect-linux-but-better.git &amp;&amp; cd smartconnect-linux-but-better &amp;&amp; ./packaging/install.sh --enable</code></pre>
+                </div>
+
+                <div class="quick-actions-row">
+                    <a class="action-btn is-primary" href="https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases/latest" target="_blank" rel="noopener noreferrer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>GitHub Releases (v0.2.0)</span>
+                    </a>
+                    <a class="action-btn is-secondary" href="#ai-agent">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="4 17 10 11 4 5"></polyline>
+                            <line x1="12" y1="19" x2="20" y2="19"></line>
+                        </svg>
+                        <span>AI Agent Prompts</span>
+                    </a>
+                    <a class="action-btn is-secondary" href="#step-1">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                        <span>Step-by-Step Manual Guide</span>
+                    </a>
                 </div>
             </section>
 
@@ -2415,20 +2981,55 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                 }
             }
 
-            /* Smooth programmatic anchor navigation (reliable in all browsers and iframes) */
+                        /* Quick Install Commands Map */
+            var QUICK_COMMANDS = {
+                fedora: {
+                    label: 'Fedora · Terminal Install Command',
+                    code: 'sudo dnf install -y git gcc pkgconf-pkg-config dbus-devel wayland-devel avahi avahi-tools bluez wl-clipboard NetworkManager fuse3 gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-good gstreamer1-plugins-bad-free libnice-gstreamer1 gtk4-devel libadwaita-devel && git clone https://github.com/Lalitmukesh69/smartconnect-linux-but-better.git && cd smartconnect-linux-but-better && ./packaging/install.sh --enable'
+                },
+                ubuntu: {
+                    label: 'Ubuntu / Debian · Terminal Install Command',
+                    code: 'sudo apt update && sudo apt install -y git build-essential pkg-config libdbus-1-dev libwayland-dev avahi-daemon avahi-utils bluez wl-clipboard network-manager fuse3 libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libnice libgtk-4-dev libadwaita-1-dev && git clone https://github.com/Lalitmukesh69/smartconnect-linux-but-better.git && cd smartconnect-linux-but-better && ./packaging/install.sh --enable'
+                },
+                arch: {
+                    label: 'Arch Linux · Terminal Install Command',
+                    code: 'sudo pacman -Syu --needed base-devel git dbus wayland avahi bluez wl-clipboard networkmanager fuse3 gstreamer gst-plugins-base gst-plugins-bad gst-plugins-good libnice gtk4 libadwaita && git clone https://github.com/Lalitmukesh69/smartconnect-linux-but-better.git && cd smartconnect-linux-but-better && ./packaging/install.sh --enable'
+                }
+            };
+
+            /* Mobile Drawer Toggle */
+            var menuToggle = document.getElementById('mobile-menu-toggle');
+            var mobileDrawer = document.getElementById('mobile-nav-drawer');
+
+            function toggleMobileMenu(open) {
+                if (!menuToggle || !mobileDrawer) return;
+                var isOpen = open !== undefined ? open : mobileDrawer.hidden;
+                mobileDrawer.hidden = !isOpen;
+                menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                var iconOpen = menuToggle.querySelector('.icon-open');
+                var iconClose = menuToggle.querySelector('.icon-close');
+                if (iconOpen) iconOpen.style.display = isOpen ? 'none' : 'block';
+                if (iconClose) iconClose.style.display = isOpen ? 'block' : 'none';
+                document.body.style.overflowY = isOpen ? 'hidden' : '';
+            }
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function () {
+                    toggleMobileMenu();
+                });
+            }
+
+            if (mobileDrawer) {
+                mobileDrawer.addEventListener('click', function (e) {
+                    if (e.target === mobileDrawer || e.target.closest('.mobile-nav-link')) {
+                        toggleMobileMenu(false);
+                    }
+                });
+            }
+
+            /* Smooth native navigation without locking phone touches */
             var sections = Array.prototype.slice.call(document.querySelectorAll('[data-section]'));
             var sidebarEl = document.getElementById('doc-sidebar');
-            var scrollLockUntil = 0;
-
-            function getScrollOffset() {
-                var header = document.querySelector('.doc-header');
-                var mobileToc = document.querySelector('.mobile-toc');
-                var offset = (header ? header.offsetHeight : 56) + 24;
-                if (mobileToc && window.getComputedStyle(mobileToc).display !== 'none') {
-                    offset += mobileToc.offsetHeight;
-                }
-                return offset;
-            }
 
             function setActiveNav(sectionId) {
                 document.querySelectorAll('[data-nav-section]').forEach(function (item) {
@@ -2439,52 +3040,32 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                         if (active) link.setAttribute('aria-current', 'location');
                         else link.removeAttribute('aria-current');
                     }
-                    if (active && sidebarEl) {
-                        var itemRect = item.getBoundingClientRect();
-                        var sbRect = sidebarEl.getBoundingClientRect();
-                        if (itemRect.top < sbRect.top + 16 || itemRect.bottom > sbRect.bottom - 16) {
-                            item.scrollIntoView({ block: 'nearest', behavior: 'auto' });
-                        }
-                    }
                 });
 
                 document.querySelectorAll('[data-nav-chip]').forEach(function (chip) {
                     var active = chip.dataset.navChip === sectionId;
                     chip.classList.toggle('is-active', active);
                     if (active) {
-                        chip.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'auto' });
+                        chip.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
                     }
                 });
             }
 
             document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
-                anchor.addEventListener('click', function (e) {
+                anchor.addEventListener('click', function () {
                     var href = anchor.getAttribute('href');
                     if (!href || href === '#') return;
                     var targetId = href.slice(1);
                     var target = document.getElementById(targetId);
                     if (!target) return;
 
-                    e.preventDefault();
-
-                    var top = target.getBoundingClientRect().top + window.pageYOffset - getScrollOffset();
-                    scrollLockUntil = Date.now() + 700;
+                    // Close mobile drawer if open
+                    if (mobileDrawer && !mobileDrawer.hidden) {
+                        toggleMobileMenu(false);
+                    }
 
                     if (target.dataset.section) {
                         setActiveNav(target.dataset.section);
-                    }
-
-                    window.scrollTo({
-                        top: Math.max(0, top),
-                        behavior: prefersReduced ? 'auto' : 'smooth'
-                    });
-
-                    try {
-                        if (window.history && window.history.replaceState) {
-                            window.history.replaceState(null, '', '#' + targetId);
-                        }
-                    } catch (err) {
-                        // Ignore in sandboxed iframes
                     }
                 });
             });
@@ -2576,8 +3157,11 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
 
             /* Global distro selector synced with AI Agent prompt, Step 1, and Step 3 */
             var globalBtns = Array.prototype.slice.call(document.querySelectorAll('[data-global-distro]'));
+            var quickDistroBtns = Array.prototype.slice.call(document.querySelectorAll('[data-quick-distro]'));
             var agentInstallLabel = document.getElementById('agent-install-label');
             var agentInstallCode = document.getElementById('agent-install-code');
+            var quickCmdLabel = document.getElementById('quick-cmd-label');
+            var quickCmdCode = document.getElementById('quick-cmd-code');
 
             function setDistro(distro, updatePrereq) {
                 if (['fedora', 'ubuntu', 'arch'].indexOf(distro) === -1) return;
@@ -2585,6 +3169,15 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                 globalBtns.forEach(function (btn) {
                     btn.setAttribute('aria-pressed', btn.dataset.globalDistro === distro ? 'true' : 'false');
                 });
+
+                quickDistroBtns.forEach(function (btn) {
+                    btn.classList.toggle('is-active', btn.dataset.quickDistro === distro);
+                });
+
+                if (QUICK_COMMANDS[distro] && quickCmdLabel && quickCmdCode) {
+                    quickCmdLabel.textContent = QUICK_COMMANDS[distro].label;
+                    quickCmdCode.textContent = QUICK_COMMANDS[distro].code;
+                }
 
                 if (updatePrereq !== false) {
                     var prereqTab = document.querySelector('[data-distro-tab="' + distro + '"]');
@@ -2608,6 +3201,29 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                     setDistro(btn.dataset.globalDistro, true);
                 });
             });
+
+            quickDistroBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    setDistro(btn.dataset.quickDistro, true);
+                });
+            });
+
+            var quickCopyBtn = document.getElementById('quick-copy-btn');
+            if (quickCopyBtn) {
+                quickCopyBtn.addEventListener('click', function () {
+                    var code = document.getElementById('quick-cmd-code');
+                    if (!code) return;
+                    copyText(code.textContent.trim()).then(function () {
+                        quickCopyBtn.classList.add('is-copied');
+                        var span = quickCopyBtn.querySelector('span');
+                        if (span) span.textContent = 'Copied!';
+                        setTimeout(function () {
+                            quickCopyBtn.classList.remove('is-copied');
+                            if (span) span.textContent = 'Copy Command';
+                        }, 2000);
+                    });
+                });
+            }
 
             var storedDistro = readStorage(DISTRO_KEY);
             if (storedDistro) {
