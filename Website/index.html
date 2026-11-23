@@ -1,0 +1,2762 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Install Smart Connect for Linux (v0.2.0) — Documentation</title>
+    <meta name="description"
+        content="Step-by-step installation documentation and ready-to-paste AI agent prompts for Smart Connect for Linux. Go from a fresh Linux machine to a paired Motorola phone in about 10 minutes.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+
+            /* Off-white documentation palette */
+            --bg: #f8f8f6;
+            --surface: #ffffff;
+            --surface-muted: #f2f2ef;
+            --header-bg: rgba(248, 248, 246, 0.88);
+            --border: #e5e5e0;
+            --border-strong: #d4d4cd;
+
+            --text-primary: #18181b;
+            --text-secondary: #52525b;
+            --text-tertiary: #6e6e77;
+
+            --accent: #0066cc;
+            --accent-bar: #0a84ff;
+            --accent-soft: #eef5fd;
+            --accent-border: #c5defa;
+
+            --code-bg: #f3f3f0;
+            --code-header: #ebebea;
+            --ok-bg: #ecfdf3;
+            --ok-text: #166534;
+            --ok-border: #bbf7d0;
+            --warn-bg: #fefce8;
+            --warn-border: #fde047;
+
+            --nav-height: 56px;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 84px;
+            font-family: var(--font-sans);
+            font-size: 16px;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            font-optical-sizing: auto;
+        }
+
+        body {
+            margin: 0;
+            font-size: 0.96875rem;
+            line-height: 1.65;
+            color: var(--text-primary);
+            background-color: var(--bg);
+        }
+
+        /* Skip link */
+        .skip-link {
+            position: fixed;
+            top: -100px;
+            left: 16px;
+            z-index: 200;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            background: var(--text-primary);
+            color: #ffffff;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .skip-link:focus {
+            top: 12px;
+            outline: 2px solid var(--accent-bar);
+            outline-offset: 2px;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--accent-bar);
+            outline-offset: 2px;
+        }
+
+        /* Sticky Top Documentation Header */
+        .doc-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: var(--nav-height);
+            background: var(--header-bg);
+            backdrop-filter: blur(16px) saturate(160%);
+            -webkit-backdrop-filter: blur(16px) saturate(160%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .doc-header-inner {
+            max-width: 1200px;
+            height: 100%;
+            margin-inline: auto;
+            padding-inline: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        @media (min-width: 768px) {
+            .doc-header-inner {
+                padding-inline: 32px;
+            }
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+        }
+
+        .brand-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .version-badge {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            color: var(--text-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-links {
+            display: none;
+            align-items: center;
+            gap: 20px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        @media (min-width: 768px) {
+            .header-links {
+                display: flex;
+            }
+        }
+
+        .header-links a {
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: color 0.15s ease;
+        }
+
+        .header-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .github-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            color: var(--text-primary);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .github-btn:hover {
+            background: var(--surface-muted);
+        }
+
+        /* Slim scroll progress line */
+        .scroll-track {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -1px;
+            height: 2px;
+            background: transparent;
+            pointer-events: none;
+        }
+
+        .scroll-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-bar);
+            transition: width 0.08s linear;
+        }
+
+        /* Mobile Step Strip */
+        .mobile-toc {
+            position: sticky;
+            top: var(--nav-height);
+            z-index: 80;
+            background: var(--header-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 0;
+        }
+
+        .mobile-toc-inner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding-inline: 20px;
+        }
+
+        .mobile-toc-inner::-webkit-scrollbar {
+            display: none;
+        }
+
+        .mobile-progress {
+            flex-shrink: 0;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            color: var(--text-primary);
+        }
+
+        .toc-chip {
+            flex-shrink: 0;
+            text-decoration: none;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            border: 1px solid transparent;
+        }
+
+        .toc-chip.is-active {
+            background: var(--surface);
+            border-color: var(--border-strong);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        @media (min-width: 960px) {
+            .mobile-toc {
+                display: none;
+            }
+        }
+
+        /* Documentation 2-Column Layout */
+        .doc-layout {
+            max-width: 1200px;
+            margin-inline: auto;
+            padding: 32px 20px 80px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 48px;
+        }
+
+        @media (min-width: 768px) {
+            .doc-layout {
+                padding: 40px 32px 96px;
+            }
+        }
+
+        @media (min-width: 960px) {
+            .doc-layout {
+                grid-template-columns: 260px minmax(0, 1fr);
+                gap: 56px;
+                align-items: start;
+            }
+        }
+
+        /* Sticky & Independently Scrollable Left Sidebar */
+        .doc-sidebar {
+            display: none;
+        }
+
+        @media (min-width: 960px) {
+            .doc-sidebar {
+                display: block;
+                position: sticky;
+                top: 76px;
+                max-height: calc(100vh - 96px);
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                padding-right: 10px;
+                padding-bottom: 24px;
+                scrollbar-width: thin;
+                scrollbar-color: var(--border-strong) transparent;
+            }
+
+            .doc-sidebar::-webkit-scrollbar {
+                width: 5px;
+            }
+
+            .doc-sidebar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .doc-sidebar::-webkit-scrollbar-thumb {
+                background: var(--border-strong);
+                border-radius: 999px;
+            }
+        }
+
+        .sidebar-progress {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .sidebar-progress-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .progress-track {
+            height: 5px;
+            border-radius: 999px;
+            background: var(--surface-muted);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-bar);
+            border-radius: 999px;
+            transition: width 0.2s ease;
+        }
+
+        .sidebar-group {
+            margin-bottom: 22px;
+        }
+
+        .sidebar-heading {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-tertiary);
+            margin: 0 0 8px 10px;
+        }
+
+        .sidebar-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            border-left: 1px solid var(--border);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            margin-left: -1px;
+            border-left: 2px solid transparent;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .sidebar-item:hover {
+            background: var(--surface-muted);
+        }
+
+        .sidebar-item.is-active {
+            border-left-color: var(--accent-bar);
+            background: var(--accent-soft);
+        }
+
+        .sidebar-link {
+            flex: 1;
+            display: block;
+            padding: 7px 8px 7px 14px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            transition: color 0.15s ease;
+            cursor: pointer;
+        }
+
+        .sidebar-item:hover .sidebar-link {
+            color: var(--text-primary);
+        }
+
+        .sidebar-item.is-active .sidebar-link {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .sidebar-check-btn {
+            appearance: none;
+            background: transparent;
+            border: 0;
+            padding: 6px 8px 6px 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            border-radius: 6px;
+        }
+
+        .sidebar-check {
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            border: 1.5px solid var(--border-strong);
+            background: var(--surface);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: transparent;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .sidebar-check-btn:hover .sidebar-check {
+            border-color: var(--accent-bar);
+        }
+
+        .sidebar-item.is-done .sidebar-check {
+            background: var(--accent-bar);
+            border-color: var(--accent-bar);
+            color: #ffffff;
+        }
+
+        /* Main Documentation Article */
+        .doc-content {
+            min-width: 0;
+            max-width: 780px;
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3 {
+            margin: 0;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+            text-wrap: balance;
+        }
+
+        h1 {
+            font-size: clamp(1.875rem, 3vw, 2.375rem);
+            font-weight: 700;
+            line-height: 1.15;
+        }
+
+        h2 {
+            font-size: clamp(1.375rem, 2vw, 1.625rem);
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        h3 {
+            font-size: 1.0625rem;
+            font-weight: 600;
+            line-height: 1.35;
+            letter-spacing: -0.01em;
+        }
+
+        p {
+            margin: 0;
+            color: var(--text-secondary);
+            text-wrap: pretty;
+        }
+
+        p strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        a.doc-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a.doc-link:hover {
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            font-size: 0.86em;
+        }
+
+        :not(pre)>code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            background: var(--surface-muted);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        kbd {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1px 7px;
+            border-radius: 5px;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 600;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            box-shadow: 0 1px 0 var(--border-strong);
+            color: var(--text-primary);
+        }
+
+        /* Doc Page Title Block */
+        .doc-intro {
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--border);
+            scroll-margin-top: 84px;
+        }
+
+        .doc-eyebrow {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--accent);
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
+        .doc-lead {
+            margin-top: 12px;
+            font-size: 1.0625rem;
+            line-height: 1.55;
+            color: var(--text-secondary);
+            max-width: 68ch;
+        }
+
+        .doc-meta-row {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        .doc-meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .doc-meta-item svg {
+            color: var(--text-tertiary);
+        }
+
+        /* Prerequisites / Requirements strip */
+        .req-grid {
+            margin-top: 24px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        @media (min-width: 640px) {
+            .req-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .req-box {
+            padding: 16px;
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            border: 1px solid var(--border);
+        }
+
+        .req-box h3 {
+            font-size: 0.9375rem;
+            margin-bottom: 4px;
+        }
+
+        .req-box p {
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* Callout boxes (Docs style) */
+        .callout {
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            background: var(--accent-soft);
+            border: 1px solid var(--accent-border);
+            border-left: 3px solid var(--accent-bar);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 0.9rem;
+        }
+
+        .callout.is-warn {
+            background: var(--warn-bg);
+            border-color: var(--warn-border);
+            border-left-color: #ca8a04;
+        }
+
+        .callout svg {
+            flex-shrink: 0;
+            margin-top: 2px;
+            color: var(--accent);
+        }
+
+        .callout.is-warn svg {
+            color: #a16207;
+        }
+
+        .callout p {
+            color: var(--text-primary);
+        }
+
+        /* Global Distro Bar */
+        .distro-bar {
+            margin-top: 24px;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .distro-bar-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .distro-bar-hint {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+
+        /* Tabs / Segmented Controls */
+        .tabs-bar {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 3px;
+            border-radius: var(--radius-sm);
+            background: var(--surface-muted);
+            border: 1px solid var(--border);
+            max-width: 100%;
+        }
+
+        .tab-btn {
+            appearance: none;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn[aria-selected="true"],
+        .tab-btn[aria-pressed="true"] {
+            background: var(--surface);
+            color: var(--text-primary);
+            border-color: var(--border-strong);
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Sections */
+        .doc-section {
+            padding-top: 44px;
+            margin-top: 44px;
+            border-top: 1px solid var(--border);
+            scroll-margin-top: 112px;
+        }
+
+        .doc-section.is-first {
+            margin-top: 36px;
+            padding-top: 0;
+            border-top: 0;
+        }
+
+        @media (min-width: 960px) {
+            .doc-section {
+                scroll-margin-top: 84px;
+            }
+        }
+
+        .step-heading-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .step-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            color: var(--text-primary);
+            font-size: 0.8125rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* AI Agent Prompt Card */
+        .agent-box {
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .agent-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .agent-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .agent-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: var(--radius-sm);
+            background: var(--accent-soft);
+            border: 1px solid var(--accent-border);
+            color: var(--accent);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .agent-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .agent-pill {
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 3px 9px;
+            border-radius: 999px;
+            background: var(--surface-muted);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .prompt-block {
+            border-radius: var(--radius-md);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .prompt-block pre {
+            margin: 0;
+            padding: 14px 16px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .prompt-block pre code {
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .agent-footnote {
+            font-size: 0.8125rem;
+            color: var(--text-tertiary);
+        }
+
+        /* Mark as done checkbox */
+        .done-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .done-pill:hover {
+            color: var(--text-primary);
+            background: var(--surface-muted);
+        }
+
+        .done-pill input {
+            width: 15px;
+            height: 15px;
+            margin: 0;
+            accent-color: var(--accent-bar);
+            cursor: pointer;
+        }
+
+        .done-pill.is-done {
+            border-color: var(--accent-border);
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .stack {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sub-block {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .tab-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tab-panel[hidden] {
+            display: none;
+        }
+
+        /* Code Blocks */
+        .code-block {
+            border-radius: var(--radius-md);
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .code-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 14px;
+            background: var(--code-header);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 5px;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .copy-btn:hover {
+            background: var(--bg);
+        }
+
+        .copy-btn.is-copied {
+            border-color: var(--ok-border);
+            background: var(--ok-bg);
+            color: var(--ok-text);
+        }
+
+        .code-block pre {
+            margin: 0;
+            padding: 14px 16px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .code-block pre code {
+            display: block;
+            white-space: pre;
+            font-size: 0.84375rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        /* Collapsible Disclosure */
+        details.doc-details {
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        details.doc-details summary {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        details.doc-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details.doc-details summary:hover {
+            background: var(--surface-muted);
+        }
+
+        .chevron {
+            color: var(--text-tertiary);
+            transition: transform 0.18s ease;
+            flex-shrink: 0;
+        }
+
+        details.doc-details[open] .chevron {
+            transform: rotate(180deg);
+        }
+
+        .details-body {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* Status Output Sample */
+        .status-box {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            overflow-x: auto;
+        }
+
+        .status-ok {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 1px 8px;
+            border-radius: 999px;
+            background: var(--ok-bg);
+            border: 1px solid var(--ok-border);
+            color: var(--ok-text);
+            font-weight: 600;
+        }
+
+        /* Pairing Steps */
+        .pairing-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        @media (min-width: 720px) {
+            .pairing-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .pairing-step {
+            padding: 18px;
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pairing-figure {
+            height: 112px;
+            border-radius: var(--radius-sm);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px;
+        }
+
+        .pairing-step h3 {
+            font-size: 0.9375rem;
+        }
+
+        .pairing-step p {
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* Feature List */
+        .feature-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        @media (min-width: 640px) {
+            .feature-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .feature-item {
+            padding: 18px;
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .feature-item-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .feature-item h3 {
+            font-size: 0.9375rem;
+        }
+
+        .feature-item p {
+            font-size: 0.875rem;
+            line-height: 1.55;
+        }
+
+        /* Troubleshooting Accordion */
+        .accordion {
+            display: flex;
+            flex-direction: column;
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .accordion-item+.accordion-item {
+            border-top: 1px solid var(--border);
+        }
+
+        .accordion-trigger {
+            width: 100%;
+            appearance: none;
+            background: transparent;
+            border: 0;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            text-align: left;
+            font-family: var(--font-sans);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .accordion-trigger:hover {
+            background: var(--surface-muted);
+        }
+
+        .accordion-trigger[aria-expanded="true"] .chevron {
+            transform: rotate(180deg);
+        }
+
+        .accordion-panel {
+            padding: 0 18px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .accordion-panel[hidden] {
+            display: none;
+        }
+
+        /* Footer */
+        .doc-footer {
+            margin-top: 64px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px 24px;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        .footer-left {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            *,
+            *::before,
+            *::after {
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a class="skip-link" href="#main-content">Skip to guide</a>
+
+    <!-- Top Documentation Nav -->
+    <header class="doc-header">
+        <div class="doc-header-inner">
+            <a class="brand" href="#overview">
+                <span class="brand-icon" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="6" y="2" width="12" height="20" rx="3"></rect>
+                        <path d="M10 18h4"></path>
+                    </svg>
+                </span>
+                <span>Smart Connect for Linux</span>
+                <span class="version-badge">v0.2.0</span>
+            </a>
+
+            <nav class="header-actions" aria-label="Documentation links">
+                <ul class="header-links">
+                    <li><a href="#ai-agent">AI Agent Prompts</a></li>
+                    <li><a href="#step-1">Manual Install</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#troubleshooting">Troubleshooting</a></li>
+                </ul>
+                <a class="github-btn" href="https://github.com/Lalitmukesh69/smartconnect-linux-but-better"
+                    target="_blank" rel="noopener noreferrer">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path
+                            d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65S8.93 17.38 9 18v4">
+                        </path>
+                        <path d="M9 18c-4.51 2-5-2-7-2"></path>
+                    </svg>
+                    <span>GitHub</span>
+                </a>
+            </nav>
+        </div>
+        <div class="scroll-track" aria-hidden="true">
+            <div class="scroll-bar" id="scroll-progress"></div>
+        </div>
+    </header>
+
+    <!-- Mobile Horizontal Step Bar -->
+    <div class="mobile-toc" aria-label="Installation steps">
+        <div class="mobile-toc-inner">
+            <span class="mobile-progress" data-progress-text aria-live="polite">0 of 5 complete</span>
+            <a class="toc-chip is-active" href="#overview" data-nav-chip="overview">Overview</a>
+            <a class="toc-chip" href="#ai-agent" data-nav-chip="ai-agent">AI Prompts</a>
+            <a class="toc-chip" href="#step-1" data-nav-chip="step-1">1. Prerequisites</a>
+            <a class="toc-chip" href="#step-2" data-nav-chip="step-2">2. Install</a>
+            <a class="toc-chip" href="#step-3" data-nav-chip="step-3">3. Firewall</a>
+            <a class="toc-chip" href="#step-4" data-nav-chip="step-4">4. Verify</a>
+            <a class="toc-chip" href="#step-5" data-nav-chip="step-5">5. Pair</a>
+            <a class="toc-chip" href="#features" data-nav-chip="features">Features</a>
+            <a class="toc-chip" href="#troubleshooting" data-nav-chip="troubleshooting">Troubleshooting</a>
+            <a class="toc-chip" href="#uninstall" data-nav-chip="uninstall">Uninstall</a>
+        </div>
+    </div>
+
+    <!-- Documentation 2-Column Workspace -->
+    <div class="doc-layout">
+        <!-- Sticky & Scrollable Left Sidebar -->
+        <aside class="doc-sidebar" id="doc-sidebar" aria-label="Table of contents">
+            <div class="sidebar-progress">
+                <div class="sidebar-progress-top">
+                    <span>Checklist</span>
+                    <span data-progress-text aria-live="polite">0 of 5 complete</span>
+                </div>
+                <div class="progress-track" aria-hidden="true">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+
+            <nav aria-label="On this page">
+                <div class="sidebar-group">
+                    <div class="sidebar-heading">Getting started</div>
+                    <ul class="sidebar-list">
+                        <li class="sidebar-item is-active" data-nav-section="overview">
+                            <a class="sidebar-link" href="#overview">Overview &amp; requirements</a>
+                        </li>
+                        <li class="sidebar-item" data-nav-section="ai-agent">
+                            <a class="sidebar-link" href="#ai-agent">Install with an AI agent</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-group">
+                    <div class="sidebar-heading">Manual installation</div>
+                    <ul class="sidebar-list">
+                        <li class="sidebar-item" data-step-item="1" data-nav-section="step-1">
+                            <a class="sidebar-link" href="#step-1">1. Install prerequisites</a>
+                            <button type="button" class="sidebar-check-btn" data-toggle-step="1"
+                                aria-label="Mark Step 1 as done" aria-pressed="false">
+                                <span class="sidebar-check" aria-hidden="true">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 6 9 17l-5-5"></path>
+                                    </svg>
+                                </span>
+                            </button>
+                        </li>
+                        <li class="sidebar-item" data-step-item="2" data-nav-section="step-2">
+                            <a class="sidebar-link" href="#step-2">2. Install from GitHub</a>
+                            <button type="button" class="sidebar-check-btn" data-toggle-step="2"
+                                aria-label="Mark Step 2 as done" aria-pressed="false">
+                                <span class="sidebar-check" aria-hidden="true">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 6 9 17l-5-5"></path>
+                                    </svg>
+                                </span>
+                            </button>
+                        </li>
+                        <li class="sidebar-item" data-step-item="3" data-nav-section="step-3">
+                            <a class="sidebar-link" href="#step-3">3. Open the firewall</a>
+                            <button type="button" class="sidebar-check-btn" data-toggle-step="3"
+                                aria-label="Mark Step 3 as done" aria-pressed="false">
+                                <span class="sidebar-check" aria-hidden="true">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 6 9 17l-5-5"></path>
+                                    </svg>
+                                </span>
+                            </button>
+                        </li>
+                        <li class="sidebar-item" data-step-item="4" data-nav-section="step-4">
+                            <a class="sidebar-link" href="#step-4">4. Verify and launch</a>
+                            <button type="button" class="sidebar-check-btn" data-toggle-step="4"
+                                aria-label="Mark Step 4 as done" aria-pressed="false">
+                                <span class="sidebar-check" aria-hidden="true">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 6 9 17l-5-5"></path>
+                                    </svg>
+                                </span>
+                            </button>
+                        </li>
+                        <li class="sidebar-item" data-step-item="5" data-nav-section="step-5">
+                            <a class="sidebar-link" href="#step-5">5. Pair your phone</a>
+                            <button type="button" class="sidebar-check-btn" data-toggle-step="5"
+                                aria-label="Mark Step 5 as done" aria-pressed="false">
+                                <span class="sidebar-check" aria-hidden="true">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 6 9 17l-5-5"></path>
+                                    </svg>
+                                </span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-group">
+                    <div class="sidebar-heading">Reference</div>
+                    <ul class="sidebar-list">
+                        <li class="sidebar-item" data-nav-section="features">
+                            <a class="sidebar-link" href="#features">What you get</a>
+                        </li>
+                        <li class="sidebar-item" data-nav-section="troubleshooting">
+                            <a class="sidebar-link" href="#troubleshooting">Troubleshooting</a>
+                        </li>
+                        <li class="sidebar-item" data-nav-section="uninstall">
+                            <a class="sidebar-link" href="#uninstall">Start fresh / uninstall</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Documentation Column -->
+        <main class="doc-content" id="main-content">
+            <!-- Overview / Doc Header -->
+            <section class="doc-intro" id="overview" data-section="overview" aria-labelledby="page-title">
+                <span class="doc-eyebrow">Installation Guide · v0.2.0</span>
+                <h1 id="page-title">Install Smart Connect for Linux</h1>
+                <p class="doc-lead">Connect your Motorola phone to a fresh Linux desktop for notifications, clipboard
+                    sync, app streaming, wireless display, and mouse sharing over local Wi-Fi.</p>
+
+                <div class="doc-meta-row">
+                    <span class="doc-meta-item">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 7v5l3 2"></path>
+                        </svg>
+                        <span>~10 minutes</span>
+                    </span>
+                    <span class="doc-meta-item">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                            <path d="M12 20h.01"></path>
+                        </svg>
+                        <span>Port 52020 (TLS WebSocket) + mDNS</span>
+                    </span>
+                    <span class="doc-meta-item">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <path d="m9 12 2 2 4-4"></path>
+                        </svg>
+                        <span>Stock phone app only</span>
+                    </span>
+                </div>
+
+                <div class="req-grid">
+                    <div class="req-box">
+                        <h3>Linux PC with Wi-Fi</h3>
+                        <p>Fedora, Ubuntu, Debian, or Arch Linux on the same Wi-Fi network as your phone.</p>
+                    </div>
+                    <div class="req-box">
+                        <h3>Motorola phone</h3>
+                        <p>Uses the stock Motorola Smart Connect app to scan the pairing QR code.</p>
+                    </div>
+                    <div class="req-box">
+                        <h3>About 10 minutes</h3>
+                        <p>Run it manually below or hand a single prompt to Claude Code or Antigravity.</p>
+                    </div>
+                </div>
+
+                <div class="callout" role="note">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M12 16v-4"></path>
+                        <path d="M12 8h.01"></path>
+                    </svg>
+                    <p><strong>No phone-side modifications are required.</strong> Smart Connect for Linux pairs natively
+                        with the stock Motorola Smart Connect app from your phone.</p>
+                </div>
+
+                <!-- Global Distro Selector -->
+                <div class="distro-bar">
+                    <div>
+                        <span class="distro-bar-label" id="distro-label">Your Linux distribution</span>
+                        <span class="distro-bar-hint">Syncs the AI agent prompt, Step 1 packages, and Step 3 firewall
+                            rules.</span>
+                    </div>
+                    <div class="tabs-bar" role="group" aria-labelledby="distro-label">
+                        <button type="button" class="tab-btn" data-global-distro="fedora"
+                            aria-pressed="true">Fedora</button>
+                        <button type="button" class="tab-btn" data-global-distro="ubuntu" aria-pressed="false">Ubuntu /
+                            Debian</button>
+                        <button type="button" class="tab-btn" data-global-distro="arch"
+                            aria-pressed="false">Arch</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Install with an AI Agent (Claude Code / Antigravity) -->
+            <section class="doc-section is-first" id="ai-agent" data-section="ai-agent"
+                aria-labelledby="ai-agent-title">
+                <div class="agent-box">
+                    <div class="agent-header">
+                        <div>
+                            <div class="agent-title-row">
+                                <span class="agent-icon" aria-hidden="true">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="4 17 10 11 4 5"></polyline>
+                                        <line x1="12" y1="19" x2="20" y2="19"></line>
+                                    </svg>
+                                </span>
+                                <h2 id="ai-agent-title">Let an AI agent install it for you</h2>
+                            </div>
+                            <p style="margin-top: 8px;">Copy one of the prompts below and paste it into <strong>Claude
+                                    Code</strong>, <strong>Antigravity</strong>, or any terminal coding agent. It
+                                includes the exact repository, package names, port <code>52020</code> firewall rules,
+                                and verification checks so the agent runs the full setup without guessing.</p>
+                        </div>
+                        <div class="agent-badges" aria-label="Compatible AI agents">
+                            <span class="agent-pill">Claude Code</span>
+                            <span class="agent-pill">Antigravity</span>
+                            <span class="agent-pill">Terminal agents</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="tabs-bar" role="tablist" aria-label="AI agent prompt type">
+                            <button type="button" class="tab-btn" role="tab" id="tab-prompt-install"
+                                aria-selected="true" aria-controls="panel-prompt-install">Full setup prompt</button>
+                            <button type="button" class="tab-btn" role="tab" id="tab-prompt-troubleshoot"
+                                aria-selected="false" aria-controls="panel-prompt-troubleshoot">Troubleshoot
+                                prompt</button>
+                            <button type="button" class="tab-btn" role="tab" id="tab-prompt-uninstall"
+                                aria-selected="false" aria-controls="panel-prompt-uninstall">Clean slate / uninstall
+                                prompt</button>
+                        </div>
+                    </div>
+
+                    <!-- Prompt 1: Full Setup -->
+                    <div class="tab-panel" role="tabpanel" id="panel-prompt-install"
+                        aria-labelledby="tab-prompt-install">
+                        <div class="prompt-block">
+                            <div class="code-top">
+                                <span class="code-label" id="agent-install-label">Prompt · Full install (Fedora)</span>
+                                <button type="button" class="copy-btn" data-copy="raw">Copy prompt</button>
+                            </div>
+                            <pre><code id="agent-install-code">Install and set up "Smart Connect for Linux" (v0.2.0) on this Linux machine by running the exact commands below in order. Confirm before running sudo commands if needed, and stop to report any error.
+
+1. Install prerequisites (Fedora):
+sudo dnf install -y \
+  git gcc pkgconf-pkg-config dbus-devel wayland-devel \
+  avahi avahi-tools bluez wl-clipboard NetworkManager fuse3 \
+  gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel \
+  gstreamer1-plugins-good gstreamer1-plugins-bad-free libnice-gstreamer1 \
+  gtk4-devel libadwaita-devel
+
+2. Enable mDNS discovery and Bluetooth:
+sudo systemctl enable --now avahi-daemon bluetooth
+
+3. Clone and run the automated source installer:
+git clone https://github.com/Lalitmukesh69/smartconnect-linux-but-better.git
+cd smartconnect-linux-but-better
+./packaging/install.sh --enable
+
+4. Open TCP port 52020 (TLS WebSocket) and mDNS in firewalld:
+firewall-cmd --get-active-zones
+sudo firewall-cmd --permanent --add-port=52020/tcp
+sudo firewall-cmd --permanent --add-service=mdns
+sudo firewall-cmd --reload
+
+5. Verify the systemd user service is active (running) and launch the GUI:
+systemctl --user status smartconnectd
+smartconnect-gui &amp;
+
+Once smartconnect-gui is open and smartconnectd is active (running), tell me I am ready to click "Pair new phone…" and scan the QR code from the Motorola Smart Connect app on my phone.</code></pre>
+                        </div>
+                        <p class="agent-footnote">Switch your distribution above to automatically update the package and
+                            firewall commands inside this prompt. After the agent finishes, jump straight to <a
+                                class="doc-link" href="#step-5">Step 5: Pair your phone</a>.</p>
+                    </div>
+
+                    <!-- Prompt 2: Troubleshoot -->
+                    <div class="tab-panel" role="tabpanel" id="panel-prompt-troubleshoot"
+                        aria-labelledby="tab-prompt-troubleshoot" hidden>
+                        <div class="prompt-block">
+                            <div class="code-top">
+                                <span class="code-label">Prompt · Diagnose &amp; fix Smart Connect</span>
+                                <button type="button" class="copy-btn" data-copy="raw">Copy prompt</button>
+                            </div>
+                            <pre><code>Diagnose and fix my "Smart Connect for Linux" installation using these checks and fixes:
+
+1. Verify the background service status:
+systemctl --user status smartconnectd
+- If port 52020 is already in use or the daemon is stuck, restart it with:
+systemctl --user restart smartconnectd
+(Do not run smartconnectd manually while the systemd user service is active.)
+
+2. Check mDNS and firewall rules for port 52020/tcp and mDNS:
+- On firewalld, reload rules with:
+sudo firewall-cmd --reload
+- Verify avahi-daemon is running and remind me to confirm my PC and Motorola phone are on the exact same Wi-Fi SSID.
+
+3. Check clipboard sync dependency:
+wl-copy --version
+- Confirm wl-clipboard is installed and working.
+
+4. Refresh the desktop launcher database if the app icon is missing:
+update-desktop-database ~/.local/share/applications
+
+Report what you found and what you fixed.</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Prompt 3: Clean Slate / Uninstall -->
+                    <div class="tab-panel" role="tabpanel" id="panel-prompt-uninstall"
+                        aria-labelledby="tab-prompt-uninstall" hidden>
+                        <div class="prompt-block">
+                            <div class="code-top">
+                                <span class="code-label">Prompt · Clean slate / uninstall</span>
+                                <button type="button" class="copy-btn" data-copy="raw">Copy prompt</button>
+                            </div>
+                            <pre><code>Cleanly uninstall "Smart Connect for Linux" from this machine so we have a clean slate. Run these exact commands:
+
+systemctl --user stop smartconnectd.service 2&gt;/dev/null || true
+systemctl --user disable smartconnectd.service 2&gt;/dev/null || true
+killall -9 smartconnectd smartconnect-gui 2&gt;/dev/null || true
+rm -f ~/.local/bin/smartconnect*
+rm -f ~/.local/share/applications/dev.smartconnect.Linux.desktop
+rm -f ~/.local/share/applications/dev.smartconnect.Display.desktop
+rm -f ~/.config/systemd/user/smartconnectd.service
+systemctl --user daemon-reload
+update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true
+
+Before deleting saved pairing credentials, ask me if I also want to remove them. If I say yes, run:
+rm -rf ~/.local/share/smartconnect-linux ~/.config/smartconnect-linux ~/.cache/smartconnect
+and remind me to remove this PC from the Motorola Smart Connect app on my phone under Settings &gt; Connected Computers.</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 1: Install prerequisites -->
+            <section class="doc-section" id="step-1" data-section="step-1" data-step="1" aria-labelledby="step-1-title">
+                <div class="step-heading-row">
+                    <div class="step-title-wrap">
+                        <span class="step-num" aria-hidden="true">1</span>
+                        <h2 id="step-1-title">Install prerequisites</h2>
+                    </div>
+                    <label class="done-pill">
+                        <input type="checkbox" data-step-done="1">
+                        <span>Mark as done</span>
+                    </label>
+                </div>
+
+                <div class="stack">
+                    <p>Install the GTK4 and libadwaita UI libraries, GStreamer plugins for video mirroring, Avahi for
+                        local network discovery, BlueZ, FUSE3, and Wayland clipboard utilities.</p>
+
+                    <div>
+                        <div class="tabs-bar" role="tablist" aria-label="Distribution packages">
+                            <button type="button" class="tab-btn" role="tab" id="tab-prereq-fedora" aria-selected="true"
+                                aria-controls="panel-prereq-fedora" data-distro-tab="fedora">Fedora</button>
+                            <button type="button" class="tab-btn" role="tab" id="tab-prereq-ubuntu"
+                                aria-selected="false" aria-controls="panel-prereq-ubuntu"
+                                data-distro-tab="ubuntu">Ubuntu / Debian</button>
+                            <button type="button" class="tab-btn" role="tab" id="tab-prereq-arch" aria-selected="false"
+                                aria-controls="panel-prereq-arch" data-distro-tab="arch">Arch</button>
+                        </div>
+                    </div>
+
+                    <div class="tab-panel" role="tabpanel" id="panel-prereq-fedora" aria-labelledby="tab-prereq-fedora">
+                        <p>Installs all required build tools, GTK4/libadwaita development headers, GStreamer plugins,
+                            Avahi, BlueZ, FUSE3, and <code>wl-clipboard</code> via <code>dnf</code>.</p>
+                        <div class="code-block">
+                            <div class="code-top">
+                                <span class="code-label">Terminal · Fedora</span>
+                                <button type="button" class="copy-btn" data-copy>Copy</button>
+                            </div>
+                            <pre><code>sudo dnf install -y \
+  git gcc pkgconf-pkg-config dbus-devel wayland-devel \
+  avahi avahi-tools bluez wl-clipboard NetworkManager fuse3 \
+  gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel \
+  gstreamer1-plugins-good gstreamer1-plugins-bad-free libnice-gstreamer1 \
+  gtk4-devel libadwaita-devel</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="tab-panel" role="tabpanel" id="panel-prereq-ubuntu" aria-labelledby="tab-prereq-ubuntu"
+                        hidden>
+                        <p>Refreshes apt repositories and installs the build toolchain, GTK4/libadwaita libraries,
+                            GStreamer video plugins, Avahi, BlueZ, FUSE3, and <code>wl-clipboard</code>.</p>
+                        <div class="code-block">
+                            <div class="code-top">
+                                <span class="code-label">Terminal · Ubuntu / Debian</span>
+                                <button type="button" class="copy-btn" data-copy>Copy</button>
+                            </div>
+                            <pre><code>sudo apt update && sudo apt install -y \
+  git build-essential pkg-config libdbus-1-dev libwayland-dev \
+  avahi-daemon avahi-utils bluez wl-clipboard network-manager fuse3 \
+  libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev \
+  gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
+  gstreamer1.0-gl gstreamer1.0-nice gstreamer1.0-libav \
+  libgtk-4-dev libadwaita-1-dev</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="tab-panel" role="tabpanel" id="panel-prereq-arch" aria-labelledby="tab-prereq-arch"
+                        hidden>
+                        <p>Installs the base development packages, Rust, GTK4, libadwaita, GStreamer plugins, Avahi,
+                            BlueZ, FUSE3, and <code>wl-clipboard</code> via <code>pacman</code>.</p>
+                        <div class="code-block">
+                            <div class="code-top">
+                                <span class="code-label">Terminal · Arch</span>
+                                <button type="button" class="copy-btn" data-copy>Copy</button>
+                            </div>
+                            <pre><code>sudo pacman -S --needed \
+  git base-devel pkgconf rust avahi bluez dbus wl-clipboard fuse3 \
+  gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad libnice gst-libav \
+  gtk4 libadwaita</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="sub-block">
+                        <h3>Enable Avahi and Bluetooth</h3>
+                        <p>Avahi provides mDNS discovery so your phone and PC can find each other automatically over
+                            Wi-Fi without manual IP configuration. Enable and start both services:</p>
+                        <div class="code-block">
+                            <div class="code-top">
+                                <span class="code-label">Terminal</span>
+                                <button type="button" class="copy-btn" data-copy>Copy</button>
+                            </div>
+                            <pre><code>sudo systemctl enable --now avahi-daemon bluetooth</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 2: Install from GitHub -->
+            <section class="doc-section" id="step-2" data-section="step-2" data-step="2" aria-labelledby="step-2-title">
+                <div class="step-heading-row">
+                    <div class="step-title-wrap">
+                        <span class="step-num" aria-hidden="true">2</span>
+                        <h2 id="step-2-title">Install from GitHub</h2>
+                    </div>
+                    <label class="done-pill">
+                        <input type="checkbox" data-step-done="2">
+                        <span>Mark as done</span>
+                    </label>
+                </div>
+
+                <div class="stack">
+                    <p>Building from source is recommended because the installer sets up every component automatically.
+                        A prebuilt GUI binary is also available if you want a quick download.</p>
+
+                    <div>
+                        <div class="tabs-bar" role="tablist" aria-label="Installation method">
+                            <button type="button" class="tab-btn" role="tab" id="tab-method-source" aria-selected="true"
+                                aria-controls="panel-method-source">Build from source (recommended)</button>
+                            <button type="button" class="tab-btn" role="tab" id="tab-method-fast" aria-selected="false"
+                                aria-controls="panel-method-fast">Fast track (prebuilt binary)</button>
+                        </div>
+                    </div>
+
+                    <div class="tab-panel" role="tabpanel" id="panel-method-source" aria-labelledby="tab-method-source">
+                        <p>Clones the repository and runs <code>./packaging/install.sh --enable</code>, which compiles
+                            all 8 binaries (<code>smartconnectd</code>, <code>smartconnect-gui</code>, mirror, display,
+                            webcam, files, crosscontrol, and fex), installs them to <code>~/.local/bin</code>, adds the
+                            desktop launcher with hicolor icons, and starts the systemd user service.</p>
+                        <div class="code-block">
+                            <div class="code-top">
+                                <span class="code-label">Terminal</span>
+                                <button type="button" class="copy-btn" data-copy>Copy</button>
+                            </div>
+                            <pre><code>git clone https://github.com/Lalitmukesh69/smartconnect-linux-but-better.git
+cd smartconnect-linux-but-better
+./packaging/install.sh --enable</code></pre>
+                        </div>
+
+                        <details class="doc-details">
+                            <summary>
+                                <span>What you should see</span>
+                                <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
+                                    <path d="m6 9 6 6 6-6"></path>
+                                </svg>
+                            </summary>
+                            <div class="details-body">
+                                <p>The installer checks local desktop helpers, compiles the optimized release profile,
+                                    installs binaries and launchers, and starts <code>smartconnectd</code>:</p>
+                                <div class="code-block">
+                                    <div class="code-top">
+                                        <span class="code-label">Expected output</span>
+                                    </div>
+                                    <pre><code>==> Checking the desktop side (hints only)
+[ok] wl-copy
+[ok] avahi-publish
+[ok] avahi-browse
+[ok] gst-inspect-1.0
+[ok] fusermount3
+[ok] avahi-daemon running
+==> Building the workspace (release)
+    Finished `release` profile [optimized] target(s)
+==> Installing binaries to /home/&lt;user&gt;/.local/bin
+==> Installing the systemd user unit to /home/&lt;user&gt;/.config/systemd/user
+==> Installing the GTK app launcher to /home/&lt;user&gt;/.local/share/applications
+==> Starting the systemd user service smartconnectd</code></pre>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+
+                    <div class="tab-panel" role="tabpanel" id="panel-method-fast" aria-labelledby="tab-method-fast"
+                        hidden>
+                        <div class="callout is-warn" role="note" style="margin-top: 0;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path
+                                    d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                                </path>
+                                <path d="M12 9v4"></path>
+                                <path d="M12 17h.01"></path>
+                            </svg>
+                            <p><strong>Scope note:</strong> The fast track installs only the
+                                <code>smartconnect-gui</code> binary. Building from source sets up everything — all 8
+                                binaries, the <code>smartconnectd</code> systemd user service, and the desktop
+                                application launcher.
+                            </p>
+                        </div>
+
+                        <p>Downloads the stripped <code>smartconnect-gui</code> binary from the <code>v0.2.0</code>
+                            release into <code>~/.local/bin</code> and makes it executable.</p>
+                        <div class="code-block">
+                            <div class="code-top">
+                                <span class="code-label">Terminal</span>
+                                <button type="button" class="copy-btn" data-copy>Copy</button>
+                            </div>
+                            <pre><code>curl -fsSL -o ~/.local/bin/smartconnect-gui \
+  https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases/download/v0.2.0/smartconnect-gui
+
+chmod +x ~/.local/bin/smartconnect-gui</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 3: Open the firewall -->
+            <section class="doc-section" id="step-3" data-section="step-3" data-step="3" aria-labelledby="step-3-title">
+                <div class="step-heading-row">
+                    <div class="step-title-wrap">
+                        <span class="step-num" aria-hidden="true">3</span>
+                        <h2 id="step-3-title">Open the firewall</h2>
+                    </div>
+                    <label class="done-pill">
+                        <input type="checkbox" data-step-done="3">
+                        <span>Mark as done</span>
+                    </label>
+                </div>
+
+                <div class="stack">
+                    <p>Smart Connect communicates locally over encrypted TLS WebSockets on TCP port <code>52020</code>
+                        and uses mDNS for device discovery. Allow both through your firewall so your phone can initiate
+                        the handshake.</p>
+
+                    <div>
+                        <div class="tabs-bar" role="tablist" aria-label="Firewall manager">
+                            <button type="button" class="tab-btn" role="tab" id="tab-fw-firewalld" aria-selected="true"
+                                aria-controls="panel-fw-firewalld" data-fw-tab="firewalld">firewalld (Fedora / RHEL /
+                                openSUSE)</button>
+                            <button type="button" class="tab-btn" role="tab" id="tab-fw-ufw" aria-selected="false"
+                                aria-controls="panel-fw-ufw" data-fw-tab="ufw">ufw (Ubuntu / Debian / Mint)</button>
+                        </div>
+                    </div>
+
+                    <div class="tab-panel" role="tabpanel" id="panel-fw-firewalld" aria-labelledby="tab-fw-firewalld">
+                        <p>Displays the active firewall zone attached to your Wi-Fi connection.</p>
+                        <div class="code-block">
+                            <div class="code-top">
+                                <span class="code-label">Terminal · firewalld</span>
+                                <button type="button" class="copy-btn" data-copy>Copy</button>
+                            </div>
+                            <pre><code>firewall-cmd --get-active-zones</code></pre>
+                        </div>
+
+                        <p>Permanently allows TCP port <code>52020</code> and the <code>mdns</code> service, then
+                            reloads firewalld rules.</p>
+                        <div class="code-block">
+                            <div class="code-top">
+                                <span class="code-label">Terminal · firewalld</span>
+                                <button type="button" class="copy-btn" data-copy>Copy</button>
+                            </div>
+                            <pre><code>sudo firewall-cmd --permanent --add-port=52020/tcp
+sudo firewall-cmd --permanent --add-service=mdns
+sudo firewall-cmd --reload</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="tab-panel" role="tabpanel" id="panel-fw-ufw" aria-labelledby="tab-fw-ufw" hidden>
+                        <p>Allows TCP port <code>52020</code> for Smart Connect WebSockets and UDP port
+                            <code>5353</code> for mDNS discovery, then reloads ufw.
+                        </p>
+                        <div class="code-block">
+                            <div class="code-top">
+                                <span class="code-label">Terminal · ufw</span>
+                                <button type="button" class="copy-btn" data-copy>Copy</button>
+                            </div>
+                            <pre><code>sudo ufw allow 52020/tcp comment 'Smart Connect WebSocket'
+sudo ufw allow 5353/udp comment 'mDNS discovery'
+sudo ufw reload</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 4: Verify and launch -->
+            <section class="doc-section" id="step-4" data-section="step-4" data-step="4" aria-labelledby="step-4-title">
+                <div class="step-heading-row">
+                    <div class="step-title-wrap">
+                        <span class="step-num" aria-hidden="true">4</span>
+                        <h2 id="step-4-title">Verify and launch</h2>
+                    </div>
+                    <label class="done-pill">
+                        <input type="checkbox" data-step-done="4">
+                        <span>Mark as done</span>
+                    </label>
+                </div>
+
+                <div class="stack">
+                    <p>Verify that the background daemon service is active and listening:</p>
+                    <div class="code-block">
+                        <div class="code-top">
+                            <span class="code-label">Terminal</span>
+                            <button type="button" class="copy-btn" data-copy>Copy</button>
+                        </div>
+                        <pre><code>systemctl --user status smartconnectd</code></pre>
+                    </div>
+
+                    <div class="status-box" aria-label="Example systemctl output showing active running state">
+                        <div>● smartconnectd.service</div>
+                        <div>&nbsp;&nbsp;&nbsp;Loaded: loaded
+                            (/home/&lt;user&gt;/.config/systemd/user/smartconnectd.service; enabled)</div>
+                        <div>&nbsp;&nbsp;&nbsp;Active: <span class="status-ok">active (running)</span></div>
+                    </div>
+
+                    <div class="sub-block">
+                        <h3>Open the application</h3>
+                        <p>Press the <strong>Super</strong> key to open your application launcher, search for
+                            <strong>Smart Connect</strong>, and click the squircle icon. Alternatively, start the GUI in
+                            the background from your terminal:
+                        </p>
+                        <div class="code-block">
+                            <div class="code-top">
+                                <span class="code-label">Terminal</span>
+                                <button type="button" class="copy-btn" data-copy>Copy</button>
+                            </div>
+                            <pre><code>smartconnect-gui &amp;</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 5: Pair your phone -->
+            <section class="doc-section" id="step-5" data-section="step-5" data-step="5" aria-labelledby="step-5-title">
+                <div class="step-heading-row">
+                    <div class="step-title-wrap">
+                        <span class="step-num" aria-hidden="true">5</span>
+                        <h2 id="step-5-title">Pair your phone</h2>
+                    </div>
+                    <label class="done-pill">
+                        <input type="checkbox" data-step-done="5">
+                        <span>Mark as done</span>
+                    </label>
+                </div>
+
+                <div class="stack">
+                    <p>Make sure both your Linux PC and Motorola phone are connected to the same Wi-Fi SSID, then follow
+                        these three steps:</p>
+
+                    <div class="pairing-list">
+                        <article class="pairing-step">
+                            <div class="pairing-figure" aria-hidden="true">
+                                <svg width="72" height="72" viewBox="0 0 92 92" fill="none">
+                                    <rect x="4" y="4" width="24" height="24" rx="3" stroke="#18181b" stroke-width="5">
+                                    </rect>
+                                    <rect x="11" y="11" width="10" height="10" rx="1.5" fill="#18181b"></rect>
+                                    <rect x="64" y="4" width="24" height="24" rx="3" stroke="#18181b" stroke-width="5">
+                                    </rect>
+                                    <rect x="71" y="11" width="10" height="10" rx="1.5" fill="#18181b"></rect>
+                                    <rect x="4" y="64" width="24" height="24" rx="3" stroke="#18181b" stroke-width="5">
+                                    </rect>
+                                    <rect x="11" y="71" width="10" height="10" rx="1.5" fill="#18181b"></rect>
+                                    <rect x="36" y="6" width="6" height="6" fill="#18181b"></rect>
+                                    <rect x="48" y="6" width="6" height="6" fill="#18181b"></rect>
+                                    <rect x="42" y="16" width="6" height="6" fill="#18181b"></rect>
+                                    <rect x="52" y="20" width="6" height="6" fill="#18181b"></rect>
+                                    <rect x="6" y="38" width="6" height="6" fill="#18181b"></rect>
+                                    <rect x="18" y="42" width="6" height="6" fill="#18181b"></rect>
+                                    <rect x="28" y="36" width="6" height="6" fill="#18181b"></rect>
+                                    <rect x="39" y="39" width="14" height="14" rx="3" fill="#0a84ff"></rect>
+                                    <rect x="62" y="38" width="6" height="6" fill="#18181b"></rect>
+                                    <rect x="76" y="38" width="10" height="6" fill="#18181b"></rect>
+                                    <rect x="68" y="48" width="6" height="6" fill="#18181b"></rect>
+                                    <rect x="80" y="54" width="6" height="6" fill="#18181b"></rect>
+                                    <rect x="36" y="62" width="6" height="6" fill="#18181b"></rect>
+                                    <rect x="48" y="62" width="10" height="6" fill="#18181b"></rect>
+                                    <rect x="64" y="64" width="6" height="10" fill="#18181b"></rect>
+                                    <rect x="76" y="68" width="10" height="6" fill="#18181b"></rect>
+                                    <rect x="38" y="76" width="12" height="10" fill="#18181b"></rect>
+                                    <rect x="56" y="78" width="6" height="8" fill="#18181b"></rect>
+                                    <rect x="74" y="80" width="12" height="6" fill="#18181b"></rect>
+                                </svg>
+                            </div>
+                            <h3>1. Click “Pair new phone…”</h3>
+                            <p>In the Smart Connect window on Linux, click <strong>Pair new phone…</strong> to display
+                                the QR code pairing dialog.</p>
+                        </article>
+
+                        <article class="pairing-step">
+                            <div class="pairing-figure" aria-hidden="true">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0066cc"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                                    <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                                    <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                                    <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                                    <path d="M8 12h8"></path>
+                                    <path d="M12 8v8"></path>
+                                </svg>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">+ → Scan QR Code</span>
+                            </div>
+                            <h3>2. Scan on your phone</h3>
+                            <p>Open the stock <strong>Smart Connect</strong> app on your Motorola phone, tap
+                                <strong>+</strong> (or <strong>Add device</strong>) → <strong>Scan QR Code</strong>, and
+                                point the camera at the screen.
+                            </p>
+                        </article>
+
+                        <article class="pairing-step">
+                            <div class="pairing-figure" aria-hidden="true">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#166534"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="9"></circle>
+                                    <path d="m9 12 2 2 4-4"></path>
+                                </svg>
+                                <span
+                                    style="font-size: 0.8125rem; font-weight: 600; color: var(--text-primary);">motorola
+                                    edge</span>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">Battery · Signal ·
+                                    Wi-Fi</span>
+                            </div>
+                            <h3>3. Connected</h3>
+                            <p>The dialog closes within a second and the main window shows your phone name (e.g.
+                                <em>motorola edge</em>), battery percentage with charging status, cellular signal bars,
+                                and Wi-Fi indicator.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <!-- What you get -->
+            <section class="doc-section" id="features" data-section="features" aria-labelledby="features-title">
+                <div class="stack">
+                    <div>
+                        <h2 id="features-title">What you get in v0.2.0</h2>
+                        <p style="margin-top: 6px;">Highlights available once your phone is paired:</p>
+                    </div>
+
+                    <div class="feature-list">
+                        <article class="feature-item">
+                            <div class="feature-item-head">
+                                <h3>Apple Pro Dark UI</h3>
+                            </div>
+                            <p>Native GTK4 and libadwaita dark surface hierarchy with clean typography for desktop use.
+                            </p>
+                        </article>
+
+                        <article class="feature-item">
+                            <div class="feature-item-head">
+                                <h3>Command Palette</h3>
+                                <span><kbd>Ctrl</kbd> + <kbd>K</kbd></span>
+                            </div>
+                            <p>Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to open the Spotlight-style launcher, search
+                                features, and view the developer card.</p>
+                        </article>
+
+                        <article class="feature-item">
+                            <div class="feature-item-head">
+                                <h3>App grid view</h3>
+                            </div>
+                            <p>Open the <strong>Apps</strong> tab to toggle between a 4-column responsive grid view and
+                                a list stream.</p>
+                        </article>
+
+                        <article class="feature-item">
+                            <div class="feature-item-head">
+                                <h3>Live tray telemetry</h3>
+                            </div>
+                            <p>Hover over the system tray icon in your top bar to view live phone battery level and
+                                connection details.</p>
+                        </article>
+
+                        <article class="feature-item" style="grid-column: 1 / -1;">
+                            <div class="feature-item-head">
+                                <h3>In-app software updates</h3>
+                            </div>
+                            <p>Click the <code>...</code> menu in the top right and select <strong>Check for
+                                    Updates…</strong> to check GitHub releases in real time (displaying <em>“Smart
+                                    Connect is Up to Date (v0.2.0)”</em>) and install future updates with one click
+                                without returning to the terminal.</p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Troubleshooting -->
+            <section class="doc-section" id="troubleshooting" data-section="troubleshooting"
+                aria-labelledby="troubleshooting-title">
+                <div class="stack">
+                    <div>
+                        <h2 id="troubleshooting-title">Troubleshooting</h2>
+                        <p style="margin-top: 6px;">Common setup issues and the commands to resolve them:</p>
+                    </div>
+
+                    <div class="accordion">
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-trigger" aria-expanded="false"
+                                aria-controls="trouble-1" id="trouble-btn-1">
+                                <span>Phone cannot find PC during pairing</span>
+                                <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
+                                    <path d="m6 9 6 6 6-6"></path>
+                                </svg>
+                            </button>
+                            <div class="accordion-panel" id="trouble-1" role="region" aria-labelledby="trouble-btn-1"
+                                hidden>
+                                <p>Reload firewalld rules and verify that both your PC and phone are connected to the
+                                    exact same Wi-Fi SSID.</p>
+                                <div class="code-block">
+                                    <div class="code-top">
+                                        <span class="code-label">Terminal</span>
+                                        <button type="button" class="copy-btn" data-copy>Copy</button>
+                                    </div>
+                                    <pre><code>sudo firewall-cmd --reload</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-trigger" aria-expanded="false"
+                                aria-controls="trouble-2" id="trouble-btn-2">
+                                <span>Port 52020 already in use</span>
+                                <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
+                                    <path d="m6 9 6 6 6-6"></path>
+                                </svg>
+                            </button>
+                            <div class="accordion-panel" id="trouble-2" role="region" aria-labelledby="trouble-btn-2"
+                                hidden>
+                                <p>Restart the systemd user service instead of starting <code>smartconnectd</code>
+                                    manually while the service is active.</p>
+                                <div class="code-block">
+                                    <div class="code-top">
+                                        <span class="code-label">Terminal</span>
+                                        <button type="button" class="copy-btn" data-copy>Copy</button>
+                                    </div>
+                                    <pre><code>systemctl --user restart smartconnectd</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-trigger" aria-expanded="false"
+                                aria-controls="trouble-3" id="trouble-btn-3">
+                                <span>Desktop icon not showing in app launcher</span>
+                                <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
+                                    <path d="m6 9 6 6 6-6"></path>
+                                </svg>
+                            </button>
+                            <div class="accordion-panel" id="trouble-3" role="region" aria-labelledby="trouble-btn-3"
+                                hidden>
+                                <p>Refresh your user desktop entry cache so the Smart Connect launcher icon appears in
+                                    search.</p>
+                                <div class="code-block">
+                                    <div class="code-top">
+                                        <span class="code-label">Terminal</span>
+                                        <button type="button" class="copy-btn" data-copy>Copy</button>
+                                    </div>
+                                    <pre><code>update-desktop-database ~/.local/share/applications</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-trigger" aria-expanded="false"
+                                aria-controls="trouble-4" id="trouble-btn-4">
+                                <span>Clipboard sync not reflecting</span>
+                                <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
+                                    <path d="m6 9 6 6 6-6"></path>
+                                </svg>
+                            </button>
+                            <div class="accordion-panel" id="trouble-4" role="region" aria-labelledby="trouble-btn-4"
+                                hidden>
+                                <p>Make sure <code>wl-clipboard</code> is installed on your machine by checking
+                                    <code>wl-copy</code>:
+                                </p>
+                                <div class="code-block">
+                                    <div class="code-top">
+                                        <span class="code-label">Terminal</span>
+                                        <button type="button" class="copy-btn" data-copy>Copy</button>
+                                    </div>
+                                    <pre><code>wl-copy --version</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Start fresh / uninstall -->
+            <section class="doc-section" id="uninstall" data-section="uninstall" aria-labelledby="uninstall-title">
+                <div class="stack">
+                    <div>
+                        <h2 id="uninstall-title">Start fresh or uninstall</h2>
+                        <p style="margin-top: 6px;">Clear leftover builds, running services, desktop entries, and
+                            optional pairing data before reinstalling or removing Smart Connect.</p>
+                    </div>
+
+                    <details class="doc-details">
+                        <summary>
+                            <span>Clean-slate and uninstall commands</span>
+                            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                                aria-hidden="true">
+                                <path d="m6 9 6 6 6-6"></path>
+                            </svg>
+                        </summary>
+                        <div class="details-body">
+                            <p>Stops and disables <code>smartconnectd.service</code>, kills any stray daemon or GUI
+                                process, removes binaries, desktop launchers, and the systemd user unit, then reloads
+                                systemd and the desktop database:</p>
+                            <div class="code-block">
+                                <div class="code-top">
+                                    <span class="code-label">Terminal</span>
+                                    <button type="button" class="copy-btn" data-copy>Copy</button>
+                                </div>
+                                <pre><code>systemctl --user stop smartconnectd.service 2&gt;/dev/null || true
+systemctl --user disable smartconnectd.service 2&gt;/dev/null || true
+killall -9 smartconnectd smartconnect-gui 2&gt;/dev/null || true
+rm -f ~/.local/bin/smartconnect*
+rm -f ~/.local/share/applications/dev.smartconnect.Linux.desktop
+rm -f ~/.local/share/applications/dev.smartconnect.Display.desktop
+rm -f ~/.config/systemd/user/smartconnectd.service
+systemctl --user daemon-reload
+update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</code></pre>
+                            </div>
+
+                            <p><strong>Optional — remove saved pairing credentials:</strong> Deletes local pairing keys,
+                                config, and cache so you can pair from scratch. Also remove this PC from the Motorola
+                                Smart Connect app on your phone under <strong>Settings &gt; Connected
+                                    Computers</strong>.</p>
+                            <div class="code-block">
+                                <div class="code-top">
+                                    <span class="code-label">Terminal</span>
+                                    <button type="button" class="copy-btn" data-copy>Copy</button>
+                                </div>
+                                <pre><code>rm -rf ~/.local/share/smartconnect-linux ~/.config/smartconnect-linux ~/.cache/smartconnect</code></pre>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="doc-footer">
+                <div class="footer-left">
+                    <a class="doc-link" href="https://github.com/Lalitmukesh69/smartconnect-linux-but-better"
+                        target="_blank" rel="noopener noreferrer">GitHub repository (v0.2.0)</a>
+                    <span>Open source — see repository for license details.</span>
+                </div>
+                <span>Not affiliated with Motorola.</span>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            var DISTRO_KEY = 'smartconnect_docs_distro';
+            var STEPS_KEY = 'smartconnect_docs_done';
+            var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            var AGENT_PROMPTS = {
+                fedora: {
+                    label: 'Prompt · Full install (Fedora)',
+                    text: [
+                        'Install and set up "Smart Connect for Linux" (v0.2.0) on this Linux machine by running the exact commands below in order. Confirm before running sudo commands if needed, and stop to report any error.',
+                        '',
+                        '1. Install prerequisites (Fedora):',
+                        'sudo dnf install -y \\',
+                        '  git gcc pkgconf-pkg-config dbus-devel wayland-devel \\',
+                        '  avahi avahi-tools bluez wl-clipboard NetworkManager fuse3 \\',
+                        '  gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel \\',
+                        '  gstreamer1-plugins-good gstreamer1-plugins-bad-free libnice-gstreamer1 \\',
+                        '  gtk4-devel libadwaita-devel',
+                        '',
+                        '2. Enable mDNS discovery and Bluetooth:',
+                        'sudo systemctl enable --now avahi-daemon bluetooth',
+                        '',
+                        '3. Clone and run the automated source installer:',
+                        'git clone https://github.com/Lalitmukesh69/smartconnect-linux-but-better.git',
+                        'cd smartconnect-linux-but-better',
+                        './packaging/install.sh --enable',
+                        '',
+                        '4. Open TCP port 52020 (TLS WebSocket) and mDNS in firewalld:',
+                        'firewall-cmd --get-active-zones',
+                        'sudo firewall-cmd --permanent --add-port=52020/tcp',
+                        'sudo firewall-cmd --permanent --add-service=mdns',
+                        'sudo firewall-cmd --reload',
+                        '',
+                        '5. Verify the systemd user service is active (running) and launch the GUI:',
+                        'systemctl --user status smartconnectd',
+                        'smartconnect-gui &',
+                        '',
+                        'Once smartconnect-gui is open and smartconnectd is active (running), tell me I am ready to click "Pair new phone…" and scan the QR code from the Motorola Smart Connect app on my phone.'
+                    ].join('\n')
+                },
+                ubuntu: {
+                    label: 'Prompt · Full install (Ubuntu / Debian)',
+                    text: [
+                        'Install and set up "Smart Connect for Linux" (v0.2.0) on this Linux machine by running the exact commands below in order. Confirm before running sudo commands if needed, and stop to report any error.',
+                        '',
+                        '1. Install prerequisites (Ubuntu / Debian):',
+                        'sudo apt update && sudo apt install -y \\',
+                        '  git build-essential pkg-config libdbus-1-dev libwayland-dev \\',
+                        '  avahi-daemon avahi-utils bluez wl-clipboard network-manager fuse3 \\',
+                        '  libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev \\',
+                        '  gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \\',
+                        '  gstreamer1.0-gl gstreamer1.0-nice gstreamer1.0-libav \\',
+                        '  libgtk-4-dev libadwaita-1-dev',
+                        '',
+                        '2. Enable mDNS discovery and Bluetooth:',
+                        'sudo systemctl enable --now avahi-daemon bluetooth',
+                        '',
+                        '3. Clone and run the automated source installer:',
+                        'git clone https://github.com/Lalitmukesh69/smartconnect-linux-but-better.git',
+                        'cd smartconnect-linux-but-better',
+                        './packaging/install.sh --enable',
+                        '',
+                        '4. Open TCP port 52020 (TLS WebSocket) and UDP port 5353 (mDNS) in ufw:',
+                        "sudo ufw allow 52020/tcp comment 'Smart Connect WebSocket'",
+                        "sudo ufw allow 5353/udp comment 'mDNS discovery'",
+                        'sudo ufw reload',
+                        '',
+                        '5. Verify the systemd user service is active (running) and launch the GUI:',
+                        'systemctl --user status smartconnectd',
+                        'smartconnect-gui &',
+                        '',
+                        'Once smartconnect-gui is open and smartconnectd is active (running), tell me I am ready to click "Pair new phone…" and scan the QR code from the Motorola Smart Connect app on my phone.'
+                    ].join('\n')
+                },
+                arch: {
+                    label: 'Prompt · Full install (Arch)',
+                    text: [
+                        'Install and set up "Smart Connect for Linux" (v0.2.0) on this Linux machine by running the exact commands below in order. Confirm before running sudo commands if needed, and stop to report any error.',
+                        '',
+                        '1. Install prerequisites (Arch Linux):',
+                        'sudo pacman -S --needed \\',
+                        '  git base-devel pkgconf rust avahi bluez dbus wl-clipboard fuse3 \\',
+                        '  gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad libnice gst-libav \\',
+                        '  gtk4 libadwaita',
+                        '',
+                        '2. Enable mDNS discovery and Bluetooth:',
+                        'sudo systemctl enable --now avahi-daemon bluetooth',
+                        '',
+                        '3. Clone and run the automated source installer:',
+                        'git clone https://github.com/Lalitmukesh69/smartconnect-linux-but-better.git',
+                        'cd smartconnect-linux-but-better',
+                        './packaging/install.sh --enable',
+                        '',
+                        '4. Open TCP port 52020 (TLS WebSocket) and mDNS in the active firewall (if firewalld or ufw is enabled):',
+                        '- For firewalld:',
+                        'firewall-cmd --get-active-zones',
+                        'sudo firewall-cmd --permanent --add-port=52020/tcp',
+                        'sudo firewall-cmd --permanent --add-service=mdns',
+                        'sudo firewall-cmd --reload',
+                        '- For ufw:',
+                        "sudo ufw allow 52020/tcp comment 'Smart Connect WebSocket'",
+                        "sudo ufw allow 5353/udp comment 'mDNS discovery'",
+                        'sudo ufw reload',
+                        '',
+                        '5. Verify the systemd user service is active (running) and launch the GUI:',
+                        'systemctl --user status smartconnectd',
+                        'smartconnect-gui &',
+                        '',
+                        'Once smartconnect-gui is open and smartconnectd is active (running), tell me I am ready to click "Pair new phone…" and scan the QR code from the Motorola Smart Connect app on my phone.'
+                    ].join('\n')
+                }
+            };
+
+            function readStorage(key) {
+                try {
+                    return window.localStorage.getItem(key);
+                } catch (err) {
+                    return null;
+                }
+            }
+
+            function writeStorage(key, value) {
+                try {
+                    window.localStorage.setItem(key, value);
+                } catch (err) {
+                    // Ignore storage errors in restricted environments
+                }
+            }
+
+            /* Smooth programmatic anchor navigation (reliable in all browsers and iframes) */
+            var sections = Array.prototype.slice.call(document.querySelectorAll('[data-section]'));
+            var sidebarEl = document.getElementById('doc-sidebar');
+            var scrollLockUntil = 0;
+
+            function getScrollOffset() {
+                var header = document.querySelector('.doc-header');
+                var mobileToc = document.querySelector('.mobile-toc');
+                var offset = (header ? header.offsetHeight : 56) + 24;
+                if (mobileToc && window.getComputedStyle(mobileToc).display !== 'none') {
+                    offset += mobileToc.offsetHeight;
+                }
+                return offset;
+            }
+
+            function setActiveNav(sectionId) {
+                document.querySelectorAll('[data-nav-section]').forEach(function (item) {
+                    var active = item.dataset.navSection === sectionId;
+                    item.classList.toggle('is-active', active);
+                    var link = item.querySelector('a');
+                    if (link) {
+                        if (active) link.setAttribute('aria-current', 'location');
+                        else link.removeAttribute('aria-current');
+                    }
+                    if (active && sidebarEl) {
+                        var itemRect = item.getBoundingClientRect();
+                        var sbRect = sidebarEl.getBoundingClientRect();
+                        if (itemRect.top < sbRect.top + 16 || itemRect.bottom > sbRect.bottom - 16) {
+                            item.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+                        }
+                    }
+                });
+
+                document.querySelectorAll('[data-nav-chip]').forEach(function (chip) {
+                    var active = chip.dataset.navChip === sectionId;
+                    chip.classList.toggle('is-active', active);
+                    if (active) {
+                        chip.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'auto' });
+                    }
+                });
+            }
+
+            document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
+                anchor.addEventListener('click', function (e) {
+                    var href = anchor.getAttribute('href');
+                    if (!href || href === '#') return;
+                    var targetId = href.slice(1);
+                    var target = document.getElementById(targetId);
+                    if (!target) return;
+
+                    e.preventDefault();
+
+                    var top = target.getBoundingClientRect().top + window.pageYOffset - getScrollOffset();
+                    scrollLockUntil = Date.now() + 700;
+
+                    if (target.dataset.section) {
+                        setActiveNav(target.dataset.section);
+                    }
+
+                    window.scrollTo({
+                        top: Math.max(0, top),
+                        behavior: prefersReduced ? 'auto' : 'smooth'
+                    });
+
+                    try {
+                        if (window.history && window.history.replaceState) {
+                            window.history.replaceState(null, '', '#' + targetId);
+                        }
+                    } catch (err) {
+                        // Ignore in sandboxed iframes
+                    }
+                });
+            });
+
+            /* Scroll progress bar + accurate scroll spy */
+            var scrollBar = document.getElementById('scroll-progress');
+            var ticking = false;
+
+            function onScrollFrame() {
+                ticking = false;
+                var y = window.scrollY || document.documentElement.scrollTop;
+                var max = document.documentElement.scrollHeight - window.innerHeight;
+
+                if (scrollBar) {
+                    var pct = max > 0 ? Math.min(100, Math.max(0, (y / max) * 100)) : 0;
+                    scrollBar.style.width = pct.toFixed(2) + '%';
+                }
+
+                if (Date.now() < scrollLockUntil || !sections.length) return;
+
+                // If at the bottom of the document, highlight the last section
+                if (max > 0 && y >= max - 8) {
+                    setActiveNav(sections[sections.length - 1].dataset.section);
+                    return;
+                }
+
+                var marker = getScrollOffset() + 28;
+                var current = sections[0].dataset.section;
+                for (var i = 0; i < sections.length; i++) {
+                    var rect = sections[i].getBoundingClientRect();
+                    if (rect.top <= marker) {
+                        current = sections[i].dataset.section;
+                    } else {
+                        break;
+                    }
+                }
+                setActiveNav(current);
+            }
+
+            function requestScrollUpdate() {
+                if (!ticking) {
+                    ticking = true;
+                    window.requestAnimationFrame(onScrollFrame);
+                }
+            }
+
+            window.addEventListener('scroll', requestScrollUpdate, { passive: true });
+            window.addEventListener('resize', requestScrollUpdate, { passive: true });
+            onScrollFrame();
+
+            /* Accessible tablists */
+            function selectTab(tabBtn) {
+                var list = tabBtn.closest('[role="tablist"]');
+                if (!list) return;
+                var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+                tabs.forEach(function (t) {
+                    var active = t === tabBtn;
+                    t.setAttribute('aria-selected', active ? 'true' : 'false');
+                    t.setAttribute('tabindex', active ? '0' : '-1');
+                    var panel = document.getElementById(t.getAttribute('aria-controls'));
+                    if (panel) panel.hidden = !active;
+                });
+            }
+
+            document.querySelectorAll('[role="tablist"]').forEach(function (list) {
+                var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+                tabs.forEach(function (tab, index) {
+                    tab.setAttribute('tabindex', tab.getAttribute('aria-selected') === 'true' ? '0' : '-1');
+                    tab.addEventListener('click', function () {
+                        selectTab(tab);
+                        if (tab.dataset.distroTab) {
+                            setDistro(tab.dataset.distroTab, false);
+                        }
+                    });
+                    tab.addEventListener('keydown', function (e) {
+                        var next = null;
+                        if (e.key === 'ArrowRight') next = (index + 1) % tabs.length;
+                        else if (e.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+                        else if (e.key === 'Home') next = 0;
+                        else if (e.key === 'End') next = tabs.length - 1;
+                        if (next !== null) {
+                            e.preventDefault();
+                            tabs[next].focus();
+                            tabs[next].click();
+                        }
+                    });
+                });
+            });
+
+            /* Global distro selector synced with AI Agent prompt, Step 1, and Step 3 */
+            var globalBtns = Array.prototype.slice.call(document.querySelectorAll('[data-global-distro]'));
+            var agentInstallLabel = document.getElementById('agent-install-label');
+            var agentInstallCode = document.getElementById('agent-install-code');
+
+            function setDistro(distro, updatePrereq) {
+                if (['fedora', 'ubuntu', 'arch'].indexOf(distro) === -1) return;
+
+                globalBtns.forEach(function (btn) {
+                    btn.setAttribute('aria-pressed', btn.dataset.globalDistro === distro ? 'true' : 'false');
+                });
+
+                if (updatePrereq !== false) {
+                    var prereqTab = document.querySelector('[data-distro-tab="' + distro + '"]');
+                    if (prereqTab) selectTab(prereqTab);
+                }
+
+                var fw = distro === 'ubuntu' ? 'ufw' : 'firewalld';
+                var fwTab = document.querySelector('[data-fw-tab="' + fw + '"]');
+                if (fwTab) selectTab(fwTab);
+
+                if (AGENT_PROMPTS[distro] && agentInstallLabel && agentInstallCode) {
+                    agentInstallLabel.textContent = AGENT_PROMPTS[distro].label;
+                    agentInstallCode.textContent = AGENT_PROMPTS[distro].text;
+                }
+
+                writeStorage(DISTRO_KEY, distro);
+            }
+
+            globalBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    setDistro(btn.dataset.globalDistro, true);
+                });
+            });
+
+            var storedDistro = readStorage(DISTRO_KEY);
+            if (storedDistro) {
+                setDistro(storedDistro, true);
+            }
+
+            /* Copy buttons (raw for AI prompts; command-only for terminal blocks) */
+            function copyText(text) {
+                if (navigator.clipboard && window.isSecureContext) {
+                    return navigator.clipboard.writeText(text);
+                }
+                return new Promise(function (resolve, reject) {
+                    var ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.setAttribute('readonly', '');
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try {
+                        var ok = document.execCommand('copy');
+                        document.body.removeChild(ta);
+                        if (ok) resolve();
+                        else reject(new Error('Copy failed'));
+                    } catch (err) {
+                        document.body.removeChild(ta);
+                        reject(err);
+                    }
+                });
+            }
+
+            document.querySelectorAll('[data-copy]').forEach(function (btn) {
+                var timer = null;
+                var defaultLabel = btn.textContent;
+                btn.addEventListener('click', function () {
+                    var container = btn.closest('.code-block, .prompt-block');
+                    var code = container && container.querySelector('pre code');
+                    if (!code) return;
+
+                    var isRaw = btn.getAttribute('data-copy') === 'raw';
+                    var payload = isRaw
+                        ? code.textContent.trim()
+                        : code.textContent
+                            .split('\n')
+                            .filter(function (line) {
+                                return !/^\s*#/.test(line);
+                            })
+                            .map(function (line) {
+                                return line.replace(/^\$\s+/, '');
+                            })
+                            .join('\n')
+                            .trim();
+
+                    copyText(payload).then(function () {
+                        btn.textContent = 'Copied';
+                        btn.classList.add('is-copied');
+                        clearTimeout(timer);
+                        timer = setTimeout(function () {
+                            btn.textContent = defaultLabel;
+                            btn.classList.remove('is-copied');
+                        }, 1800);
+                    }).catch(function () {
+                        btn.textContent = 'Failed';
+                        clearTimeout(timer);
+                        timer = setTimeout(function () {
+                            btn.textContent = defaultLabel;
+                        }, 1800);
+                    });
+                });
+            });
+
+            /* Step completion checklist (synced between step pills and sidebar circle buttons) */
+            var checkboxes = Array.prototype.slice.call(document.querySelectorAll('[data-step-done]'));
+            var sidebarToggleBtns = Array.prototype.slice.call(document.querySelectorAll('[data-toggle-step]'));
+            var progressLabels = Array.prototype.slice.call(document.querySelectorAll('[data-progress-text]'));
+            var progressFill = document.getElementById('progress-fill');
+
+            var doneMap = {};
+            var savedSteps = readStorage(STEPS_KEY);
+            if (savedSteps) {
+                try {
+                    var parsed = JSON.parse(savedSteps);
+                    if (parsed && typeof parsed === 'object') doneMap = parsed;
+                } catch (err) {
+                    doneMap = {};
+                }
+            }
+
+            function renderProgress() {
+                var completed = 0;
+                var total = checkboxes.length;
+
+                checkboxes.forEach(function (cb) {
+                    var id = cb.dataset.stepDone;
+                    var checked = Boolean(doneMap[id]);
+                    cb.checked = checked;
+                    var pill = cb.closest('.done-pill');
+                    if (pill) pill.classList.toggle('is-done', checked);
+
+                    var item = document.querySelector('[data-step-item="' + id + '"]');
+                    if (item) item.classList.toggle('is-done', checked);
+
+                    var btn = document.querySelector('[data-toggle-step="' + id + '"]');
+                    if (btn) btn.setAttribute('aria-pressed', checked ? 'true' : 'false');
+
+                    if (checked) completed += 1;
+                });
+
+                var text = completed + ' of ' + total + ' complete';
+                progressLabels.forEach(function (el) {
+                    el.textContent = text;
+                });
+                if (progressFill) {
+                    progressFill.style.width = ((completed / total) * 100) + '%';
+                }
+            }
+
+            function setStepDone(id, value) {
+                doneMap[id] = Boolean(value);
+                writeStorage(STEPS_KEY, JSON.stringify(doneMap));
+                renderProgress();
+            }
+
+            checkboxes.forEach(function (cb) {
+                cb.addEventListener('change', function () {
+                    setStepDone(cb.dataset.stepDone, cb.checked);
+                });
+            });
+
+            sidebarToggleBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var id = btn.dataset.toggleStep;
+                    setStepDone(id, !doneMap[id]);
+                });
+            });
+
+            renderProgress();
+
+            /* Accordion */
+            document.querySelectorAll('.accordion-trigger').forEach(function (trigger) {
+                trigger.addEventListener('click', function () {
+                    var expanded = trigger.getAttribute('aria-expanded') === 'true';
+                    var panel = document.getElementById(trigger.getAttribute('aria-controls'));
+                    trigger.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                    if (panel) panel.hidden = expanded;
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>
