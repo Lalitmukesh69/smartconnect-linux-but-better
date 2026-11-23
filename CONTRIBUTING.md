@@ -120,4 +120,4 @@ it in sync when the rules change. Machine-specific notes belong in the git-ignor
 
 ## License
 
-By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE).
+By contributing, you agree that your contributions are licensed under the [GNU General Public License v3.0](LICENSE).

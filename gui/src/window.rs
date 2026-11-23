@@ -2896,7 +2896,7 @@ impl Ui {
             .comments("Pair, mirror, stream apps, share clipboard, forward notifications, and extend your desktop onto your Motorola phone.")
             .website("https://github.com/Lalitmukesh69/smartconnect-linux-but-better")
             .issue_url("https://github.com/Lalitmukesh69/smartconnect-linux-but-better/issues")
-            .license_type(gtk::License::MitX11)
+            .license_type(gtk::License::Gpl30)
             .build();
         dialog.present(Some(&self.window));
     }

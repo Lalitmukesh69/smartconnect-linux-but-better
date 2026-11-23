@@ -11,7 +11,7 @@ pkgrel=1
 pkgdesc='Unofficial Linux peer for the Motorola Smart Connect phone app'
 # Set once the repository is public: url='https://github.com/<owner>/smartconnect-linux'
 arch=('x86_64')
-license=('MIT')
+license=('GPL-3.0-or-later')
 depends=('avahi' 'dbus' 'glib2' 'glibc' 'gst-plugins-bad' 'gst-plugins-bad-libs'
          'gst-plugins-base-libs' 'gst-plugins-good' 'gstreamer' 'gtk4' 'hicolor-icon-theme'
          'libadwaita' 'libgcc' 'libnice' 'pango')

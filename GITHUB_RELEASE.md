@@ -139,5 +139,5 @@ See `docs/installation.md` for full distribution dependency lists and firewall r
 ## 🙏 Credits & License
 
 - **UI Redesign & Maintainer:** Lalit mukesh ([@Lalitmukesh69](https://github.com/Lalitmukesh69))
-- **License:** MIT (`LICENSE`)
+- **License:** GNU GPLv3 (`LICENSE`)
 

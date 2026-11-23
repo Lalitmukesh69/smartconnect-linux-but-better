@@ -5,7 +5,7 @@
   "minNoctaliaVersion": "4.4.0",
   "author": "Rudra",
   "official": false,
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "repository": "",
   "description": "Motorola Smart Connect on Linux: phone status, connect/disconnect, pairing, notifications, mirroring, Cross Control and the phone as a display, via the smartconnectd daemon",
   "tags": [

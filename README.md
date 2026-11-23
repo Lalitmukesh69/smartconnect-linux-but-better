@@ -8,7 +8,7 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/Lalitmukesh69/smartconnect-linux-but-better?style=flat-square&color=blue)](https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases)
 [![Installation Guide](https://img.shields.io/badge/Docs-Installation%20Website-0066cc?style=flat-square&logo=safari&logoColor=white)](https://lalitmukesh69.github.io/smartconnect-linux-but-better/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL%20v3-blue.svg?style=flat-square)](LICENSE)
 [![Platform: Linux](https://img.shields.io/badge/Platform-Linux%20%7C%20Wayland-informational?style=flat-square)](docs/requirements.md)
 [![Rust](https://img.shields.io/badge/Built%20with-Rust%20%7C%20GTK4-orange.svg?style=flat-square)](Cargo.toml)
 
@@ -97,4 +97,4 @@ Smart Connect for Linux is an independent, unofficial open-source project. It is
 
 ## 📄 License
 
-Distributed under the [MIT License](LICENSE).
+Distributed under the [GNU General Public License v3.0](LICENSE).

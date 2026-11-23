@@ -2,7 +2,7 @@
 name = "smartconnect-linux"
 version = "0.2.0"
 edition = "2024"
-license = "MIT"
+license = "GPL-3.0-or-later"
 description = "smartconnectd: unofficial Linux peer for the Motorola Smart Connect phone app (pairing, sessions, notifications, clipboard, SMS, control socket for the helpers)"
 
 # The daemon is the root package. Each helper and front-end is a member crate with its own binary;
