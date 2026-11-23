@@ -7,6 +7,7 @@
 **Seamlessly connect your Motorola phone to your Linux PC — without root, extra phone apps, or developer mode.**
 
 [![GitHub Release](https://img.shields.io/github/v/release/Lalitmukesh69/smartconnect-linux-but-better?style=flat-square&color=blue)](https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases)
+[![Installation Guide](https://img.shields.io/badge/Docs-Installation%20Website-0066cc?style=flat-square&logo=safari&logoColor=white)](https://lalitmukesh69.github.io/smartconnect-linux-but-better/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 [![Platform: Linux](https://img.shields.io/badge/Platform-Linux%20%7C%20Wayland-informational?style=flat-square)](docs/requirements.md)
 [![Rust](https://img.shields.io/badge/Built%20with-Rust%20%7C%20GTK4-orange.svg?style=flat-square)](Cargo.toml)
@@ -18,6 +19,8 @@
 **Smart Connect for Linux** enables your Linux computer to pair directly with the official, stock **Motorola Smart Connect** app (formerly *Ready For*). 
 
 Your phone communicates with your Linux desktop just like it does with a Windows PC. Once paired with a quick QR code scan, your phone and computer work together seamlessly over your local Wi-Fi and Bluetooth.
+
+> 🌐 **Interactive Documentation & Installation Guide**: [https://lalitmukesh69.github.io/smartconnect-linux-but-better/](https://lalitmukesh69.github.io/smartconnect-linux-but-better/) — Distro-tailored commands (Fedora, Ubuntu, Arch), 1-click terminal copy, and AI agent prompts.
 
 ---
 
