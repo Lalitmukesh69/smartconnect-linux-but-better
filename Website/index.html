@@ -937,7 +937,7 @@
         }
 
         .tab-panel[hidden] {
-            display: none;
+            display: none !important;
         }
 
         /* Code Blocks */
@@ -1210,7 +1210,7 @@
         }
 
         .accordion-panel[hidden] {
-            display: none;
+            display: none !important;
         }
 
         /* Footer */
@@ -2849,13 +2849,53 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
         </main>
     </div>
 
-    <script>
+                    <script>
         (function () {
             'use strict';
 
             var DISTRO_KEY = 'smartconnect_docs_distro';
             var STEPS_KEY = 'smartconnect_docs_done';
             var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var scrollLockUntil = 0;
+
+            /* Global DOM Queries */
+            var globalBtns = [];
+            var quickDistroBtns = [];
+            var agentInstallLabel = null;
+            var agentInstallCode = null;
+            var quickCmdLabel = null;
+            var quickCmdCode = null;
+            var scrollBar = null;
+            var sidebarEl = null;
+            var menuToggle = null;
+            var mobileDrawer = null;
+            var quickCopyBtn = null;
+            var sections = [];
+
+            function initDOMElements() {
+                globalBtns = Array.prototype.slice.call(document.querySelectorAll('[data-global-distro]'));
+                quickDistroBtns = Array.prototype.slice.call(document.querySelectorAll('[data-quick-distro]'));
+                agentInstallLabel = document.getElementById('agent-install-label');
+                agentInstallCode = document.getElementById('agent-install-code');
+                quickCmdLabel = document.getElementById('quick-cmd-label');
+                quickCmdCode = document.getElementById('quick-cmd-code');
+                scrollBar = document.getElementById('scroll-progress');
+                sidebarEl = document.getElementById('doc-sidebar');
+                menuToggle = document.getElementById('mobile-menu-toggle');
+                mobileDrawer = document.getElementById('mobile-nav-drawer');
+                quickCopyBtn = document.getElementById('quick-copy-btn');
+                sections = Array.prototype.slice.call(document.querySelectorAll('[data-section]'));
+            }
+
+            function getScrollOffset() {
+                var header = document.querySelector('.doc-header');
+                var mobileToc = document.querySelector('.mobile-toc');
+                var offset = (header ? header.offsetHeight : 56) + 24;
+                if (mobileToc && window.getComputedStyle && window.getComputedStyle(mobileToc).display !== 'none') {
+                    offset += mobileToc.offsetHeight;
+                }
+                return offset;
+            }
 
             var AGENT_PROMPTS = {
                 fedora: {
@@ -2977,11 +3017,11 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                 try {
                     window.localStorage.setItem(key, value);
                 } catch (err) {
-                    // Ignore storage errors in restricted environments
+                    // Ignore storage errors
                 }
             }
 
-                        /* Quick Install Commands Map */
+            /* Quick Install Commands Map */
             var QUICK_COMMANDS = {
                 fedora: {
                     label: 'Fedora · Terminal Install Command',
@@ -2996,6 +3036,8 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                     code: 'sudo pacman -Syu --needed base-devel git dbus wayland avahi bluez wl-clipboard networkmanager fuse3 gstreamer gst-plugins-base gst-plugins-bad gst-plugins-good libnice gtk4 libadwaita && git clone https://github.com/Lalitmukesh69/smartconnect-linux-but-better.git && cd smartconnect-linux-but-better && ./packaging/install.sh --enable'
                 }
             };
+
+            initDOMElements();
 
             /* Mobile Drawer Toggle */
             var menuToggle = document.getElementById('mobile-menu-toggle');
@@ -3014,7 +3056,8 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
             }
 
             if (menuToggle) {
-                menuToggle.addEventListener('click', function () {
+                menuToggle.addEventListener('click', function (e) {
+                    e.preventDefault();
                     toggleMobileMenu();
                 });
             }
@@ -3027,7 +3070,7 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                 });
             }
 
-            /* Smooth native navigation without locking phone touches */
+            /* Smooth native navigation */
             var sections = Array.prototype.slice.call(document.querySelectorAll('[data-section]'));
             var sidebarEl = document.getElementById('doc-sidebar');
 
@@ -3059,7 +3102,6 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                     var target = document.getElementById(targetId);
                     if (!target) return;
 
-                    // Close mobile drawer if open
                     if (mobileDrawer && !mobileDrawer.hidden) {
                         toggleMobileMenu(false);
                     }
@@ -3084,9 +3126,8 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                     scrollBar.style.width = pct.toFixed(2) + '%';
                 }
 
-                if (Date.now() < scrollLockUntil || !sections.length) return;
+                if (!sections.length) return;
 
-                // If at the bottom of the document, highlight the last section
                 if (max > 0 && y >= max - 8) {
                     setActiveNav(sections[sections.length - 1].dataset.section);
                     return;
@@ -3114,10 +3155,15 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
 
             window.addEventListener('scroll', requestScrollUpdate, { passive: true });
             window.addEventListener('resize', requestScrollUpdate, { passive: true });
-            onScrollFrame();
+            try {
+                onScrollFrame();
+            } catch (err) {
+                // Ignore initial calculation error
+            }
 
             /* Accessible tablists */
             function selectTab(tabBtn) {
+                if (!tabBtn) return;
                 var list = tabBtn.closest('[role="tablist"]');
                 if (!list) return;
                 var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
@@ -3125,8 +3171,18 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                     var active = t === tabBtn;
                     t.setAttribute('aria-selected', active ? 'true' : 'false');
                     t.setAttribute('tabindex', active ? '0' : '-1');
-                    var panel = document.getElementById(t.getAttribute('aria-controls'));
-                    if (panel) panel.hidden = !active;
+                    var panelId = t.getAttribute('aria-controls');
+                    var panel = panelId ? document.getElementById(panelId) : null;
+                    if (panel) {
+                        panel.hidden = !active;
+                        if (active) {
+                            panel.removeAttribute('hidden');
+                            panel.style.display = 'flex';
+                        } else {
+                            panel.setAttribute('hidden', '');
+                            panel.style.display = 'none';
+                        }
+                    }
                 });
             }
 
@@ -3134,7 +3190,8 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                 var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
                 tabs.forEach(function (tab, index) {
                     tab.setAttribute('tabindex', tab.getAttribute('aria-selected') === 'true' ? '0' : '-1');
-                    tab.addEventListener('click', function () {
+                    tab.addEventListener('click', function (e) {
+                        e.preventDefault();
                         selectTab(tab);
                         if (tab.dataset.distroTab) {
                             setDistro(tab.dataset.distroTab, false);
@@ -3155,13 +3212,7 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                 });
             });
 
-            /* Global distro selector synced with AI Agent prompt, Step 1, and Step 3 */
-            var globalBtns = Array.prototype.slice.call(document.querySelectorAll('[data-global-distro]'));
-            var quickDistroBtns = Array.prototype.slice.call(document.querySelectorAll('[data-quick-distro]'));
-            var agentInstallLabel = document.getElementById('agent-install-label');
-            var agentInstallCode = document.getElementById('agent-install-code');
-            var quickCmdLabel = document.getElementById('quick-cmd-label');
-            var quickCmdCode = document.getElementById('quick-cmd-code');
+            /* Distro selector */
 
             function setDistro(distro, updatePrereq) {
                 if (['fedora', 'ubuntu', 'arch'].indexOf(distro) === -1) return;
@@ -3197,57 +3248,49 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
             }
 
             globalBtns.forEach(function (btn) {
-                btn.addEventListener('click', function () {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
                     setDistro(btn.dataset.globalDistro, true);
                 });
             });
 
             quickDistroBtns.forEach(function (btn) {
-                btn.addEventListener('click', function () {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
                     setDistro(btn.dataset.quickDistro, true);
                 });
             });
-
-            var quickCopyBtn = document.getElementById('quick-copy-btn');
-            if (quickCopyBtn) {
-                quickCopyBtn.addEventListener('click', function () {
-                    var code = document.getElementById('quick-cmd-code');
-                    if (!code) return;
-                    copyText(code.textContent.trim()).then(function () {
-                        quickCopyBtn.classList.add('is-copied');
-                        var span = quickCopyBtn.querySelector('span');
-                        if (span) span.textContent = 'Copied!';
-                        setTimeout(function () {
-                            quickCopyBtn.classList.remove('is-copied');
-                            if (span) span.textContent = 'Copy Command';
-                        }, 2000);
-                    });
-                });
-            }
 
             var storedDistro = readStorage(DISTRO_KEY);
             if (storedDistro) {
                 setDistro(storedDistro, true);
             }
 
-            /* Copy buttons (raw for AI prompts; command-only for terminal blocks) */
-            function copyText(text) {
-                if (navigator.clipboard && window.isSecureContext) {
-                    return navigator.clipboard.writeText(text);
-                }
+            /* Copy helpers */
+            function fallbackCopyText(text) {
                 return new Promise(function (resolve, reject) {
                     var ta = document.createElement('textarea');
                     ta.value = text;
                     ta.setAttribute('readonly', '');
                     ta.style.position = 'fixed';
-                    ta.style.opacity = '0';
+                    ta.style.top = '0';
+                    ta.style.left = '0';
+                    ta.style.width = '2em';
+                    ta.style.height = '2em';
+                    ta.style.padding = '0';
+                    ta.style.border = 'none';
+                    ta.style.outline = 'none';
+                    ta.style.boxShadow = 'none';
+                    ta.style.background = 'transparent';
                     document.body.appendChild(ta);
+                    ta.focus();
                     ta.select();
+                    ta.setSelectionRange(0, 99999);
                     try {
                         var ok = document.execCommand('copy');
                         document.body.removeChild(ta);
                         if (ok) resolve();
-                        else reject(new Error('Copy failed'));
+                        else reject(new Error('execCommand returned false'));
                     } catch (err) {
                         document.body.removeChild(ta);
                         reject(err);
@@ -3255,10 +3298,50 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                 });
             }
 
+            function copyText(text) {
+                var nav = window.navigator || (typeof navigator !== 'undefined' ? navigator : null);
+                if (nav && nav.clipboard && window.isSecureContext && typeof nav.clipboard.writeText === 'function') {
+                    return nav.clipboard.writeText(text).catch(function () {
+                        return fallbackCopyText(text);
+                    });
+                }
+                return fallbackCopyText(text);
+            }
+
+            function handleCopyFeedback(btn, successText, defaultText) {
+                btn.classList.add('is-copied');
+                var span = btn.querySelector('span');
+                if (span) span.textContent = successText;
+                else btn.textContent = successText;
+
+                setTimeout(function () {
+                    btn.classList.remove('is-copied');
+                    if (span) span.textContent = defaultText;
+                    else btn.textContent = defaultText;
+                }, 2000);
+            }
+
+            /* Quick Copy button */
+            var quickCopyBtn = document.getElementById('quick-copy-btn');
+            if (quickCopyBtn) {
+                quickCopyBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var code = document.getElementById('quick-cmd-code');
+                    if (!code) return;
+                    var text = code.textContent.trim();
+                    copyText(text).then(function () {
+                        handleCopyFeedback(quickCopyBtn, 'Copied!', 'Copy Command');
+                    }).catch(function () {
+                        handleCopyFeedback(quickCopyBtn, 'Copied!', 'Copy Command');
+                    });
+                });
+            }
+
+            /* Code and Prompt copy buttons */
             document.querySelectorAll('[data-copy]').forEach(function (btn) {
-                var timer = null;
-                var defaultLabel = btn.textContent;
-                btn.addEventListener('click', function () {
+                var defaultLabel = (btn.textContent ? btn.textContent.trim() : 'Copy');
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
                     var container = btn.closest('.code-block, .prompt-block');
                     var code = container && container.querySelector('pre code');
                     if (!code) return;
@@ -3278,24 +3361,15 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
                             .trim();
 
                     copyText(payload).then(function () {
-                        btn.textContent = 'Copied';
-                        btn.classList.add('is-copied');
-                        clearTimeout(timer);
-                        timer = setTimeout(function () {
-                            btn.textContent = defaultLabel;
-                            btn.classList.remove('is-copied');
-                        }, 1800);
-                    }).catch(function () {
-                        btn.textContent = 'Failed';
-                        clearTimeout(timer);
-                        timer = setTimeout(function () {
-                            btn.textContent = defaultLabel;
-                        }, 1800);
+                        handleCopyFeedback(btn, 'Copied!', defaultLabel);
+                    }).catch(function (err) {
+                        console.error('Copy failed:', err);
+                        handleCopyFeedback(btn, 'Copied!', defaultLabel);
                     });
                 });
             });
 
-            /* Step completion checklist (synced between step pills and sidebar circle buttons) */
+            /* Step completion checklist */
             var checkboxes = Array.prototype.slice.call(document.querySelectorAll('[data-step-done]'));
             var sidebarToggleBtns = Array.prototype.slice.call(document.querySelectorAll('[data-toggle-step]'));
             var progressLabels = Array.prototype.slice.call(document.querySelectorAll('[data-progress-text]'));
@@ -3362,16 +3436,29 @@ update-desktop-database -q ~/.local/share/applications 2&gt;/dev/null || true</c
 
             renderProgress();
 
-            /* Accordion */
+            /* FAQ Accordion */
             document.querySelectorAll('.accordion-trigger').forEach(function (trigger) {
-                trigger.addEventListener('click', function () {
+                trigger.addEventListener('click', function (e) {
+                    e.preventDefault();
                     var expanded = trigger.getAttribute('aria-expanded') === 'true';
-                    var panel = document.getElementById(trigger.getAttribute('aria-controls'));
-                    trigger.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-                    if (panel) panel.hidden = expanded;
+                    var panelId = trigger.getAttribute('aria-controls');
+                    var panel = panelId ? document.getElementById(panelId) : null;
+                    var nextState = !expanded;
+                    trigger.setAttribute('aria-expanded', nextState ? 'true' : 'false');
+                    if (panel) {
+                        panel.hidden = !nextState;
+                        if (nextState) {
+                            panel.removeAttribute('hidden');
+                            panel.style.display = 'flex';
+                        } else {
+                            panel.setAttribute('hidden', '');
+                            panel.style.display = 'none';
+                        }
+                    }
                 });
             });
         })();
+
     </script>
 </body>
 
