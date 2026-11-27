@@ -22,28 +22,27 @@ Flatpak provides an isolated, sandboxed environment with dependencies included. 
 and install the standalone `.flatpak` bundle with one command or double-click in GNOME Software
 or KDE Discover.
 
-### Download and Install
+### Build and Install
 
-1. Download `Smart_Connect-<version>-x86_64.flatpak` (or `dev.smartconnect.Linux.flatpak`) from the
-   [Releases page](https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases).
+> **Note:** Prebuilt `.flatpak` bundles are not attached to the
+> [Releases page](https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases) yet, so
+> build the bundle locally from the repository first.
+
+1. Build the bundle (outputs `dist/Smart_Connect-0.2.0-x86_64.flatpak` and `dist/dev.smartconnect.Linux.flatpak`):
+   ```sh
+   ./packaging/flatpak/make-flatpak.sh
+   ```
+   If `flatpak-builder` is installed locally, it builds using host tools. If not, it automatically uses
+   a container with Podman or Docker.
 2. Install the bundle:
    ```sh
-   flatpak install Smart_Connect-0.1.0-x86_64.flatpak
+   flatpak install dist/Smart_Connect-0.2.0-x86_64.flatpak
    ```
    Or double-click the `.flatpak` file in GNOME Software or KDE Discover.
 3. Launch Smart Connect from your application launcher or terminal:
    ```sh
    flatpak run dev.smartconnect.Linux
    ```
-
-### Building the Flatpak
-
-To build the Flatpak bundle yourself:
-```sh
-./packaging/flatpak/make-flatpak.sh
-```
-If `flatpak-builder` is installed locally, it builds using host tools. If not, it automatically uses
-a container with Podman or Docker to build and export the bundle to `dist/Smart_Connect-<version>-x86_64.flatpak`.
 
 ## AppImage
 
@@ -52,8 +51,10 @@ VA-API and x264 plugins, wl-clipboard, avahi's tools, even glibc), so it doesn't
 distribution's versions. Built on Arch Linux with
 [quick-sharun](https://github.com/pkgforge-dev/Anylinux-AppImages); x86_64 only.
 
-1. Download `Smart_Connect-<version>-anylinux-x86_64.AppImage` from the
-   [Releases page](https://github.com/rudrahnpatel/smartconnect-linux/releases), make it executable
+1. Build the AppImage locally with `./packaging/appimage/make-appimage.sh` (or download
+   `Smart_Connect-<version>-anylinux-x86_64.AppImage` from the
+   [Releases page](https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases) once
+   prebuilt AppImages are published), make it executable
    (`chmod +x Smart_Connect-*.AppImage`, or *Executable as program* in the file manager's
    properties) and open it.
 2. The first time, a welcome window offers **Set up**. That is the same as running

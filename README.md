@@ -4,7 +4,7 @@
 
 # Smart Connect for Linux
 
-**Seamlessly connect your Motorola phone to your Linux PC — without root, extra phone apps, or developer mode.**
+Connect a Motorola phone to a Linux desktop using the stock Motorola Smart Connect app, without root, extra phone apps, or developer mode.
 
 [![GitHub Release](https://img.shields.io/github/v/release/Lalitmukesh69/smartconnect-linux-but-better?style=flat-square&color=blue)](https://github.com/Lalitmukesh69/smartconnect-linux-but-better/releases)
 [![Installation Guide](https://img.shields.io/badge/Docs-Installation%20Website-0066cc?style=flat-square&logo=safari&logoColor=white)](https://lalitmukesh69.github.io/smartconnect-linux-but-better/)
@@ -14,87 +14,94 @@
 
 </div>
 
----
+Smart Connect for Linux pairs directly with the stock Motorola Smart Connect app (formerly Ready For) over local Wi-Fi and Bluetooth. Your phone sees your Linux PC the same way it sees a Windows PC running Motorola's companion app.
 
-**Smart Connect for Linux** enables your Linux computer to pair directly with the official, stock **Motorola Smart Connect** app (formerly *Ready For*). 
+See the [installation website](https://lalitmukesh69.github.io/smartconnect-linux-but-better/) for Fedora, Ubuntu, Debian, and Arch Linux commands and copyable install prompts.
 
-Your phone communicates with your Linux desktop just like it does with a Windows PC. Once paired with a quick QR code scan, your phone and computer work together seamlessly over your local Wi-Fi and Bluetooth.
+## Features
 
-> 🌐 **Interactive Documentation & Installation Guide**: [https://lalitmukesh69.github.io/smartconnect-linux-but-better/](https://lalitmukesh69.github.io/smartconnect-linux-but-better/) — Distro-tailored commands (Fedora, Ubuntu, Arch), 1-click terminal copy, and AI agent prompts.
+- Phone notifications on the desktop, with inline quick replies and action buttons (mark as read, archive, pause).
+- Two-way plain-text clipboard sync between phone and PC.
+- Full-screen phone mirroring and individual phone apps streamed into separate desktop windows, with mouse and keyboard input.
+- Wireless second monitor mode (extended or duplicated display) with touch input and an on-screen keyboard.
+- Cross Control lets you move your mouse pointer past a monitor edge onto your phone screen and type there.
+- Phone front or rear camera exposed as a Linux webcam for Zoom, Teams, Meet, and OBS.
+- Phone storage mounted in your Linux file manager (`~/Phone`), plus sharing local PC folders back to the phone.
+- GTK4 desktop app with a 4-column app grid, `Ctrl+K` command palette, and system tray status showing battery, charging state, Wi-Fi, cellular signal, and Bluetooth.
 
----
+## Installation
 
-## ✨ Key Features
+GitHub Releases does not include prebuilt `.flatpak` or `.AppImage` bundles yet. Releases currently publish only the standalone `smartconnect-gui` binary, which expects `smartconnectd` and the helper binaries to already be installed. Install from source for a complete setup, or build a Flatpak or AppImage locally from this repository.
 
-- 📱 **Notifications & Quick Reply** — View phone notifications on your desktop with one-click direct replies and action buttons (mark as read, archive, pause).
-- 📋 **Two-Way Clipboard** — Copy text on your phone and paste it on your PC (and vice versa) instantly and securely.
-- 🪟 **App Streaming & Screen Mirroring** — Launch individual phone apps in their own desktop windows, or mirror your full phone screen with smooth mouse and keyboard control.
-- 🖥️ **Wireless Second Monitor** — Use your phone or tablet as an extended or duplicated desktop display with touch support and an on-screen keyboard.
-- 🖱️ **Cross Control** — Move your mouse cursor across your monitor's edge right onto your phone screen to type and navigate seamlessly.
-- 📷 **HD Phone Webcam** — Transform your phone's high-resolution front or rear cameras into a crisp webcam for Zoom, Teams, Meet, and OBS.
-- 📁 **Files & Storage** — Browse phone storage directly in your Linux file manager (`~/Phone`), or share PC folders with your phone.
-- 🎨 **Modern Desktop App & Tray** — Refined 2026 dark UI with a responsive 4-column app grid, command palette (`Ctrl+K`), and live phone telemetry (battery %, charging, Wi-Fi, cellular, Bluetooth) in your system tray.
+### Option 1: Install from source (recommended)
 
----
+1. Install the build dependencies (Rust 1.88 or newer, GTK4, libadwaita, GStreamer with WebRTC/libnice, Avahi, BlueZ, `wl-clipboard`, and `fuse3`) listed for your distribution in the [installation guide](docs/installation.md#packages) or on the [installation website](https://lalitmukesh69.github.io/smartconnect-linux-but-better/).
+2. Enable Avahi and Bluetooth:
+   ```bash
+   sudo systemctl enable --now avahi-daemon bluetooth
+   ```
+3. Clone the repository and run the installer, which builds all eight binaries, installs them under `~/.local`, adds the desktop launcher, and starts the `smartconnectd` user service:
+   ```bash
+   git clone https://github.com/Lalitmukesh69/smartconnect-linux-but-better.git
+   cd smartconnect-linux-but-better
+   ./packaging/install.sh --enable
+   ```
+4. Allow TCP port `52020` and mDNS through your firewall (`2049/tcp` is also needed if you share PC folders to your phone):
+   ```bash
+   # firewalld (Fedora)
+   sudo firewall-cmd --permanent --add-port=52020/tcp
+   sudo firewall-cmd --permanent --add-service=mdns
+   sudo firewall-cmd --reload
+   ```
+   ```bash
+   # ufw (Ubuntu / Debian)
+   sudo ufw allow 52020/tcp
+   sudo ufw allow 5353/udp
+   sudo ufw reload
+   ```
 
-## 🚀 Quick Start
+### Option 2: Build and install a Flatpak locally
 
-### 1. Installation
+Requires `flatpak-builder`, `podman`, or `docker` inside a clone of the repository:
 
-Choose the package that works best for your Linux distribution:
-
-#### Option A: Flatpak (Recommended)
-Works on any Linux distribution with Flatpak installed:
 ```bash
-flatpak install Smart_Connect-0.1.0-x86_64.flatpak
+./packaging/flatpak/make-flatpak.sh
+flatpak install dist/Smart_Connect-0.2.0-x86_64.flatpak
 flatpak run dev.smartconnect.Linux
 ```
 
-#### Option B: AppImage (Portable)
-No installation required — download, make executable, and run:
+### Option 3: Build an AppImage locally
+
+Requires `docker` (or run with `DOCKER=podman`):
+
 ```bash
-chmod +x Smart_Connect-0.1.0-x86_64.AppImage
-./Smart_Connect-0.1.0-x86_64.AppImage
+./packaging/appimage/make-appimage.sh
+chmod +x dist/Smart_Connect-*.AppImage
+./dist/Smart_Connect-*.AppImage
 ```
 
-#### Option C: Build from Source
-```bash
-git clone https://github.com/Lalitmukesh69/smartconnect-linux-but-better.git
-cd smartconnect-linux-but-better
-./packaging/install.sh --enable
-```
-*See the full [Installation Guide](docs/installation.md) for dependencies on Arch, Fedora, and Ubuntu/Debian.*
+## Pair your phone
 
----
+1. Open Smart Connect from your app launcher (or run `smartconnect-gui`) and click **Pair new phone...** to show a QR code.
+2. Open the Motorola Smart Connect app on your phone, tap **+**, choose **Scan QR code**, and point the camera at your screen.
+3. Wait for the pairing dialog to close. Once paired, both devices reconnect automatically when they are on the same Wi-Fi network.
 
-### 2. Pairing Your Phone (3 Simple Steps)
+## Documentation
 
-1. **Open Smart Connect on Linux** and click **Pair new phone…** to generate a secure pairing QR code.
-2. **Open Smart Connect on your Motorola phone**, tap **+** → **Scan QR code**, and point your camera at the PC screen.
-3. **Connected!** Your phone and Linux PC are now paired. Future connections happen automatically when both devices are on the same Wi-Fi network.
+- [Installation guide](docs/installation.md) for Arch, Fedora, Ubuntu, and Debian package lists, systemd service details, and firewall setup.
+- [Feature status and compatibility](docs/feature-status.md) for tested phone models, Wayland compositors, and what is verified.
+- [System and network requirements](docs/requirements.md) for compositor support, ports, and optional kernel modules (`v4l2loopback`, `vkms`).
+- [User guide](docs/usage.md) for pairing, mirroring, second display, Cross Control, webcam, and CLI commands.
+- [Architecture and components](docs/components.md) for how `smartconnectd` and the helper binaries fit together.
+- [Software updates](docs/updater.md) for the in-app GitHub release checker and executable replacement.
+- [Troubleshooting](docs/troubleshooting.md) for connection, mDNS, Bluetooth, and firewall fixes.
+- [Security and privacy](docs/security.md) for TLS certificates, credential storage, and clipboard redaction.
+- [Control socket API](docs/control-socket-api.md) for the JSON-RPC socket at `$XDG_RUNTIME_DIR/smartconnectd.sock`.
 
----
+## Disclaimer
 
-## 📚 Documentation
+Smart Connect for Linux is an independent, unofficial open-source project. It is not affiliated with, endorsed by, or sponsored by Motorola Mobility LLC or Lenovo. Motorola, Smart Connect, Ready For, and associated trademarks belong to their respective owners and are used only to identify compatibility.
 
-Detailed documentation is available in the [`docs/`](docs/) directory:
+## License
 
-- 📊 **[Feature Status & Compatibility](docs/feature-status.md)** — Verified feature matrix and tested phone models.
-- ⚙️ **[System & Network Requirements](docs/requirements.md)** — Compositor details (GNOME, KDE, Hyprland, niri) and firewall ports.
-- 📖 **[User Guide & Features](docs/usage.md)** — Step-by-step feature walkthroughs and CLI commands.
-- 🏗️ **[Architecture & Crates](docs/components.md)** — Overview of daemon architecture and helper programs.
-- 🔧 **[Troubleshooting](docs/troubleshooting.md)** — Solutions for common connection and firewall questions.
-- 🔒 **[Security & Privacy](docs/security.md)** — Encryption standards, credential management, and privacy safeguards.
-- 🔌 **[Control Socket API](docs/control-socket-api.md)** — JSON-RPC socket API for custom integrations and scripting.
-
----
-
-## ⚠️ Disclaimer
-
-Smart Connect for Linux is an independent, unofficial open-source project. It is not affiliated with, endorsed by, or sponsored by Motorola Mobility LLC or Lenovo. Motorola, Smart Connect, Ready For, and associated trademarks belong to their respective owners and are used strictly for compatibility identification.
-
----
-
-## 📄 License
-
-Distributed under the [GNU General Public License v3.0](LICENSE).
+Licensed under the [GNU General Public License v3.0](LICENSE).

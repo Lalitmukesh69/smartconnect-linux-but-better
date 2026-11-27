@@ -8,7 +8,7 @@
 #   dist/dev.smartconnect.Linux.flatpak
 #
 # Anyone can install the resulting bundle easily with:
-#   flatpak install Smart_Connect-0.1.0-x86_64.flatpak
+#   flatpak install dist/Smart_Connect-0.2.0-x86_64.flatpak
 # Or double-click the file in GNOME Software / KDE Discover.
 set -euo pipefail
 
